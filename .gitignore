@@ -1,0 +1,8 @@
+/telegram/
+.env
+.env.*
+.telegram-bot-session-*.json*
+*.session
+*.session-journal
+node_modules/
+.DS_Store

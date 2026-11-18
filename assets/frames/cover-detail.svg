@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="160" viewBox="0 0 200 160">
+  <defs>
+    <linearGradient id="plate" x1="0%" y1="0%" x2="65%" y2="100%">
+      <stop stop-color="#515e68"/><stop offset=".23" stop-color="#f4f6f7"/>
+      <stop offset=".42" stop-color="#b9c6cf"/><stop offset=".64" stop-color="#626f7b"/><stop offset="1" stop-color="#a8b5be"/>
+    </linearGradient>
+    <g id="eyelet">
+      <path fill="url(#plate)" stroke="#434f58" stroke-width=".75" fill-rule="evenodd"
+        d="M10 43 7.6 23.4C7.2 20.1 2.9 17.4 2.9 12.3a9.4 9.4 0 0 1 9.4-9.4c4.8 0 7.9 4.5 11.6 4.9L49 10l-24.5 2.2C15.7 13 12.9 16 12 24.1Z M16 12a4 4 0 1 0-8 0 4 4 0 1 0 8 0Z"/>
+      <circle cx="12" cy="12" r="4.8" fill="none" stroke="#4d5b65" stroke-width=".9"/>
+      <path fill="none" stroke="#f4f7f8" stroke-width=".9" d="M4.1 10.4a8 8 0 0 1 8-6.4 M8.4 15.2a4.8 4.8 0 0 0 7.8-1.3"/>
+    </g>
+  </defs>
+  <path fill="none" stroke="#47545e" stroke-width="3" stroke-linejoin="bevel" d="M45 10h137l8 8v102 M155 150H18l-8-8V40"/>
+  <path fill="none" stroke="#d7dfe4" stroke-width="1" d="M46 9.4h136.5l8.2 8.2v102 M154 150.6H17.5l-8.2-8.2v-102"/>
+  <use href="#eyelet"/><use href="#eyelet" transform="translate(200 160) rotate(180)"/>
+</svg>

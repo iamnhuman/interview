@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="160" viewBox="0 0 200 160" fill="none">
+  <defs>
+    <linearGradient id="wire" x1="0%" y1="0%" x2="72%" y2="94%">
+      <stop stop-color="#eef4f7"/><stop offset=".21" stop-color="#91a2af"/>
+      <stop offset=".4" stop-color="#404d59"/><stop offset=".57" stop-color="#c8d4db"/>
+      <stop offset=".76" stop-color="#f6f8f9"/><stop offset="1" stop-color="#788894"/>
+    </linearGradient>
+    <path id="over" d="M61 11.7C43 11.7 36 5.3 25.8 6.6 14.2 8.1 6.3 15.8 6.5 26.3 6.7 35.3 11.7 39.2 11.7 49"/>
+    <path id="under" d="M61 8.7C45 8.7 38.2 13 27.2 12.8 17.2 12.6 10.4 2.4 6.2 6.4 1.9 10.5 12 17.3 12.2 27.6 12.3 36 8.7 41.7 8.7 49"/>
+    <g id="braid">
+      <use href="#under" stroke="#35414a" stroke-width="3"/>
+      <use href="#under" stroke="url(#wire)" stroke-width="1.75"/>
+      <use href="#over" stroke="#28323a" stroke-width="4.2"/>
+      <use href="#over" stroke="url(#wire)" stroke-width="2.5"/>
+      <path stroke="#e9f0f3" stroke-width=".7" d="M7.4 23c1.2-7.2 7.1-12.8 13.7-15"/>
+    </g>
+  </defs>
+  <path stroke="#82939e" stroke-width="1.4" d="M60 8.7h80 M191.3 48v64 M140 151.3H60 M8.7 112V48"/>
+  <path stroke="#b9c6cd" stroke-width="1.25" d="M60 11.7h80 M188.3 48v64 M140 148.3H60 M11.7 112V48"/>
+  <use href="#braid"/><use href="#braid" transform="translate(200) scale(-1 1)"/>
+  <use href="#braid" transform="translate(200 160) rotate(180)"/><use href="#braid" transform="translate(0 160) scale(1 -1)"/>
+</svg>
