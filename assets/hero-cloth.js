@@ -49,11 +49,11 @@
       vec3 halfway = normalize(light + vec3(0., 0., 1.));
       float sheen = pow(max(0., dot(normal, halfway)), 16.) - pow(halfway.z, 16.);
       vec3 colour = texture2D(photo, texCoord).rgb;
-      gl_FragColor = vec4(colour * (1. + .55 * diffuse) + .075 * sheen, 1.);
+      gl_FragColor = vec4(colour * (1. + .78 * diffuse) + .12 * sheen, 1.);
     }`;
 
   function webGL(canvas, photo, surface) {
-    const gl = canvas.getContext("webgl", { alpha: false, antialias: true, depth: false });
+    const gl = canvas.getContext("webgl", { alpha: false, antialias: true, depth: true });
     if (!gl) return null;
     const program = gl.createProgram();
     for (const [type, source] of [[gl.VERTEX_SHADER, vertex], [gl.FRAGMENT_SHADER, fragment]]) {
@@ -66,6 +66,8 @@
     gl.linkProgram(program);
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) { gl.deleteProgram(program); return null; }
     gl.useProgram(program);
+    gl.enable(gl.DEPTH_TEST);
+    gl.depthFunc(gl.LEQUAL);
     function attribute(name, size, bytes = 0, offset = 0) {
       const location = gl.getAttribLocation(program, name);
       gl.enableVertexAttribArray(location);
@@ -100,6 +102,7 @@
         gl.uniform4f(crop, rect.x / photo.naturalWidth, rect.y / photo.naturalHeight, rect.width / photo.naturalWidth, rect.height / photo.naturalHeight);
       },
       draw() {
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
         gl.bufferSubData(gl.ARRAY_BUFFER, 0, surface);
         gl.drawElements(gl.TRIANGLES, faces.length, gl.UNSIGNED_SHORT, 0);
@@ -107,77 +110,75 @@
     };
   }
 
-  // Rasterize the same projected mesh when a GPU context is unavailable.
-  // UV coordinates and light are interpolated across every triangle, including shared edges.
+  // Draw the same folds with textured triangles when WebGL is unavailable.
+  // Canvas can draw local photographs this way without reading their pixels.
   function software(canvas, photo, surface) {
-    const ctx = canvas.getContext("2d", { alpha: false, willReadFrequently: true });
-    if (!ctx) return null;
+    const ctx = canvas.getContext("2d", { alpha: false });
+    const texture = document.createElement("canvas");
+    const source = texture.getContext("2d", { alpha: false });
+    if (!ctx || !source) return null;
     const xs = new Float32Array(count), ys = new Float32Array(count);
-    const gain = new Float32Array(count), gloss = new Float32Array(count);
-    const changed = new Uint8Array(count);
-    const halfLength = Math.hypot(.48, .60, 1.64), flatGloss = (1.64 / halfLength) ** 16;
-    let source, output, w, h;
+    const light = new Float32Array(count), changed = new Uint8Array(count);
+    const skip = 2;
+    let w, h;
 
     function triangle(a, b, c) {
       if (!(changed[a] || changed[b] || changed[c])) return;
-      const ax = xs[a], ay = ys[a], bx = xs[b] - ax, by = ys[b] - ay, cx = xs[c] - ax, cy = ys[c] - ay;
-      const area = bx * cy - by * cx;
-      if (Math.abs(area) < .001) return;
-      const left = Math.max(0, Math.ceil(Math.min(ax, xs[b], xs[c]) - .5));
-      const right = Math.min(w - 1, Math.floor(Math.max(ax, xs[b], xs[c]) - .5));
-      const top = Math.max(0, Math.ceil(Math.min(ay, ys[b], ys[c]) - .5));
-      const bottom = Math.min(h - 1, Math.floor(Math.max(ay, ys[b], ys[c]) - .5));
-      const u0 = uv[a * 2] * w - .5, v0 = uv[a * 2 + 1] * h - .5;
-      const ub = (uv[b * 2] - uv[a * 2]) * w, uc = (uv[c * 2] - uv[a * 2]) * w;
-      const vb = (uv[b * 2 + 1] - uv[a * 2 + 1]) * h, vc = (uv[c * 2 + 1] - uv[a * 2 + 1]) * h;
-      const gb = gain[b] - gain[a], gc = gain[c] - gain[a], sb = gloss[b] - gloss[a], sc = gloss[c] - gloss[a];
-      const stepB = cy / area, stepC = -by / area;
-      const pixels = source.data, result = output.data;
-      for (let y = top; y <= bottom; y++) {
-        let wb = ((left + .5 - ax) * cy - (y + .5 - ay) * cx) / area;
-        let wc = (bx * (y + .5 - ay) - by * (left + .5 - ax)) / area;
-        for (let x = left; x <= right; x++, wb += stepB, wc += stepC) {
-          if (wb < -.00001 || wc < -.00001 || wb + wc > 1.00001) continue;
-          const u = Math.max(0, Math.min(w - 1, u0 + wb * ub + wc * uc));
-          const v = Math.max(0, Math.min(h - 1, v0 + wb * vb + wc * vc));
-          const ix = Math.floor(u), iy = Math.floor(v), dx = u - ix, dy = v - iy;
-          const i = (iy * w + ix) * 4, j = ix + 1 < w ? i + 4 : i, row = iy + 1 < h ? w * 4 : 0;
-          const light = gain[a] + wb * gb + wc * gc, shine = gloss[a] + wb * sb + wc * sc;
-          const dest = (y * w + x) * 4;
-          for (let k = 0; k < 3; k++) {
-            const upper = pixels[i + k] + dx * (pixels[j + k] - pixels[i + k]);
-            const lower = pixels[i + row + k] + dx * (pixels[j + row + k] - pixels[i + row + k]);
-            result[dest + k] = (upper + dy * (lower - upper)) * light + shine;
-          }
-        }
+      const u = uv[2 * a] * w, v = uv[2 * a + 1] * h;
+      const ub = uv[2 * b] * w - u, vb = uv[2 * b + 1] * h - v;
+      const uc = uv[2 * c] * w - u, vc = uv[2 * c + 1] * h - v;
+      const xb = xs[b] - xs[a], yb = ys[b] - ys[a], xc = xs[c] - xs[a], yc = ys[c] - ys[a];
+      const det = ub * vc - uc * vb;
+      const xx = (xb * vc - xc * vb) / det, xy = (xc * ub - xb * uc) / det;
+      const yx = (yb * vc - yc * vb) / det, yy = (yc * ub - yb * uc) / det;
+      const shade = (light[a] + light[b] + light[c]) / 3;
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(xs[a], ys[a]);
+      ctx.lineTo(xs[b], ys[b]);
+      ctx.lineTo(xs[c], ys[c]);
+      ctx.closePath();
+      ctx.clip();
+      ctx.setTransform(xx, yx, xy, yy, xs[a] - xx * u - xy * v, ys[a] - yx * u - yy * v);
+      ctx.drawImage(texture, 0, 0);
+      if (Math.abs(shade) > .01) {
+        ctx.globalAlpha = Math.min(.55, Math.abs(shade));
+        ctx.fillStyle = shade > 0 ? "#fff" : "#000";
+        ctx.fillRect(0, 0, w, h);
       }
+      ctx.restore();
     }
 
     return {
       name: "canvas2d",
       resize(width, height) {
-        const ratio = Math.min(window.devicePixelRatio || 1, 1.5, 850 / width, 600 / height);
-        w = canvas.width = Math.max(1, Math.round(width * ratio));
-        h = canvas.height = Math.max(1, Math.round(height * ratio));
-        const rect = photoSourceRect(photo, width, height);
-        ctx.drawImage(photo, rect.x, rect.y, rect.width, rect.height, 0, 0, w, h);
-        source = ctx.getImageData(0, 0, w, h);
-        output = ctx.createImageData(w, h);
+        const ratio = Math.min(window.devicePixelRatio || 1, 1.5, 900 / width, 650 / height);
+        w = canvas.width = texture.width = Math.max(1, Math.round(width * ratio));
+        h = canvas.height = texture.height = Math.max(1, Math.round(height * ratio));
+        const crop = photoSourceRect(photo, width, height);
+        source.drawImage(photo, crop.x, crop.y, crop.width, crop.height, 0, 0, w, h);
       },
       draw(flat) {
-        if (flat) { ctx.putImageData(source, 0, 0); return; }
-        output.data.set(source.data);
-        for (let i = 0; i < count; i++) {
-          const k = i * 5, u = uv[i * 2], v = uv[i * 2 + 1], z = surface[k + 2], perspective = 1 - .44 * z;
-          xs[i] = (((u + surface[k]) * 2 - 1 + .10 * z) / perspective + 1) * w / 2;
-          ys[i] = (((v + surface[k + 1]) * 2 - 1 - .14 * z) / perspective + 1) * h / 2;
-          const sx = surface[k + 3], sy = surface[k + 4], normal = 1 / Math.hypot(sx, sy, 1);
-          gain[i] = 1 + .55 * ((sx * .48 + sy * .60 + .64) * normal - .64);
-          gloss[i] = 255 * .075 * ((Math.max(0, (sx * .48 + sy * .60 + 1.64) * normal / halfLength)) ** 16 - flatGloss);
-          changed[i] = Math.abs(xs[i] - u * w) + Math.abs(ys[i] - v * h) > .06 || Math.abs(gain[i] - 1) + Math.abs(gloss[i] / 255) > .001;
+        ctx.drawImage(texture, 0, 0);
+        if (flat) return;
+        for (let y = 0; y <= rows; y += skip) {
+          for (let x = 0; x <= columns; x += skip) {
+            const i = y * stride + x, k = i * 5, u = uv[i * 2], v = uv[i * 2 + 1];
+            const z = surface[k + 2], perspective = 1 - .44 * z;
+            xs[i] = (((u + surface[k]) * 2 - 1 + .10 * z) / perspective + 1) * w / 2;
+            ys[i] = (((v + surface[k + 1]) * 2 - 1 - .14 * z) / perspective + 1) * h / 2;
+            const nx = surface[k + 3], ny = surface[k + 4];
+            light[i] = .78 * ((.48 * nx + .60 * ny + .64) / Math.hypot(nx, ny, 1) - .64);
+            changed[i] = Math.abs(xs[i] - u * w) + Math.abs(ys[i] - v * h) > .08 || Math.abs(light[i]) > .01;
+          }
         }
-        for (let j = 0; j < faces.length; j += 3) triangle(faces[j], faces[j + 1], faces[j + 2]);
-        ctx.putImageData(output, 0, 0);
+        for (let y = 0; y < rows; y += skip) {
+          for (let x = 0; x < columns; x += skip) {
+            const i = y * stride + x, below = i + skip * stride;
+            triangle(i, below, i + skip);
+            triangle(i + skip, below, below + skip);
+          }
+        }
       },
     };
   }
@@ -188,25 +189,30 @@
     let canvas = link.querySelector(".cloth-canvas");
     const offset = new Float32Array(count * 3), speed = new Float32Array(count * 3);
     const surface = new Float32Array(count * 5);
-    const pull = { x: 0, y: 0, dx: 0, dy: 0, angle: 0, touching: false };
+    const pull = { x: .5, y: .5, dx: 0, dy: 0, angle: 0, touching: false };
     let renderer, visible = false, flat = true, frame = 0, last = 0, width = 0, height = 0, aspect = 1;
+    let revealed = false, fromScreen = null;
 
-    function step(dt) {
+    function step(dt, direct = false) {
       const horizontal = 940 / (aspect * aspect), vertical = 760;
-      const damping = Math.exp(-5.5 * dt), co = Math.cos(pull.angle), si = Math.sin(pull.angle);
-      const drag = Math.min(1, 8 * Math.hypot(pull.dx, pull.dy));
+      const damping = Math.exp(-6.2 * dt), co = Math.cos(pull.angle), si = Math.sin(pull.angle);
+      const drag = Math.min(1, 5 * Math.hypot(pull.dx, pull.dy));
       let energy = 0;
       for (let y = 1; y < rows; y++) {
         for (let x = 1; x < columns; x++) {
           const i = y * stride + x, k = i * 3;
-          const dx = (uv[i * 2] - pull.x) * aspect, dy = uv[i * 2 + 1] - pull.y;
-          const contact = pull.touching ? Math.exp(-34 * (dx * dx + dy * dy)) : 0;
+          const dx = (uv[i * 2] - pull.x) * aspect + .6 * pull.dx;
+          const dy = uv[i * 2 + 1] - pull.y + .6 * pull.dy;
           const across = -dx * si + dy * co, along = dx * co + dy * si;
-          const crease = .075 * drag * Math.cos(across * 29 + along * 4);
-          const force = contact * 195;
+          const contact = pull.touching ? Math.exp(-16 * along * along - 32 * across * across) : 0;
+          // Pull a ridge in the direction of travel and gather the cloth on either side.
+          const crease = Math.cos(37 * across + 1.1 * Math.sin(8 * along));
+          const lift = .065 + (.075 + .11 * drag) * crease;
+          const force = contact * 275;
           for (let axis = 0; axis < 3; axis++) {
             const j = k + axis, value = offset[j];
-            const target = axis === 0 ? pull.dx - .24 * dx : axis === 1 ? pull.dy - .24 * dy : -.13 + crease;
+            const target = axis === 0 ? pull.dx - .38 * dx : axis === 1 ? pull.dy - .38 * dy : lift;
+            if (direct) { offset[j] = .3 * contact * target; continue; }
             const tension = (offset[j - 3] + offset[j + 3] - 2 * value) * horizontal
               + (offset[j - stride * 3] + offset[j + stride * 3] - 2 * value) * vertical;
             speed[j] = (speed[j] + dt * (tension - 37 * value + force * (target - value))) * damping;
@@ -214,6 +220,7 @@
           }
         }
       }
+      if (direct) return 0;
       for (let j = 0; j < offset.length; j++) offset[j] += speed[j] * dt;
       pull.dx *= Math.exp(-3.9 * dt); pull.dy *= Math.exp(-3.9 * dt);
       return energy;
@@ -242,6 +249,12 @@
 
     function update(now) {
       frame = 0;
+      if (reduced.matches) {
+        if (pull.touching) step(0, true);
+        else reset();
+        paint();
+        return;
+      }
       const dt = Math.min(.05, last ? (now - last) / 1000 : 1 / 60);
       if (renderer.name === "canvas2d" && last && dt < 1 / 32) { frame = window.requestAnimationFrame(update); return; }
       last = now;
@@ -255,7 +268,7 @@
     }
 
     function wake() {
-      if (!frame && visible && renderer && !document.hidden && !reduced.matches) {
+      if (!frame && visible && renderer && !document.hidden) {
         last = 0;
         frame = window.requestAnimationFrame(update);
       }
@@ -277,6 +290,9 @@
       if (!renderer) return;
       if (width !== link.clientWidth || height !== link.clientHeight) {
         width = link.clientWidth; height = link.clientHeight; aspect = Math.max(.5, width / height);
+        const transform = getComputedStyle(link.parentElement).transform;
+        fromScreen = transform !== "none" && window.DOMMatrixReadOnly
+          ? new DOMMatrixReadOnly(transform).inverse() : null;
         try { renderer.resize(width, height); } catch {
           reset();
           link.removeAttribute("data-cloth-ready");
@@ -284,19 +300,36 @@
           return;
         }
       }
+      if (!revealed) {
+        revealed = true;
+        if (!reduced.matches && !pull.touching) {
+          for (let y = 1; y < rows; y++) {
+            for (let x = 1; x < columns; x++) {
+              const u = x / columns, v = y / rows, fold = u - .5 + .3 * (v - .5);
+              speed[(y * stride + x) * 3 + 2] = .7 * Math.cos(fold * 25) * Math.exp(-12 * fold * fold) * Math.sin(Math.PI * u) * Math.sin(Math.PI * v);
+            }
+          }
+          flat = false;
+          wake();
+        }
+      }
       paint();
       if (pull.touching) wake();
     }
 
     function touch(event) {
-      if (reduced.matches || !event.isPrimary) return;
-      const x = Math.max(0, Math.min(1, event.offsetX / link.clientWidth));
-      const y = Math.max(0, Math.min(1, event.offsetY / link.clientHeight));
+      if (event.isPrimary === false || !link.clientWidth || !link.clientHeight) return;
+      const rect = link.getBoundingClientRect();
+      const px = event.clientX - rect.left - rect.width / 2, py = event.clientY - rect.top - rect.height / 2;
+      const localX = fromScreen ? fromScreen.a * px + fromScreen.c * py : px;
+      const localY = fromScreen ? fromScreen.b * px + fromScreen.d * py : py;
+      const x = Math.max(0, Math.min(1, .5 + localX / link.clientWidth));
+      const y = Math.max(0, Math.min(1, .5 + localY / link.clientHeight));
       if (pull.touching) {
         const dx = (x - pull.x) * aspect, dy = y - pull.y;
         if (Math.hypot(dx, dy) > .002) pull.angle = Math.atan2(dy, dx);
-        pull.dx = Math.max(-.19, Math.min(.19, pull.dx + 1.55 * dx));
-        pull.dy = Math.max(-.19, Math.min(.19, pull.dy + 1.55 * dy));
+        pull.dx = Math.max(-.2, Math.min(.2, pull.dx + 1.75 * dx));
+        pull.dy = Math.max(-.2, Math.min(.2, pull.dy + 1.75 * dy));
       }
       pull.x = x; pull.y = y; pull.touching = true; flat = false;
       wake();

@@ -377,7 +377,9 @@ function initTrackSpectrum(player, audio) {
   const seek = player.querySelector("[data-seek]");
   const context = canvas.getContext("2d", { alpha: false });
   const reduced = matchMedia("(prefers-reduced-motion: reduce)");
-  let frame = 0, visible = false, live = false, ready = false;
+  const levels = atob(track.stereoLevels || "");
+  let frame = 0, visible = false, live = !audio.paused && !audio.ended, ready = false;
+  let previousLevel = -1;
   let start = 0, span = track.duration, drag = null;
 
   function duration() { return Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : track.duration; }
@@ -387,19 +389,29 @@ function initTrackSpectrum(player, audio) {
   }
 
   function draw(seconds) {
-    if (!ready || !visible || document.hidden) return;
+    if (!visible || document.hidden) return;
     const total = duration();
     seconds = Math.max(0, Math.min(seconds, total));
+    const sounding = live && !audio.paused && !audio.ended && !audio.seeking;
+    const sampleTime = reduced.matches ? Math.floor(seconds * 2) / 2 : seconds;
+    const levelIndex = Math.min(levels.length - 1, Math.floor(sampleTime / total * levels.length));
+    const level = sounding && levelIndex >= 0 ? levels.charCodeAt(levelIndex) : 0;
+    if (level !== previousLevel) {
+      player.style.setProperty("--level-left", `${(level >> 4) * 100 / 15}%`);
+      player.style.setProperty("--level-right", `${(level & 15) * 100 / 15}%`);
+      previousLevel = level;
+    }
     if (drag) {
       ({ start, span } = drag);
-    } else if (live && !reduced.matches) {
-      span = Math.min(7, total);
-      // The head moves in from the left as the first seconds of history accumulate.
-      start = seconds - .7 * span * (1 - Math.exp(-seconds / span));
+    } else if (ready && sounding && !reduced.matches) {
+      span = Math.min(total, Math.max(3, Math.min(5, screen.clientWidth / 110)));
+      start = Math.min(total - span, seconds - .65 * span * (1 - Math.exp(-seconds / span)));
     } else {
       start = 0;
       span = total;
     }
+    screen.style.setProperty("--needle", `${Math.max(0, Math.min(100, (seconds - start) / span * 100))}%`);
+    if (!ready) return;
     const length = Math.min(span, total - start);
     const width = canvas.width, height = canvas.height;
     context.fillStyle = "#060310";
@@ -408,7 +420,6 @@ function initTrackSpectrum(player, audio) {
       context.drawImage(map, map.naturalWidth * start / total, 0, map.naturalWidth * length / total, map.naturalHeight,
         0, 0, width * length / span, height);
     }
-    screen.style.setProperty("--needle", `${Math.max(0, Math.min(100, (seconds - start) / span * 100))}%`);
   }
 
   function nextFrame() {
@@ -416,7 +427,7 @@ function initTrackSpectrum(player, audio) {
     const seconds = audio.currentTime;
     position(seconds);
     draw(seconds);
-    if (ready && visible && !document.hidden && live && !drag && !reduced.matches && !audio.paused && !audio.ended && !audio.seeking && !audio.error && audio.readyState >= 3) {
+    if (visible && !document.hidden && live && !drag && !reduced.matches && !audio.paused && !audio.ended && !audio.seeking && !audio.error) {
       frame = window.requestAnimationFrame(nextFrame);
     }
   }
@@ -437,7 +448,6 @@ function initTrackSpectrum(player, audio) {
   function loaded() {
     ready = Boolean(context && map.naturalWidth && map.naturalHeight);
     player.toggleAttribute("data-spectrum-ready", ready);
-    if (!context) screen.style.backgroundImage = `url("${track.image}")`;
     resize();
     sync();
   }
@@ -446,10 +456,18 @@ function initTrackSpectrum(player, audio) {
   map.src = track.image;
   if (map.complete && map.naturalWidth) loaded();
   new ResizeObserver(resize).observe(screen);
-  new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; sync(); }).observe(player);
+  new IntersectionObserver(([entry]) => {
+    visible = entry.isIntersecting;
+    if (visible) player.setAttribute("data-spectrum-seen", "");
+    sync();
+  }).observe(player);
   audio.addEventListener("playing", () => { live = true; sync(); });
-  for (const event of ["pause", "waiting", "seeking", "seeked", "loadedmetadata"]) audio.addEventListener(event, sync);
-  for (const event of ["ended", "error", "emptied"]) audio.addEventListener(event, () => { live = false; sync(); });
+  for (const event of ["canplay", "seeked"]) audio.addEventListener(event, () => {
+    live = !audio.paused && !audio.ended && audio.readyState >= 2;
+    sync();
+  });
+  for (const event of ["seeking", "loadedmetadata"]) audio.addEventListener(event, sync);
+  for (const event of ["pause", "waiting", "ended", "error", "emptied"]) audio.addEventListener(event, () => { live = false; sync(); });
   reduced.addEventListener("change", sync);
   document.addEventListener("visibilitychange", sync);
 

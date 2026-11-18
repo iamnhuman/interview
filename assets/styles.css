@@ -174,8 +174,8 @@ html.has-sigil-scroll::-webkit-scrollbar, html.has-sigil-scroll body::-webkit-sc
 .header-player { grid-column: 2; min-width: 0; display: flex; align-items: center; gap: .65rem; padding: .4rem .55rem .4rem .8rem; border: 1px solid var(--line); border-radius: .7rem; background: var(--surface); }
 .header-jump { display: flex; align-items: center; gap: .65rem; min-width: 0; min-height: 2.35rem; text-decoration: none; color: var(--ink); }
 .header-track-stack { display: grid; flex: 1; min-width: 0; gap: .12rem; overflow: hidden; }
-.header-artist { color: var(--muted); font-size: .51rem; line-height: 1.2; letter-spacing: .12em; }
-.header-track { max-width: min(17vw, 15rem); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 500 .7rem/1.25 var(--display); letter-spacing: -.015em; }
+.header-artist { color: var(--muted); font: 450 .68rem/1.2 var(--body); }
+.header-track { max-width: min(17vw, 15rem); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 550 .82rem/1.25 var(--body); }
 .header-jump-label { display: flex; align-items: center; gap: .25rem; flex: none; margin-left: .5rem; color: var(--muted); font-size: .57rem; }
 .header-jump-label svg { width: .7rem; height: .7rem; fill: none; stroke: currentColor; stroke-width: 1.3; }
 .header-jump:hover .header-jump-label { color: var(--ink); }
@@ -408,20 +408,21 @@ html.has-sigil-scroll::-webkit-scrollbar, html.has-sigil-scroll body::-webkit-sc
 .pull-quote-live blockquote { font-size: clamp(1.65rem, 3vw, 2.5rem); font-weight: 450; line-height: 1.22; letter-spacing: -.035em; text-wrap: pretty; }
 .quote-emphasis { color: var(--ink); font-weight: 650; }
 
-/* Matte audio surface, chrome ornaments, and a seekable spectral heat map. */
+/* The spectrum and its stereo level meters share one instrument window. */
 .audio-cue {
+  --frame-cap: clamp(25px, 4vw, 35px);
   position: relative;
-  margin: 3rem 0;
-  padding: clamp(.9rem, 2vw, 1.4rem);
+  width: min(100%, 30.5rem);
+  margin: 2.25rem auto;
+  padding: clamp(.8rem, 2vw, 1.1rem);
   color: var(--ink);
-  border: 0;
 }
 .audio-cue::before {
   content: "";
   position: absolute;
   z-index: -1;
   inset: 0;
-  background: linear-gradient(155deg, var(--surface), var(--page) 85%);
+  background: var(--surface);
   pointer-events: none;
 }
 [data-media-frame="metal-fervor"]::before {
@@ -431,50 +432,51 @@ html.has-sigil-scroll::-webkit-scrollbar, html.has-sigil-scroll body::-webkit-sc
 [data-media-frame="maw"]::before { border-radius: calc(var(--frame-cap) * .32); }
 
 .audio-cue[data-audio-ready] {
-  --key-size: clamp(3rem, 5vw, 3.85rem);
   display: grid;
-  grid-template: "title title download" auto "key plot plot" auto "note note clock" auto / var(--key-size) minmax(0, 1fr) auto;
+  grid-template: "key title download" auto "plot plot plot" auto "seek seek clock" auto / 2.75rem minmax(0, 1fr) auto;
   align-items: center;
-  gap: 1rem clamp(.85rem, 2vw, 1.5rem);
-  padding: clamp(1.15rem, 3.2vw, 2.15rem);
+  gap: .5rem .75rem;
 }
-.track-title { grid-area: title; display: grid; min-width: 0; gap: .25rem; }
-.track-artist { color: var(--muted); font: 550 .73rem/1.2 var(--body); letter-spacing: .1em; }
-.track-title strong { color: var(--ink); font: 650 clamp(1.4rem, 3vw, 2.2rem)/1.04 var(--display); letter-spacing: -.045em; overflow-wrap: anywhere; }
-.track-download { grid-area: download; align-self: start; justify-self: end; display: inline-flex; align-items: center; gap: .35rem; min-height: 2rem; padding: .3rem 0 .3rem .35rem; color: var(--text); font: 500 .72rem/1 var(--body); text-decoration: none; }
+.track-title { grid-area: title; display: grid; min-width: 0; gap: .13rem; }
+.track-artist { color: var(--muted); font: 450 .8rem/1.25 var(--body); }
+.track-title strong { color: var(--ink); font: 550 clamp(.97rem, 2vw, 1.14rem)/1.22 var(--body); letter-spacing: -.015em; overflow-wrap: anywhere; }
+.track-download { grid-area: download; justify-self: end; display: inline-flex; align-items: center; gap: .25rem; min-height: 2.75rem; padding-inline: .2rem; color: var(--text); font: 500 .75rem/1 var(--body); text-decoration: none; }
 .track-download svg { width: .95rem; height: .95rem; fill: none; stroke: currentColor; stroke-width: 1.45; stroke-linecap: round; stroke-linejoin: round; }
 .track-download:hover { color: var(--ink); }
-.track-note { grid-area: note; color: var(--muted); font-size: .78rem; line-height: 1.45; }
+.track-note { grid-column: 1 / -1; color: var(--muted); font: 400 .8rem/1.45 var(--body); }
 .audio-cue audio { width: 100%; margin-top: 1rem; }
 .sound-controls { display: contents; }
 
 .play-toggle {
-  grid-area: key; justify-self: start; display: grid; place-items: center; align-self: center;
-  width: var(--key-size); height: calc(var(--key-size) * 1.45); padding: 0; border: 0; border-radius: 99px;
-  color: var(--key-ink); background: linear-gradient(132deg, var(--key-glint), var(--key-face) 53%, var(--key-edge));
-  box-shadow: inset 0 1px 0 #ffffff59, inset 0 -2px 2px #1116;
+  grid-area: key; display: grid; place-items: center;
+  width: 2.75rem; aspect-ratio: 1; padding: 0; border: 1px solid var(--key-edge); border-radius: 50%;
+  color: var(--key-ink); background: var(--key-face);
 }
 .play-toggle:is(:hover, :focus-visible) { background: var(--key-glint); }
-.play-toggle:active { transform: translateY(1px); }
+.play-toggle:focus-visible, .track-download:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+.play-toggle:active { transform: scale(.95); }
 .play-icon { width: 0; height: 0; margin-left: .13rem; border-block: .39rem solid transparent; border-left: .59rem solid currentColor; }
-.play-toggle .play-icon { border-block-width: .53rem; border-left-width: .82rem; }
+.play-toggle .play-icon { border-block-width: .43rem; border-left-width: .65rem; }
 .audio-cue[data-playing] .play-icon, .masthead[data-audio-playing] .header-toggle .play-icon { width: .67rem; height: .82rem; margin-left: 0; border: 0; border-inline: .21rem solid currentColor; }
-.audio-cue[data-playing] .play-icon { width: .81rem; height: 1.02rem; border-inline-width: .25rem; }
 
-.transport { grid-area: plot; min-width: 0; }
-.wave-control { position: relative; height: clamp(6.6rem, 12vw, 10rem); overflow: hidden; background: #060310 center / 100% 100% no-repeat; cursor: ew-resize; touch-action: pan-y; }
+.transport { grid-area: plot; display: flex; gap: 5px; height: clamp(3.4rem, 9vw, 4.15rem); padding: 4px; min-width: 0; background: #0b0810; border-radius: 3px; }
+.wave-control { flex: 1; min-width: 0; position: relative; overflow: hidden; background: #060310; cursor: ew-resize; touch-action: pan-y; }
+.wave-control img { position: absolute; inset: 0; width: 100%; height: 100%; }
 .track-spectrum { position: absolute; inset: 0; width: 100%; height: 100%; display: none; pointer-events: none; }
 [data-spectrum-ready] .track-spectrum { display: block; }
-[data-spectrum-ready] .wave-control::after { content: ""; position: absolute; inset-block: 0; left: clamp(0px, var(--needle, 0%), calc(100% - 1px)); width: 1px; background: #fff9; pointer-events: none; }
-.track-timeline { position: relative; height: 1.65rem; min-width: 0; display: flex; align-items: center; cursor: ew-resize; }
-.track-timeline img { display: block; width: 100%; height: .45rem; opacity: .65; }
+.wave-control::after { content: ""; position: absolute; inset-block: 0; left: clamp(0px, var(--needle, var(--played, 0%)), calc(100% - 1px)); width: 1px; background: #fff; box-shadow: -2px 0 5px #ffcb9255; pointer-events: none; }
+.level-meter { display: flex; gap: 2px; padding-right: 1px; }
+.level-meter i { position: relative; width: 5px; background: #38303d; mask-image: repeating-linear-gradient(to top, #000 0 3px, transparent 3px 4px); }
+.level-meter i::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, #ad75f6, #e891d2 60%, #ffcf88 90%); clip-path: inset(calc(100% - var(--level-left, 0%)) 0 0); }
+.level-meter i + i::after { clip-path: inset(calc(100% - var(--level-right, 0%)) 0 0); }
+.track-timeline { grid-area: seek; position: relative; min-width: 0; height: 1.5rem; cursor: ew-resize; }
 .track-timeline::before, .track-timeline::after { content: ""; position: absolute; pointer-events: none; }
-.track-timeline::before { left: 0; width: var(--played, 0%); height: .45rem; background: #d9e0e64a; }
-.track-timeline::after { top: 50%; left: clamp(0px, var(--played, 0%), calc(100% - 3px)); width: 3px; height: .9rem; border-radius: 2px; background: var(--ink); transform: translateY(-50%); }
-.track-timeline:has(.seek:focus-visible)::after { width: 6px; height: 1.12rem; }
+.track-timeline::before { inset-inline: 0; top: calc(50% - 1px); height: 2px; background: linear-gradient(to right, var(--metal) var(--played, 0%), var(--line) var(--played, 0%)); }
+.track-timeline::after { top: 50%; left: clamp(4px, var(--played, 0%), calc(100% - 4px)); width: 8px; height: 8px; border-radius: 50%; background: var(--ink); transform: translate(-50%, -50%); }
+.track-timeline:has(.seek:focus-visible) { outline: 2px solid var(--ink); outline-offset: 2px; }
 .seek { position: absolute; z-index: 1; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: ew-resize; }
-.clock { grid-area: clock; justify-self: end; display: flex; align-items: baseline; gap: .38rem; font: 450 .76rem/1 var(--body); color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.clock [data-current] { color: var(--ink); font-size: 1.08rem; }
+.clock { grid-area: clock; justify-self: end; display: flex; gap: .28rem; font: 450 .78rem/1.2 var(--body); color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.clock [data-current] { color: var(--ink); }
 .time-divider { opacity: .65; }
 .audio-error { grid-column: 1 / -1; margin-top: .5rem; font-size: .8rem; }
 
@@ -516,7 +518,7 @@ html.has-sigil-scroll::-webkit-scrollbar, html.has-sigil-scroll body::-webkit-sc
   .masthead-title { font-size: .52rem; letter-spacing: .07em; }
   .masthead-inner { column-gap: .65rem; }
   .header-player { gap: .65rem; }
-  .header-track { font-size: .65rem; }
+  .header-track { font-size: .76rem; }
   .header-jump { gap: .4rem; }
   .header-stop { font-size: .58rem; padding-inline: .45rem; }
   .header-jump-label { margin-left: .2rem; font-size: .53rem; }
@@ -546,21 +548,13 @@ html.has-sigil-scroll::-webkit-scrollbar, html.has-sigil-scroll body::-webkit-sc
   .pull-quote blockquote { font-size: 1.4rem; }
   .pull-quote-live { padding: 2rem 0; }
   .pull-quote-live blockquote { font-size: clamp(1.65rem, 5.1vw, 2rem); }
-  .audio-cue { margin-block: 2.5rem; padding: 1.15rem .9rem; }
-  .audio-cue[data-audio-ready] { gap: .8rem; }
   .footer-inner { padding-block: 1.5rem; }
 }
 
-@media (max-width: 540px) {
-  .audio-cue[data-audio-ready] {
-    --key-size: 44px;
-    grid-template: "key title download" auto "plot plot plot" auto "note note clock" auto / var(--key-size) minmax(0, 1fr) auto;
-    padding: 1rem;
-  }
-  .play-toggle { height: 3rem; }
-  .track-title strong { font-size: clamp(1rem, 4.6vw, 1.45rem); }
-  .track-note { font-size: .72rem; }
-  .track-download { align-self: center; }
+@media (max-width: 430px) {
+  .audio-cue[data-audio-ready] { grid-template-areas: "key title title" "plot plot plot" "seek seek seek" "clock clock download"; row-gap: .3rem; }
+  .audio-cue .clock { justify-self: start; }
+  .track-download { min-height: 1.75rem; }
 }
 
 @media (max-width: 380px) {
@@ -574,7 +568,6 @@ html.has-sigil-scroll::-webkit-scrollbar, html.has-sigil-scroll body::-webkit-sc
   .header-jump-label { display: none; }
   .header-player { gap: .35rem; }
   .audio-cue[data-audio-ready] { column-gap: .55rem; }
-  .track-title strong { font-size: 1rem; }
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -585,8 +578,11 @@ html.has-sigil-scroll::-webkit-scrollbar, html.has-sigil-scroll body::-webkit-sc
   .masthead[data-audio-playing] .playback-signal i { animation: signal-pulse .75s ease-in-out alternate infinite; }
   .masthead[data-audio-playing] .playback-signal i:nth-child(2) { animation-delay: -.25s; }
   .masthead[data-audio-playing] .playback-signal i:nth-child(3) { animation-delay: -.5s; }
+  .play-toggle { transition: transform .16s ease-out, background-color .16s; }
+  .audio-cue[data-spectrum-seen] .wave-control::before { content: ""; position: absolute; z-index: 1; inset: 0; pointer-events: none; background: linear-gradient(90deg, transparent 35%, #ffdaa74a 49%, transparent 51%); animation: spectrum-scan .75s ease-out both; }
 }
 
+@keyframes spectrum-scan { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
 @keyframes signal-pulse { to { transform: scaleY(.25); } }
 
 @keyframes cover-type-in {
