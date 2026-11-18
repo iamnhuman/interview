@@ -32,15 +32,15 @@
         </a>
         <p class="masthead-title">Интервью с Тойотой</p>
       </div>
-      <div class="header-player" data-header-player hidden>
-        <a class="header-jump" href="#track-4ll" data-header-jump>
-          <span class="playback-signal" aria-hidden="true"><i></i><i></i><i></i></span>
+      <div class="header-player" data-header-player role="group" aria-label="Мини-плеер" hidden>
+        <a class="header-jump" href="#track-4ll" data-header-jump title="Перейти к треку">
+          <img class="header-art" data-header-art width="38" height="38" alt="">
           <span class="header-track-stack"><span class="header-artist" data-header-artist></span><span class="header-track" data-header-track></span></span>
-          <span class="header-jump-label">К треку <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 12 12 4M4 4h8v8"/></svg></span>
+          <svg class="header-return" viewBox="0 0 16 16" aria-hidden="true"><path d="M12.5 3v4a3 3 0 0 1-3 3H3.5m4-4-4 4 4 4"/></svg>
         </a>
-        <button class="header-toggle" type="button" data-header-toggle aria-label="Пауза"><span class="play-icon" aria-hidden="true"></span></button>
-        <button class="header-stop" type="button" data-header-stop>
-          <span class="stop-icon" aria-hidden="true"></span><span>Выключить трек</span>
+        <button class="header-toggle" type="button" data-header-toggle aria-label="Пауза" title="Пауза"><span class="play-icon" aria-hidden="true"></span></button>
+        <button class="header-stop" type="button" data-header-stop aria-label="Выключить трек" title="Выключить трек">
+          <span class="stop-icon" aria-hidden="true"></span>
         </button>
       </div>
       <button class="theme-switch" type="button" data-theme-switch hidden aria-label="Тёмная тема" aria-pressed="true">
@@ -115,7 +115,7 @@
         </div>
         <figure class="image-asset image-inset">
           <div class="image-frame">
-            <a class="photo-link" href="assets/media/anti-nick-land-shirt.jpg" data-photo data-media-frame="ccru" aria-label="Открыть изображение. Чёрная футболка с надписью Anti Nick Land CCRU Club">
+            <a id="ccru-shirt" class="photo-link" href="assets/media/anti-nick-land-shirt.jpg" data-photo data-media-frame="ccru" aria-label="Открыть изображение. Чёрная футболка с надписью Anti Nick Land CCRU Club">
               <img src="assets/media/anti-nick-land-shirt.jpg" width="1104" height="1104" loading="lazy" decoding="async" alt="Чёрная футболка с надписью Anti Nick Land CCRU Club">
             </a>
           </div>
@@ -136,8 +136,9 @@
             <p>Да я уже устал об этом говорить. Мы с тобой обсуждали на примере релиза «4ll», как одна из его участниц — «salibi» — снимала клип «Дейли Слайму», и я пошел и стал орать у неё в комментах. Суть в том, что звук, как у «<a href="https://soundcloud.com/4_ll" target="_blank" rel="noopener noreferrer">4ll</a>», — это и есть то, что хочется видеть хотя бы иногда на попсовых каналах типа «⁠⁠Дейли Слайма», но они годами игнорируют такой звук, постят только то, что трендово и выгодно, т. е., грубо говоря, вытирают ноги о звук самих «4ll». От этого и была такая реакция, что коллабить с тем, кто вытирал о тебя ноги, — единственное, что остается таким проектам, и это печально. «Дейли Слайм» не первый и не последний в данном контексте — я EP «4ll» протестировал в каждой дыре телеграма и на каждом админе, смотрел, как людей в чате корёжит и продюсеров плющит. Они искренне делали вид, что я скидываю случайный бростеп-трек, а не что-то уникальное. Показываю людям и вижу реакцию, будто я колхозник. Оттуда и рождается агрессия. Я пытался и без агрессии — не работает. Остается только «угорать с нормисов» или вкладывать в это деньги, а второе всегда отталкивало. Помимо «4ll» дохуя релизов ещё есть, просто они хоть как-то с рунетом связаны, поэтому я в пример их привожу. Я не понимаю, как можно быть Антоном Савенко, писать про электронную музыку, изучать её и не прийти хотя бы с исследовательской целью к <a href="https://bluenoise1.bandcamp.com/album/organa" target="_blank" rel="noopener noreferrer">такому</a> звуку (речь про <a href="https://bluenoise1.bandcamp.com/album/organa" target="_blank" rel="noopener noreferrer"><i>ORGANA by BLUE NOISE</i></a><i> — прим.). </i>И, конечно, когда я вижу, что админ «<a href="https://t.me/egrooves" target="_blank" rel="noopener noreferrer">ethereal grooves</a>» зовёт Cавенко или «Дейли Слайма» в подборку, я агрессирую</p>
           </div>
         </div>
-        <figure class="audio-cue" id="track-4ll" data-audio-player data-media-frame="metal-fervor">
+        <figure class="audio-cue" id="track-4ll" data-audio-player>
           <figcaption class="track-title">
+            <img class="track-art" src="assets/media/track-4ll-cover.jpg" width="52" height="52" alt="">
             <span class="track-artist">4LL</span>
             <strong>TRACK2_<wbr>METAL_<wbr>FERVOR</strong>
           </figcaption>
@@ -150,8 +151,10 @@
               <div class="wave-control">
                 <img data-spectrum-map loading="lazy" decoding="async" alt="">
                 <canvas class="track-spectrum" data-track-spectrum aria-hidden="true"></canvas>
+                <svg class="spectrum-edge" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+                  <path class="edge-mask"/><path class="edge-trail far"/><path class="edge-trail"/><path class="edge-front"/>
+                </svg>
               </div>
-              <div class="level-meter" aria-hidden="true"><i></i><i></i></div>
             </div>
             <div class="track-timeline">
               <input class="seek" data-seek type="range" min="0" max="158" value="0" step="0.1"
@@ -182,8 +185,9 @@
           </div>
           <figcaption><sub>костюм для лайвов FITNESS</sub></figcaption>
         </figure>
-        <figure class="audio-cue" id="track-fitnesss" data-audio-player data-media-frame="maw">
+        <figure class="audio-cue" id="track-fitnesss" data-audio-player>
           <figcaption class="track-title">
+            <img class="track-art" src="assets/media/track-fitnesss-cover.jpg" width="52" height="52" alt="">
             <span class="track-artist">FITNESSS</span>
             <strong>F11 / MAW</strong>
           </figcaption>
@@ -196,8 +200,10 @@
               <div class="wave-control">
                 <img data-spectrum-map loading="lazy" decoding="async" alt="">
                 <canvas class="track-spectrum" data-track-spectrum aria-hidden="true"></canvas>
+                <svg class="spectrum-edge" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+                  <path class="edge-mask"/><path class="edge-trail far"/><path class="edge-trail"/><path class="edge-front"/>
+                </svg>
               </div>
-              <div class="level-meter" aria-hidden="true"><i></i><i></i></div>
             </div>
             <div class="track-timeline">
               <input class="seek" data-seek type="range" min="0" max="284" value="0" step="0.1"

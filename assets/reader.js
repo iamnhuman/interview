@@ -288,6 +288,7 @@ function initHeaderPlayback(tracks) {
   const jump = header.querySelector("[data-header-jump]");
   const title = header.querySelector("[data-header-track]");
   const artist = header.querySelector("[data-header-artist]");
+  const art = header.querySelector("[data-header-art]");
   let active = null;
   let followedPlayer = null;
   let inlineVisible = false;
@@ -306,6 +307,12 @@ function initHeaderPlayback(tracks) {
     inlineVisible = false;
   }
 
+  function showProgress() {
+    const progress = active && Number.isFinite(active.duration) && active.duration > 0
+      ? Math.min(1, Math.max(0, active.currentTime / active.duration)) : 0;
+    player.style.setProperty("--header-progress", String(progress));
+  }
+
   function sync() {
     const hadFocus = player.contains(document.activeElement);
     player.hidden = !active || inlineVisible;
@@ -315,7 +322,10 @@ function initHeaderPlayback(tracks) {
       const currentPlayer = active.closest("[data-audio-player]");
       artist.textContent = currentPlayer.querySelector(".track-artist").textContent;
       title.textContent = currentPlayer.querySelector(".track-title strong").textContent;
+      const cover = currentPlayer.querySelector(".track-art").getAttribute("src");
+      if (art.getAttribute("src") !== cover) art.setAttribute("src", cover);
       const action = active.paused ? "Продолжить" : "Пауза";
+      toggle.title = action;
       toggle.setAttribute("aria-label", `${action} — ${name}`);
       stop.setAttribute("aria-label", `Выключить трек: ${name}`);
       jump.href = `#${currentPlayer.id}`;
@@ -324,6 +334,7 @@ function initHeaderPlayback(tracks) {
     } else if (hadFocus) {
       header.querySelector(".wordmark").focus({ preventScroll: true });
     }
+    showProgress();
   }
 
   const measure = new ResizeObserver(() => {
@@ -349,6 +360,9 @@ function initHeaderPlayback(tracks) {
     sync();
   });
   for (const audio of tracks) {
+    for (const event of ["timeupdate", "durationchange", "seeked"]) {
+      audio.addEventListener(event, () => { if (active === audio) showProgress(); });
+    }
     audio.addEventListener("play", () => {
       if (active !== audio) clearFollow();
       active = audio;
@@ -368,6 +382,44 @@ function timeLabel(seconds) {
   return `${minutes}:${String(whole % 60).padStart(2, "0")}`;
 }
 
+function createSpectrumEdge(svg, track) {
+  const bands = spectrumBandCount;
+  const packed = atob(track.edgeLevels);
+  const frames = packed.length * 2 / bands;
+  const mask = svg.querySelector(".edge-mask");
+  const front = svg.querySelector(".edge-front");
+  const [far, near] = svg.querySelectorAll(".edge-trail");
+  let lastTime = -1;
+
+  function contour(time, offset) {
+    const sample = Math.max(0, Math.min(frames - 1, time * frames / track.duration));
+    const first = Math.floor(sample), second = Math.min(first + 1, frames - 1);
+    const mix = sample - first;
+    let path = "";
+    for (let i = 0; i < bands; i++) {
+      const shift = i % 2 === 0 ? 4 : 0;
+      const a = (packed.charCodeAt((first * bands + i) >> 1) >> shift) & 15;
+      const b = (packed.charCodeAt((second * bands + i) >> 1) >> shift) & 15;
+      const x = Math.min(99, 4 + offset + (a + (b - a) * mix) * 5.25);
+      path += `${i ? "L" : "M"}${x.toFixed(1)} ${(100 * i / (bands - 1)).toFixed(1)}`;
+    }
+    return path;
+  }
+
+  return (seconds, reducedMotion) => {
+    const rate = reducedMotion ? 4 : 30;
+    const tick = Math.floor(seconds * rate);
+    const time = tick / rate;
+    if (time === lastTime) return;
+    lastTime = time;
+    const outline = contour(time, 0);
+    mask.setAttribute("d", outline + "L100 100L100 0Z");
+    front.setAttribute("d", outline);
+    near.setAttribute("d", contour(time - .10, 8));
+    far.setAttribute("d", contour(time - .23, 16));
+  };
+}
+
 function initTrackSpectrum(player, audio) {
   const track = typeof trackSpectra !== "undefined" && trackSpectra[player.id];
   if (!track) return null;
@@ -377,10 +429,11 @@ function initTrackSpectrum(player, audio) {
   const seek = player.querySelector("[data-seek]");
   const context = canvas.getContext("2d", { alpha: false });
   const reduced = matchMedia("(prefers-reduced-motion: reduce)");
-  const levels = atob(track.stereoLevels || "");
+  const drawEdge = createSpectrumEdge(screen.querySelector(".spectrum-edge"), track);
+  const historyFraction = .74;
+  screen.style.setProperty("--edge-width", `${(1 - historyFraction) * 100}%`);
   let frame = 0, visible = false, live = !audio.paused && !audio.ended, ready = false;
-  let previousLevel = -1;
-  let start = 0, span = track.duration, drag = null;
+  let start = 0, span = track.duration, drag = null, previewTime = null;
 
   function duration() { return Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : track.duration; }
 
@@ -393,33 +446,36 @@ function initTrackSpectrum(player, audio) {
     const total = duration();
     seconds = Math.max(0, Math.min(seconds, total));
     const sounding = live && !audio.paused && !audio.ended && !audio.seeking;
-    const sampleTime = reduced.matches ? Math.floor(seconds * 2) / 2 : seconds;
-    const levelIndex = Math.min(levels.length - 1, Math.floor(sampleTime / total * levels.length));
-    const level = sounding && levelIndex >= 0 ? levels.charCodeAt(levelIndex) : 0;
-    if (level !== previousLevel) {
-      player.style.setProperty("--level-left", `${(level >> 4) * 100 / 15}%`);
-      player.style.setProperty("--level-right", `${(level & 15) * 100 / 15}%`);
-      previousLevel = level;
-    }
+    const follow = ready && sounding && !reduced.matches && !drag;
+    const probe = audio.paused && !drag && previewTime !== null;
+    const sampleTime = probe ? previewTime : seconds;
+    drawEdge(sampleTime, reduced.matches);
+    screen.toggleAttribute("data-preview", probe);
+    player.toggleAttribute("data-history-live", Boolean(follow));
     if (drag) {
       ({ start, span } = drag);
-    } else if (ready && sounding && !reduced.matches) {
-      span = Math.min(total, Math.max(3, Math.min(5, screen.clientWidth / 110)));
-      start = Math.min(total - span, seconds - .65 * span * (1 - Math.exp(-seconds / span)));
+    } else if (follow) {
+      const history = Math.max(3.5, Math.min(7, screen.clientWidth / 95));
+      start = Math.max(0, seconds - history);
+      span = Math.max(1 / 48, seconds - start);
     } else {
       start = 0;
       span = total;
     }
-    screen.style.setProperty("--needle", `${Math.max(0, Math.min(100, (seconds - start) / span * 100))}%`);
+    screen.style.setProperty("--needle", `${historyFraction * Math.max(0, Math.min(100, (seconds - start) / span * 100))}%`);
     if (!ready) return;
     const length = Math.min(span, total - start);
     const width = canvas.width, height = canvas.height;
-    context.fillStyle = "#060310";
+    const historyWidth = Math.round(width * historyFraction);
+    context.fillStyle = "#0b0910";
     context.fillRect(0, 0, width, height);
     if (length > 0) {
       context.drawImage(map, map.naturalWidth * start / total, 0, map.naturalWidth * length / total, map.naturalHeight,
-        0, 0, width * length / span, height);
+        0, 0, historyWidth * length / span, height);
     }
+    // Stretch the exact frequency column at the playhead into the animated outline.
+    const column = Math.min(map.naturalWidth - 1, sampleTime / total * map.naturalWidth);
+    context.drawImage(map, column, 0, 1, map.naturalHeight, historyWidth, 0, width - historyWidth, height);
   }
 
   function nextFrame() {
@@ -458,10 +514,9 @@ function initTrackSpectrum(player, audio) {
   new ResizeObserver(resize).observe(screen);
   new IntersectionObserver(([entry]) => {
     visible = entry.isIntersecting;
-    if (visible) player.setAttribute("data-spectrum-seen", "");
     sync();
   }).observe(player);
-  audio.addEventListener("playing", () => { live = true; sync(); });
+  audio.addEventListener("playing", () => { previewTime = null; live = true; sync(); });
   for (const event of ["canplay", "seeked"]) audio.addEventListener(event, () => {
     live = !audio.paused && !audio.ended && audio.readyState >= 2;
     sync();
@@ -474,18 +529,28 @@ function initTrackSpectrum(player, audio) {
   // The large plot seeks within the displayed interval. The strip always spans the whole song.
   function scrub(event) {
     const rect = screen.getBoundingClientRect();
-    const fraction = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
+    const fraction = Math.max(0, Math.min(1, (event.clientX - rect.left) / (rect.width * historyFraction)));
     seek.value = String(Math.max(0, Math.min(duration(), drag.start + fraction * drag.span)));
     seek.dispatchEvent(new Event("input", { bubbles: true }));
   }
   screen.addEventListener("pointerdown", event => {
     if (!event.isPrimary || event.button !== 0) return;
+    const rect = screen.getBoundingClientRect();
+    if (event.clientX - rect.left > rect.width * historyFraction) return;
+    previewTime = null;
     drag = { id: event.pointerId, start, span, waitingForTap: event.pointerType === "touch", x: event.clientX, y: event.clientY };
     screen.setPointerCapture(event.pointerId);
     if (!drag.waitingForTap) scrub(event);
   });
   screen.addEventListener("pointermove", event => {
-    if (drag?.id !== event.pointerId) return;
+    if (!drag && audio.paused && event.pointerType === "mouse") {
+      const rect = screen.getBoundingClientRect();
+      const x = Math.max(0, (event.clientX - rect.left) / rect.width);
+      previewTime = x <= historyFraction ? duration() * x / historyFraction : null;
+      screen.style.setProperty("--probe", `${x * 100}%`);
+      draw(audio.currentTime);
+    }
+    if (!drag || drag.id !== event.pointerId) return;
     if (drag.waitingForTap) {
       const dx = Math.abs(event.clientX - drag.x), dy = Math.abs(event.clientY - drag.y);
       if (dx < 6 || dy > dx) return;
@@ -493,15 +558,18 @@ function initTrackSpectrum(player, audio) {
     }
     scrub(event);
   });
+  screen.addEventListener("pointerleave", () => {
+    if (previewTime !== null) { previewTime = null; draw(audio.currentTime); }
+  });
   function release(event) {
-    if (drag?.id !== event.pointerId) return;
+    if (!drag || drag.id !== event.pointerId) return;
     drag = null;
     sync();
   }
   screen.addEventListener("lostpointercapture", release);
   screen.addEventListener("pointercancel", release);
   screen.addEventListener("pointerup", event => {
-    if (drag?.id === event.pointerId && drag.waitingForTap && Math.hypot(event.clientX - drag.x, event.clientY - drag.y) < 6) scrub(event);
+    if (drag && drag.id === event.pointerId && drag.waitingForTap && Math.hypot(event.clientX - drag.x, event.clientY - drag.y) < 6) scrub(event);
     release(event);
   });
   return progress => {

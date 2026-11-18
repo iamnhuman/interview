@@ -24,16 +24,16 @@
     #endif
     attribute vec2 uv;
     attribute vec3 displacement;
-    attribute vec2 gradient;
+    attribute vec2 normalXY;
     uniform vec4 crop;
     varying vec2 texCoord;
-    varying vec2 slope;
+    varying vec2 tilt;
     void main() {
       vec2 p = (uv + displacement.xy) * vec2(2., -2.) + vec2(-1., 1.);
       float z = displacement.z;
       gl_Position = vec4(p + vec2(.10, .14) * z, -.3 * z, 1. - .44 * z);
       texCoord = crop.xy + uv * crop.zw;
-      slope = gradient;
+      tilt = normalXY;
     }`;
   const fragment = `
     #ifdef GL_ES
@@ -41,9 +41,9 @@
     #endif
     uniform sampler2D photo;
     varying vec2 texCoord;
-    varying vec2 slope;
+    varying vec2 tilt;
     void main() {
-      vec3 normal = normalize(vec3(-slope, 1.));
+      vec3 normal = vec3(tilt, sqrt(max(0., 1. - dot(tilt, tilt))));
       vec3 light = vec3(-.48, -.60, .64);
       float diffuse = dot(normal, light) - light.z;
       vec3 halfway = normalize(light + vec3(0., 0., 1.));
@@ -80,7 +80,7 @@
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
     gl.bufferData(gl.ARRAY_BUFFER, surface.byteLength, gl.DYNAMIC_DRAW);
     attribute("displacement", 3, 20);
-    attribute("gradient", 2, 20, 12);
+    attribute("normalXY", 2, 20, 12);
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.createBuffer());
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, faces, gl.STATIC_DRAW);
     gl.bindTexture(gl.TEXTURE_2D, gl.createTexture());
@@ -168,7 +168,8 @@
             xs[i] = (((u + surface[k]) * 2 - 1 + .10 * z) / perspective + 1) * w / 2;
             ys[i] = (((v + surface[k + 1]) * 2 - 1 - .14 * z) / perspective + 1) * h / 2;
             const nx = surface[k + 3], ny = surface[k + 4];
-            light[i] = .78 * ((.48 * nx + .60 * ny + .64) / Math.hypot(nx, ny, 1) - .64);
+            const nz = Math.sqrt(Math.max(0, 1 - nx * nx - ny * ny));
+            light[i] = .78 * (-.48 * nx - .60 * ny + .64 * nz - .64);
             changed[i] = Math.abs(xs[i] - u * w) + Math.abs(ys[i] - v * h) > .08 || Math.abs(light[i]) > .01;
           }
         }
@@ -189,40 +190,75 @@
     let canvas = link.querySelector(".cloth-canvas");
     const offset = new Float32Array(count * 3), speed = new Float32Array(count * 3);
     const surface = new Float32Array(count * 5);
-    const pull = { x: .5, y: .5, dx: 0, dy: 0, angle: 0, touching: false };
+    const force = new Float32Array(count * 3);
+    const hand = { x: .5, y: .5, u: .5, v: .5, active: false };
+    let grip = null, suppressClick = false;
     let renderer, visible = false, flat = true, frame = 0, last = 0, width = 0, height = 0, aspect = 1;
     let revealed = false, fromScreen = null;
 
-    function step(dt, direct = false) {
-      const horizontal = 940 / (aspect * aspect), vertical = 760;
-      const damping = Math.exp(-6.2 * dt), co = Math.cos(pull.angle), si = Math.sin(pull.angle);
-      const drag = Math.min(1, 5 * Math.hypot(pull.dx, pull.dy));
+    // Equal and opposite 3D spring forces along warp, weft and the two diagonals.
+    // The two-node spans resist sharp bending; the perimeter stays attached to the frame.
+    function springs(dx, dy, stiffness) {
+      const rx = dx * aspect / columns, ry = dy / rows;
+      const rest = Math.hypot(rx, ry), jump = (dx + dy * stride) * 3;
+      const first = Math.max(0, -dx), end = columns - Math.max(0, dx);
+      for (let y = 0; y <= rows - dy; y++) {
+        for (let x = first; x <= end; x++) {
+          const a = (y * stride + x) * 3, b = a + jump;
+          const ex = rx + offset[b] - offset[a], ey = ry + offset[b + 1] - offset[a + 1], ez = offset[b + 2] - offset[a + 2];
+          const length = Math.sqrt(ex * ex + ey * ey + ez * ez);
+          const stretch = stiffness * (1 - rest / Math.max(.00001, length));
+          const fx = stretch * ex, fy = stretch * ey, fz = stretch * ez;
+          force[a] += fx; force[b] -= fx;
+          force[a + 1] += fy; force[b + 1] -= fy;
+          force[a + 2] += fz; force[b + 2] -= fz;
+        }
+      }
+    }
+
+    function step(dt) {
+      force.fill(0);
+      springs(1, 0, 2900); springs(0, 1, 2400);
+      springs(1, 1, 850); springs(-1, 1, 850);
+      springs(2, 0, 130); springs(0, 2, 110);
+
+      const follow = 1 - Math.exp(-42 * dt);
+      const hx = (hand.x - hand.u) * aspect * follow, hy = (hand.y - hand.v) * follow;
+      hand.u += hx / aspect; hand.v += hy;
+      const travel = Math.hypot(hx, hy), velocityScale = Math.min(1 / dt, 2.8 / Math.max(.00001, travel));
+      const vx = hx * velocityScale, vy = hy * velocityScale, motion = Math.min(1, travel / (1.8 * dt));
+      const reach = .14 + .055 * motion, damping = Math.exp(-5.8 * dt);
+      const lift = (reduced.matches ? .45 : 1) * (.032 + .115 * motion);
+      const pullX = grip ? grip.ox + Math.max(-.5, Math.min(.5, (hand.u - grip.u) * aspect)) : 0;
+      const pullY = grip ? grip.oy + Math.max(-.5, Math.min(.5, hand.v - grip.v)) : 0;
       let energy = 0;
       for (let y = 1; y < rows; y++) {
         for (let x = 1; x < columns; x++) {
-          const i = y * stride + x, k = i * 3;
-          const dx = (uv[i * 2] - pull.x) * aspect + .6 * pull.dx;
-          const dy = uv[i * 2 + 1] - pull.y + .6 * pull.dy;
-          const across = -dx * si + dy * co, along = dx * co + dy * si;
-          const contact = pull.touching ? Math.exp(-16 * along * along - 32 * across * across) : 0;
-          // Pull a ridge in the direction of travel and gather the cloth on either side.
-          const crease = Math.cos(37 * across + 1.1 * Math.sin(8 * along));
-          const lift = .065 + (.075 + .11 * drag) * crease;
-          const force = contact * 275;
-          for (let axis = 0; axis < 3; axis++) {
-            const j = k + axis, value = offset[j];
-            const target = axis === 0 ? pull.dx - .38 * dx : axis === 1 ? pull.dy - .38 * dy : lift;
-            if (direct) { offset[j] = .3 * contact * target; continue; }
-            const tension = (offset[j - 3] + offset[j + 3] - 2 * value) * horizontal
-              + (offset[j - stride * 3] + offset[j + stride * 3] - 2 * value) * vertical;
-            speed[j] = (speed[j] + dt * (tension - 37 * value + force * (target - value))) * damping;
-            energy = Math.max(energy, Math.abs(speed[j]));
+          const i = y * stride + x, k = i * 3, u = uv[i * 2], v = uv[i * 2 + 1];
+          const ox = offset[k], oy = offset[k + 1], oz = offset[k + 2];
+          let fx = force[k] - 22 * ox, fy = force[k + 1] - 22 * oy + .8 * Math.abs(oz), fz = force[k + 2] - 27 * oz;
+          // Hover brushes the currently deformed surface. Holding keeps the same cloth
+          // fibres in the hand, even if the pointer reverses or passes over an old fold.
+          if (grip) {
+            const dx = (u - grip.nodeU) * aspect, dy = v - grip.nodeV;
+            const weight = Math.max(0, 1 - (dx * dx + dy * dy) / .012) ** 2;
+            fx += weight * (620 * (pullX - ox) - 25 * speed[k]);
+            fy += weight * (620 * (pullY - oy) - 25 * speed[k + 1]);
+            fz += weight * (470 * (grip.lift - oz) - 19 * speed[k + 2]);
+          } else if (hand.active) {
+            const dx = (u - hand.u) * aspect + ox, dy = v - hand.v + oy;
+            const weight = Math.max(0, 1 - (dx * dx + dy * dy) / (reach * reach)) ** 2;
+            fx += weight * 55 * (vx - speed[k]);
+            fy += weight * 55 * (vy - speed[k + 1]);
+            fz += weight * (295 * (lift - oz) - 12 * speed[k + 2]);
           }
+          speed[k] = (speed[k] + dt * fx) * damping;
+          speed[k + 1] = (speed[k + 1] + dt * fy) * damping;
+          speed[k + 2] = (speed[k + 2] + dt * fz) * damping;
+          energy = Math.max(energy, Math.abs(speed[k]), Math.abs(speed[k + 1]), Math.abs(speed[k + 2]));
         }
       }
-      if (direct) return 0;
-      for (let j = 0; j < offset.length; j++) offset[j] += speed[j] * dt;
-      pull.dx *= Math.exp(-3.9 * dt); pull.dy *= Math.exp(-3.9 * dt);
+      for (let i = 0; i < offset.length; i++) offset[i] += speed[i] * dt;
       return energy;
     }
 
@@ -233,8 +269,14 @@
           surface[j] = offset[k] / aspect;
           surface[j + 1] = offset[k + 1];
           surface[j + 2] = offset[k + 2];
-          surface[j + 3] = (offset[k + 5] - offset[k - 1]) * columns / (2 * aspect);
-          surface[j + 4] = (offset[k + stride * 3 + 2] - offset[k - stride * 3 + 2]) * rows / 2;
+          // The normal follows both tangents of the deformed photograph, including shear.
+          const l = k - 3, r = k + 3, t = k - stride * 3, b = k + stride * 3;
+          const ux = 2 * aspect / columns + offset[r] - offset[l], uy = offset[r + 1] - offset[l + 1], uz = offset[r + 2] - offset[l + 2];
+          const vx = offset[b] - offset[t], vy = 2 / rows + offset[b + 1] - offset[t + 1], vz = offset[b + 2] - offset[t + 2];
+          const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
+          const inv = (nz < 0 ? -1 : 1) / Math.max(.000001, Math.sqrt(nx * nx + ny * ny + nz * nz));
+          surface[j + 3] = nx * inv;
+          surface[j + 4] = ny * inv;
         }
       }
       renderer.draw(flat);
@@ -243,14 +285,14 @@
 
     function reset() {
       window.cancelAnimationFrame(frame);
-      frame = 0; last = 0; pull.touching = false; pull.dx = 0; pull.dy = 0; flat = true;
+      frame = 0; last = 0; hand.active = false; grip = null; flat = true;
       offset.fill(0); speed.fill(0); surface.fill(0);
     }
 
     function update(now) {
       frame = 0;
       if (reduced.matches) {
-        if (pull.touching) step(0, true);
+        if (hand.active) { for (let i = 0; i < 6; i++) step(1 / 160); }
         else reset();
         paint();
         return;
@@ -258,11 +300,11 @@
       const dt = Math.min(.05, last ? (now - last) / 1000 : 1 / 60);
       if (renderer.name === "canvas2d" && last && dt < 1 / 32) { frame = window.requestAnimationFrame(update); return; }
       last = now;
-      const steps = Math.max(1, Math.ceil(dt * 120));
+      const steps = Math.max(1, Math.ceil(dt * 160));
       let energy = 0;
       for (let n = 0; n < steps; n++) energy = step(dt / steps);
-      const moving = energy > .00035 || Math.abs(pull.dx) + Math.abs(pull.dy) > .0005;
-      if (!moving && !pull.touching) reset();
+      const moving = energy > .001 || Math.abs(hand.x - hand.u) + Math.abs(hand.y - hand.v) > .0002;
+      if (!moving && !hand.active) reset();
       paint();
       if (moving) frame = window.requestAnimationFrame(update);
     }
@@ -302,11 +344,14 @@
       }
       if (!revealed) {
         revealed = true;
-        if (!reduced.matches && !pull.touching) {
+        if (!reduced.matches && !hand.active) {
           for (let y = 1; y < rows; y++) {
             for (let x = 1; x < columns; x++) {
-              const u = x / columns, v = y / rows, fold = u - .5 + .3 * (v - .5);
-              speed[(y * stride + x) * 3 + 2] = .7 * Math.cos(fold * 25) * Math.exp(-12 * fold * fold) * Math.sin(Math.PI * u) * Math.sin(Math.PI * v);
+              const dx = (x / columns - (aspect > 1.2 ? .65 : .36)) * aspect, dy = y / rows - .32;
+              const impulse = Math.max(0, 1 - (dx * dx + dy * dy) / .075) ** 2;
+              const k = (y * stride + x) * 3;
+              speed[k] = -.25 * impulse;
+              speed[k + 2] = .85 * impulse;
             }
           }
           flat = false;
@@ -314,7 +359,7 @@
         }
       }
       paint();
-      if (pull.touching) wake();
+      if (hand.active) wake();
     }
 
     function touch(event) {
@@ -325,23 +370,51 @@
       const localY = fromScreen ? fromScreen.b * px + fromScreen.d * py : py;
       const x = Math.max(0, Math.min(1, .5 + localX / link.clientWidth));
       const y = Math.max(0, Math.min(1, .5 + localY / link.clientHeight));
-      if (pull.touching) {
-        const dx = (x - pull.x) * aspect, dy = y - pull.y;
-        if (Math.hypot(dx, dy) > .002) pull.angle = Math.atan2(dy, dx);
-        pull.dx = Math.max(-.2, Math.min(.2, pull.dx + 1.75 * dx));
-        pull.dy = Math.max(-.2, Math.min(.2, pull.dy + 1.75 * dy));
-      }
-      pull.x = x; pull.y = y; pull.touching = true; flat = false;
+      if (!hand.active) { hand.u = x; hand.v = y; }
+      hand.x = x; hand.y = y; hand.active = true; flat = false;
+      if (grip && Math.hypot(event.clientX - grip.clientX, event.clientY - grip.clientY) > 6) grip.moved = true;
       wake();
     }
 
-    function release() { pull.touching = false; wake(); }
+    function pick(event) {
+      if (!renderer || event.isPrimary === false || event.button !== 0) return;
+      suppressClick = false;
+      touch(event);
+      let nearest = stride + 1, best = Infinity;
+      for (let y = 1; y < rows; y++) {
+        for (let x = 1; x < columns; x++) {
+          const i = y * stride + x, k = i * 3, z = offset[k + 2], perspective = 1 - .44 * z;
+          const dx = ((uv[2 * i] + offset[k] / aspect - .5 + .05 * z) / perspective + .5 - hand.x) * aspect;
+          const dy = (uv[2 * i + 1] + offset[k + 1] - .5 - .07 * z) / perspective + .5 - hand.y;
+          const distance = dx * dx + dy * dy;
+          if (distance < best) { nearest = i; best = distance; }
+        }
+      }
+      const k = nearest * 3;
+      grip = { id: event.pointerId, u: hand.x, v: hand.y, nodeU: uv[2 * nearest], nodeV: uv[2 * nearest + 1],
+        ox: offset[k], oy: offset[k + 1], lift: offset[k + 2] + (reduced.matches ? .055 : .14),
+        clientX: event.clientX, clientY: event.clientY, moved: false };
+      link.setPointerCapture(event.pointerId);
+    }
+
+    function release() { hand.active = false; grip = null; wake(); }
     link.addEventListener("pointerenter", touch);
     link.addEventListener("pointermove", touch);
-    link.addEventListener("pointerdown", touch);
-    link.addEventListener("pointerleave", release);
-    link.addEventListener("pointercancel", release);
-    link.addEventListener("pointerup", event => { if (event.pointerType === "touch") release(); });
+    link.addEventListener("pointerdown", pick);
+    link.addEventListener("pointerleave", () => { if (!grip) release(); });
+    link.addEventListener("pointercancel", event => { if (event.isPrimary !== false) release(); });
+    link.addEventListener("lostpointercapture", event => { if (grip && grip.id === event.pointerId) release(); });
+    link.addEventListener("pointerup", event => {
+      if (!grip || grip.id !== event.pointerId) return;
+      suppressClick = grip.moved;
+      release();
+    });
+    link.addEventListener("click", event => {
+      if (!suppressClick || event.detail === 0) return;
+      suppressClick = false;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    }, true);
     canvas.addEventListener("webglcontextlost", event => {
       event.preventDefault();
       reset();
