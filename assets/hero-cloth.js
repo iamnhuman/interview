@@ -210,7 +210,7 @@
     const hand = { x: .5, y: .5, u: .5, v: .5, active: false };
     let grip = null, suppressClick = false;
     let renderer, visible = false, flat = true, frame = 0, last = 0, width = 0, height = 0, aspect = 1;
-    let revealed = false, fromScreen = null;
+    let revealed = false, fromScreen = null, settling = false;
 
     // Equal and opposite 3D spring forces along warp, weft and the two diagonals.
     // The two-node spans resist sharp bending; the perimeter stays attached to the frame.
@@ -304,14 +304,28 @@
 
     function reset() {
       window.cancelAnimationFrame(frame);
-      frame = 0; last = 0; hand.active = false; grip = null; flat = true;
+      frame = 0; last = 0; hand.active = false; grip = null; flat = true; settling = false;
       link.removeAttribute("data-cloth-moving");
       offset.fill(0); speed.fill(0); surface.fill(0);
     }
 
+    // A critically damped return starts with the last position and velocity of each vertex.
+    function settle(dt) {
+      const rate = reduced.matches ? 24 : 10;
+      const decay = Math.exp(-rate * dt);
+      let residual = 0;
+      for (let i = 0; i < offset.length; i++) {
+        const slope = speed[i] + rate * offset[i];
+        offset[i] = (offset[i] + slope * dt) * decay;
+        speed[i] = (speed[i] - rate * slope * dt) * decay;
+        residual = Math.max(residual, Math.abs(offset[i]), Math.abs(speed[i]) / rate);
+      }
+      return residual * Math.max(width, height) > .1;
+    }
+
     function update(now) {
       frame = 0;
-      if (reduced.matches) {
+      if (reduced.matches && !settling) {
         if (hand.active) { for (let i = 0; i < 6; i++) step(1 / 160); }
         else reset();
         paint();
@@ -320,10 +334,15 @@
       const dt = Math.min(.05, last ? (now - last) / 1000 : 1 / 60);
       if (renderer.name === "canvas2d" && last && dt < 1 / 32) { frame = window.requestAnimationFrame(update); return; }
       last = now;
-      const steps = Math.max(1, Math.ceil(dt * 160));
-      let energy = 0;
-      for (let n = 0; n < steps; n++) energy = step(dt / steps);
-      const moving = energy > .001 || Math.abs(hand.x - hand.u) + Math.abs(hand.y - hand.v) > .0002;
+      let moving;
+      if (settling) {
+        moving = settle(dt);
+      } else {
+        const steps = Math.max(1, Math.ceil(dt * 160));
+        let energy = 0;
+        for (let n = 0; n < steps; n++) energy = step(dt / steps);
+        moving = energy > .001 || Math.abs(hand.x - hand.u) + Math.abs(hand.y - hand.v) > .0002;
+      }
       if (!moving && !hand.active) reset();
       paint();
       if (moving) frame = window.requestAnimationFrame(update);
@@ -401,6 +420,7 @@
       const x = Math.max(0, Math.min(1, .5 + localX / link.clientWidth));
       const y = Math.max(0, Math.min(1, .5 + localY / link.clientHeight));
       if (!hand.active) { hand.u = x; hand.v = y; }
+      settling = false;
       hand.x = x; hand.y = y; hand.active = true; flat = false;
       if (!renderer) prepare();
       if (grip && Math.hypot(event.clientX - grip.clientX, event.clientY - grip.clientY) > 6) grip.moved = true;
@@ -429,7 +449,11 @@
       link.setPointerCapture(event.pointerId);
     }
 
-    function release() { hand.active = false; grip = null; wake(); }
+    function release() {
+      if (!hand.active) return;
+      hand.active = false; grip = null; settling = true;
+      wake();
+    }
     function move(event) {
       if (grip ? grip.id === event.pointerId : event.pointerType !== "touch" && !event.buttons) touch(event);
     }

@@ -1,17 +1,11 @@
 <!doctype html>
-<html lang="ru">
+<html lang="ru" data-theme="dark" data-artist-style="bold" data-bibliography="hidden">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Интервью с Тойотой: как понять НЕОГРАЙМ и быть в курсе настоящего Андера</title>
   <meta name="description" content="Интервью с Тойотой о неограйме, музыкальном андерграунде, саунддизайне и нейросетях.">
   <meta name="theme-color" content="#000000">
-  <script>
-    try {
-      const theme = localStorage.getItem("interview-theme");
-      if (theme === "light" || theme === "dark") document.documentElement.dataset.theme = theme;
-    } catch {}
-  </script>
   <link rel="icon" type="image/webp" href="assets/art/sigil-fractured-orbit.webp">
   <link rel="stylesheet" href="assets/fonts/fonts.css">
   <link rel="stylesheet" href="assets/styles.css">
@@ -46,9 +40,17 @@
           <span class="stop-icon" aria-hidden="true"></span>
         </button>
       </div>
-      <button class="theme-switch" type="button" data-theme-switch hidden aria-label="Тёмная тема" aria-pressed="true">
-        <svg class="theme-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
-      </button>
+      <div class="masthead-actions">
+        <button type="button" data-bibliography-switch hidden aria-label="Библиография" aria-pressed="false" title="Показать библиографию">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M2.5 5.2c3.4-.9 6.5-.5 9.5 1.2 3-1.7 6.1-2.1 9.5-1.2v13c-3.4-.9-6.5-.5-9.5 1.2-3-1.7-6.1-2.1-9.5-1.2z"/><path class="book-fold" d="M12 6.5v12.6"/></svg>
+        </button>
+        <button type="button" data-artist-style-switch hidden aria-label="Кавычки в названиях" aria-pressed="false" title="Показать кавычки">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9.5 5c-4.2 1.6-7 5.2-7 9.6a4 4 0 1 0 4.1-4c.6-1.6 1.8-3 3.7-4.3z M20.5 5c-4.2 1.6-7 5.2-7 9.6a4 4 0 1 0 4.1-4c.6-1.6 1.8-3 3.7-4.3z"/></svg>
+        </button>
+        <button type="button" data-theme-switch hidden aria-label="Светлая тема" aria-pressed="false" title="Включить светлую тему">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
+        </button>
+      </div>
     </div>
   </header>
   <aside class="sigil-scroll" data-sigil-navigation aria-label="Перемещение по интервью" hidden>
@@ -59,7 +61,7 @@
     <nav class="question-jumps" aria-label="Начало, вопросы и конец интервью" data-question-jumps></nav>
   </aside>
   <main id="page-content">
-    <section class="cover wrap" id="cover" aria-labelledby="title">
+    <section class="cover wrap" id="start" aria-labelledby="title">
       <div class="cover-heading">
         <h1 id="title"><span class="cover-kicker">Как понять</span> <span class="cover-word">Неограйм</span></h1>
         <img class="heading-sigil" src="assets/art/sigil-thorn-halo.webp" width="880" height="880" alt="" aria-hidden="true" decoding="async">
@@ -69,7 +71,7 @@
           <p class="cover-deck">И быть в курсе<br>настоящего андера</p>
           <a class="reading-link" href="#interview">
             <span>Читать интервью</span>
-            <svg viewBox="4 0 16 24" aria-hidden="true"><path d="M12 3v14m-5-5 5 5 5-5"/></svg>
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v12m-5-5 5 5 5-5"/></svg>
           </a>
         </div>
         <figure class="cover-main">
@@ -93,19 +95,18 @@
       <article class="interview" aria-label="Интервью с Тойотой">
         <div class="lead">
           <p class="lead-byline">Интервью провёл <a href="https://t.me/wronggateway502" target="_blank" rel="noopener noreferrer">wrong/gateway .₅₀₂</a></p>
-          <p><i>Если вы часто обитаете (или являетесь админом) в телеграм-каналах о музыке, в особенности электронной, то очень вероятно встречали в комментариях пользователя под разными никнеймами, в основном связанные с «Тойота». Он часто пишет, что блогеры уделяют внимание не тому, скидывает много треков, помнит что сказал чуть ли ни любой канал на ту или иную тему, и все это будет подкреплено кучей ссылок. У Тойоты есть большая сетка своих каналов и складов контента, а еще очень интересная история запуска лейблов, сайтов, ведения ВК-пабликов по музыке и отношения к звуку и музыкальной журналистике. Я заинтересовался таким рвением, и мы поговорили о всех этих вещах, а так же затронули современные тренды, нейро-музыку и кучу всего еще.</i></p>
+          <p><i>Если вы часто обитаете (или являетесь админом) в каналах <span class="artist-name"><span class="artist-quote">«</span>Telegram<span class="artist-quote">»</span></span> о музыке, в особенности электронной, то очень вероятно встречали в комментариях пользователя под разными никнеймами, в основном связанные с <span class="artist-name"><span class="artist-quote">«</span>Тойота<span class="artist-quote">»</span></span>. Он часто пишет, что блогеры уделяют внимание не тому, скидывает много треков, помнит что сказал чуть ли ни любой канал на ту или иную тему, и все это будет подкреплено кучей ссылок. У Тойоты есть большая сетка своих каналов и складов контента, а еще очень интересная история запуска лейблов, сайтов, ведения ВК-пабликов по музыке и отношения к звуку и музыкальной журналистике. Я заинтересовался таким рвением, и мы поговорили о всех этих вещах, а так же затронули современные тренды, нейро-музыку и кучу всего еще.</i></p>
         </div>
         <hr class="topic-break">
-        <div class="turn question" id="toyota" tabindex="-1">
-          <h2 class="turn-copy question-copy" id="toyota-title">И так, начнем с главного – почему все таки «Тойота»?</h2>
+        <div class="turn question" id="question-01" tabindex="-1">
+          <span class="question-alias" id="toyota" aria-hidden="true"></span>
+          <h2 class="turn-copy question-copy" id="toyota-title">И так, начнем с главного – почему все таки <span class="artist-name"><span class="artist-quote">«</span>Тойота<span class="artist-quote">»</span></span>?</h2>
         </div>
         <div class="turn answer">
           <div class="turn-copy answer-copy">
-            <p>Если ты пытаешься объяснить современное искусство словами, то каждый раз получается какая-то залупа) Говорить про музыку или про современное искусство — это как танцевать про архитектуру. Как только открываешь рот, сразу складывается ощущение, что искусство не такое уж и «современное».
-
-Я могу только сказать, что у меня когда-то был ник «fazda», когда я делал <a href="https://t.me/archivenormis/818/8256" target="_blank" rel="noopener noreferrer">уебищные миксы</a> в «Sound Forge», годах в 2013 - 2015, как «<a href="https://gearspace.com/threads/how-can-burial-make-music-with-soundforge.968872/" target="_blank" rel="noopener noreferrer">Burial</a>» свои треки.
-
-Также всегда испытывал необъяснимое влечение к тому мему из интернета, где обыгрывается лого «Adidas». Логотипы в какой-то момент превратились в сигилы XXI века, и заигрывание с этой темой всегда привлекало. Это часто встречалось в андерграунде того времени. На «Pinterest» или «Behance» регулярно можно было увидеть, как кто-то обыгрывает известные логотипы.</p>
+            <p>Если ты пытаешься объяснить современное искусство словами, то каждый раз получается какая-то залупа) Говорить про музыку или про современное искусство — это как танцевать про архитектуру. Как только открываешь рот, сразу складывается ощущение, что искусство не такое уж и «современное».</p>
+            <p>Я могу только сказать, что у меня когда-то был ник <span class="artist-name"><span class="artist-quote">«</span>fazda<span class="artist-quote">»</span></span>, когда я делал <a href="https://t.me/archivenormis/818/8256" target="_blank" rel="noopener noreferrer">уебищные миксы</a> в <span class="artist-name"><span class="artist-quote">«</span>Sound Forge<span class="artist-quote">»</span></span>, годах в 2013 - 2015, <a href="https://gearspace.com/threads/how-can-burial-make-music-with-soundforge.968872/" target="_blank" rel="noopener noreferrer">как <span class="artist-name"><span class="artist-quote">«</span>Burial<span class="artist-quote">»</span></span></a> свои треки.</p>
+            <p>Также всегда испытывал необъяснимое влечение к тому мему из интернета, где обыгрывается лого <span class="artist-name"><span class="artist-quote">«</span>Adidas<span class="artist-quote">»</span></span>. Логотипы в какой-то момент превратились в сигилы XXI века, и заигрывание с этой темой всегда привлекало. Это часто встречалось в андерграунде того времени. На <span class="artist-name"><span class="artist-quote">«</span>Pinterest<span class="artist-quote">»</span></span> или <span class="artist-name"><span class="artist-quote">«</span>Behance<span class="artist-quote">»</span></span> регулярно можно было увидеть, как кто-то обыгрывает известные логотипы.</p>
           </div>
         </div>
         <figure class="image-asset image-half">
@@ -117,10 +118,10 @@
         </figure>
         <div class="turn answer">
           <div class="turn-copy answer-copy">
-            <p>А потом я так же стал угорать с «Тойоты» и случайно узнал про проект «<a href="https://fict.info/" target="_blank" rel="noopener noreferrer">Церковь Тойоты</a>». Тогда «<a href="https://t.me/hypernormis/3/4413" target="_blank" rel="noopener noreferrer">011668</a>», создатель всего этого движа, коллабил с «<a href="https://t.me/thequietplace/9417" target="_blank" rel="noopener noreferrer">S280F</a>», и это казалось самым свежим звуком. Потом я узнал, что готовится <a href="https://fict.bandcamp.com/album/toyotathon" target="_blank" rel="noopener noreferrer">компиляция</a> «Церкви Тойоты» почти на 100 треков, и с тех пор стал себя ассоциировать со всем этим движем. На тот момент складывалось ощущение, что благодаря таким проектам у этой музыки ещё есть шансы) Т. е. так получилось, что многое из того, что делает «011668», резонировало с тем, как я вижу экспериментальную деятельность в интернете, поэтому я продолжил развивать своё ответвление «Тойоты» в рунете, только более темную версию. Если зайти к «011668» на страницу в «Instagram», может показаться, что там рандомный поток чуши и бессмысленного мерча, но если углубиться, то можно обнаружить отсылки к <a href="https://t.me/slopnormis/2737/3590" target="_blank" rel="noopener noreferrer">Nick Land</a>, «<a href="https://hijinx.world/interactive/2026-ccru-graph/" target="_blank" rel="noopener noreferrer">CCRU</a>» или «<a href="https://t.me/slopnormis/2737/3642" target="_blank" rel="noopener noreferrer">Palantir</a>», заигрывание с различными философскими темами. А если у тебя богатое воображение, то можно приметить и ещё что-то. Выглядит как то, чем должно быть настоящее искусство в современном интернете, — скрещивание медиумов и сатира над тем, что сейчас актуально.</p>
+            <p>А потом я так же стал угорать с <span class="artist-name"><span class="artist-quote">«</span>Тойоты<span class="artist-quote">»</span></span> и случайно узнал про проект <span class="artist-name"><span class="artist-quote">«</span><a href="https://fict.info/" target="_blank" rel="noopener noreferrer">Церковь Тойоты</a><span class="artist-quote">»</span></span>. Тогда <span class="artist-name"><span class="artist-quote">«</span><a href="https://t.me/hypernormis/3/4413" target="_blank" rel="noopener noreferrer">011668</a><span class="artist-quote">»</span></span>, создатель всего этого движа, коллабил с <span class="artist-name"><span class="artist-quote">«</span><a href="https://t.me/thequietplace/9417" target="_blank" rel="noopener noreferrer">S280F</a><span class="artist-quote">»</span></span>, и это казалось самым свежим звуком. Потом я узнал, что готовится <a href="https://fict.bandcamp.com/album/toyotathon" target="_blank" rel="noopener noreferrer">компиляция</a> <span class="artist-name"><span class="artist-quote">«</span>Церкви Тойоты<span class="artist-quote">»</span></span> почти на 100 треков, и с тех пор стал себя ассоциировать со всем этим движем. На тот момент складывалось ощущение, что благодаря таким проектам у этой музыки ещё есть шансы) Т. е. так получилось, что многое из того, что делает <span class="artist-name"><span class="artist-quote">«</span>011668<span class="artist-quote">»</span></span>, резонировало с тем, как я вижу экспериментальную деятельность в интернете, поэтому я продолжил развивать своё ответвление <span class="artist-name"><span class="artist-quote">«</span>Тойоты<span class="artist-quote">»</span></span> в рунете, только более темную версию. Если зайти к <span class="artist-name"><span class="artist-quote">«</span>011668<span class="artist-quote">»</span></span> на страницу в <span class="artist-name"><span class="artist-quote">«</span>Instagram<span class="artist-quote">»</span></span>, может показаться, что там рандомный поток чуши и бессмысленного мерча, но если углубиться, то можно обнаружить отсылки к <a href="https://t.me/slopnormis/2737/3590" target="_blank" rel="noopener noreferrer">Nick Land</a>, <span class="artist-name"><span class="artist-quote">«</span><a href="https://hijinx.world/interactive/2026-ccru-graph/" target="_blank" rel="noopener noreferrer">CCRU</a><span class="artist-quote">»</span></span> или <span class="artist-name"><span class="artist-quote">«</span><a href="https://t.me/slopnormis/2737/3642" target="_blank" rel="noopener noreferrer">Palantir</a><span class="artist-quote">»</span></span>, заигрывание с различными философскими темами. А если у тебя богатое воображение, то можно приметить и ещё что-то. Выглядит как то, чем должно быть настоящее искусство в современном интернете, — скрещивание медиумов и сатира над тем, что сейчас актуально.</p>
           </div>
         </div>
-        <figure class="image-asset image-half">
+        <figure class="image-asset image-half" data-sources-before>
           <div class="image-frame">
             <a id="ccru-shirt" class="photo-link" href="assets/media/anti-nick-land-shirt.jpg" data-photo aria-label="Открыть изображение. Чёрная футболка с надписью Anti Nick Land CCRU Club">
               <img src="assets/media/anti-nick-land-shirt.jpg" width="1104" height="991" loading="lazy" decoding="async" alt="Чёрная футболка с надписью Anti Nick Land CCRU Club">
@@ -132,15 +133,16 @@
         </div>
         <div class="turn answer">
           <div class="turn-copy answer-copy">
-            <p>Нет. <a href="http://t.me/toyotamuzik" target="_blank" rel="noopener noreferrer">Челы</a> просто спиздили мою аватарку и сделали похожий концепт, но я потом с ними нормально общался. Это как «<a href="https://t.me/trollnormis/4142" target="_blank" rel="noopener noreferrer">SCP</a>» — любой может делать что хочет, это не какой-то патент) Я вначале на них нагнал, а потом успокоился. Ну посты у них есть смешные, а музыка вообще не моё, думаю, слышно.</p>
+            <p>Нет. <a href="http://t.me/toyotamuzik" target="_blank" rel="noopener noreferrer">Челы</a> просто спиздили мою аватарку и сделали похожий концепт, но я потом с ними нормально общался. Это как <span class="artist-name"><span class="artist-quote">«</span><a href="https://t.me/trollnormis/4142" target="_blank" rel="noopener noreferrer">SCP</a><span class="artist-quote">»</span></span> — любой может делать что хочет, это не какой-то патент) Я вначале на них нагнал, а потом успокоился. Ну посты у них есть смешные, а музыка вообще не моё, думаю, слышно.</p>
           </div>
         </div>
-        <div class="turn question" id="scene" tabindex="-1">
-          <h2 class="turn-copy question-copy" id="scene-title">Стал часто замечать тебя в комментариях разных каналов, ощущается, что ты очень горишь идеей, чтобы муз-каналы в тг освещали какие-то определенные релизы. В чем суть этого упорства?</h2>
+        <div class="turn question" id="question-03" tabindex="-1">
+          <span class="question-alias" id="scene" aria-hidden="true"></span>
+          <h2 class="turn-copy question-copy" id="scene-title">Стал часто замечать тебя в комментариях разных каналов, ощущается, что ты очень горишь идеей, чтобы муз-каналы в <span class="artist-name"><span class="artist-quote">«</span>Telegram<span class="artist-quote">»</span></span> освещали какие-то определенные релизы. В чем суть этого упорства?</h2>
         </div>
         <div class="turn answer">
           <div class="turn-copy answer-copy">
-            <p>Да я уже устал об этом говорить. Мы с тобой обсуждали на примере релиза «<a href="https://soundcloud.com/4_ll" target="_blank" rel="noopener noreferrer">4LL</a>», как одна из его участниц «<a href="https://www.instagram.com/______salibi/" target="_blank" rel="noopener noreferrer">salibi</a>» снимала клип для «<a href="http://t.me/dailyslime" target="_blank" rel="noopener noreferrer">Daily Slime</a>», и я пошел и стал орать у неё в комментах. Суть в том, что звук, как у «4LL», — это и есть то, что хочется видеть хотя бы иногда на попсовых каналах типа «Daily Slime», но они годами игнорируют такой звук, постят только то, что трендово и выгодно, т. е., грубо говоря, вытирают ноги о звук самих «4LL». От этого и была такая реакция, что коллабить с тем, кто вытирал о тебя ноги, — единственное, что остается таким проектам, и это печально. «Daily Slime» не первый и не последний в данном контексте — я EP «4LL» протестировал в каждой дыре «Telegram» и на каждом админе, смотрел, как людей в чате корёжит и продюсеров плющит. Они искренне делали вид, что я скидываю случайный бростеп-трек, а не что-то уникальное. Показываю людям и вижу реакцию, будто я колхозник. Оттуда и рождается агрессия. Я пытался и без агрессии — не работает. Остается только «угорать с нормисов» или вкладывать в это деньги, а второе всегда отталкивало. Помимо «4LL» дохуя релизов ещё есть, просто они хоть как-то с рунетом связаны, поэтому я в пример их привожу. Я не понимаю, как можно быть Антоном Савенко, писать про электронную музыку, изучать её и не прийти хотя бы с исследовательской целью к <a href="https://bluenoise1.bandcamp.com/album/organa" target="_blank" rel="noopener noreferrer">такому</a> звуку (речь про <a href="https://bluenoise1.bandcamp.com/album/organa" target="_blank" rel="noopener noreferrer"><i>ORGANA by BLUE NOISE</i></a><i> — прим.). </i>И, конечно, когда я вижу, что админ канала «<a href="https://t.me/egrooves" target="_blank" rel="noopener noreferrer">ethereal grooves</a>» зовёт Савенко или «Daily Slime» в подборку, я агрессирую.</p>
+            <p>Да я уже устал об этом говорить. Мы с тобой обсуждали на примере релиза <span class="artist-name"><span class="artist-quote">«</span><a href="https://soundcloud.com/4_ll" target="_blank" rel="noopener noreferrer">4LL</a><span class="artist-quote">»</span></span>, как одна из его участниц <span class="artist-name"><span class="artist-quote">«</span><a href="https://www.instagram.com/______salibi/" target="_blank" rel="noopener noreferrer">salibi</a><span class="artist-quote">»</span></span> снимала клип для <span class="artist-name"><span class="artist-quote">«</span><a href="http://t.me/dailyslime" target="_blank" rel="noopener noreferrer">Daily Slime</a><span class="artist-quote">»</span></span>, и я пошел и стал орать у неё в комментах. Суть в том, что звук, как у <span class="artist-name"><span class="artist-quote">«</span>4LL<span class="artist-quote">»</span></span>, — это и есть то, что хочется видеть хотя бы иногда на попсовых каналах типа <span class="artist-name"><span class="artist-quote">«</span>Daily Slime<span class="artist-quote">»</span></span>, но они годами игнорируют такой звук, постят только то, что трендово и выгодно, т. е., грубо говоря, вытирают ноги о звук самих <span class="artist-name"><span class="artist-quote">«</span>4LL<span class="artist-quote">»</span></span>. От этого и была такая реакция, что коллабить с тем, кто вытирал о тебя ноги, — единственное, что остается таким проектам, и это печально. <span class="artist-name"><span class="artist-quote">«</span>Daily Slime<span class="artist-quote">»</span></span> не первый и не последний в данном контексте — я EP <span class="artist-name"><span class="artist-quote">«</span>4LL<span class="artist-quote">»</span></span> протестировал в каждой дыре <span class="artist-name"><span class="artist-quote">«</span>Telegram<span class="artist-quote">»</span></span> и на каждом админе, смотрел, как людей в чате корёжит и продюсеров плющит. Они искренне делали вид, что я скидываю случайный бростеп-трек, а не что-то уникальное. Показываю людям и вижу реакцию, будто я колхозник. Оттуда и рождается агрессия. Я пытался и без агрессии — не работает. Остается только «угорать с нормисов» или вкладывать в это деньги, а второе всегда отталкивало. Помимо <span class="artist-name"><span class="artist-quote">«</span>4LL<span class="artist-quote">»</span></span> дохуя релизов ещё есть, просто они хоть как-то с рунетом связаны, поэтому я в пример их привожу. Я не понимаю, как можно быть <a href="https://t.me/bestdjchannel" target="_blank" rel="noopener noreferrer">Антоном Савенко</a>, писать про электронную музыку, изучать её и не прийти хотя бы с исследовательской целью к <a href="https://bluenoise1.bandcamp.com/album/organa" target="_blank" rel="noopener noreferrer">такому</a> звуку. И, конечно, когда я вижу, что админ канала <span class="artist-name"><span class="artist-quote">«</span><a href="https://t.me/egrooves" target="_blank" rel="noopener noreferrer">ethereal grooves</a><span class="artist-quote">»</span></span> зовёт Савенко или <span class="artist-name"><span class="artist-quote">«</span>Daily Slime<span class="artist-quote">»</span></span> в подборку, я агрессирую.</p>
           </div>
         </div>
         <figure class="audio-cue" id="track-4ll" data-audio-player aria-labelledby="track-4ll-title">
@@ -163,12 +165,13 @@
           <p class="audio-error" data-media-error hidden role="status">Трек не удалось воспроизвести. Его можно скачать по ссылке MP3.</p>
           <figcaption class="track-note"><sub><i>трек 4LL, под которым меня заинтересовало обсуждение</i></sub></figcaption>
         </figure>
-        <div class="turn question" id="fitnesss" tabindex="-1">
+        <div class="turn question" id="question-04" tabindex="-1" data-sources-at-end>
+          <span class="question-alias" id="fitnesss" aria-hidden="true"></span>
           <h2 class="turn-copy question-copy" id="fitnesss-title">Я видел, что ты часто упоминаешь <a href="https://www.instagram.com/flt.n3sss/" target="_blank" rel="noopener noreferrer">FITNESSS</a>. Почему тебе кажется, о нем должны говорить? Что, например, он сделал такого, чего не делала Arca?</h2>
         </div>
         <div class="turn answer">
           <div class="turn-copy answer-copy">
-            <p>Мне это сложно объяснить, видимо, без <a href="assets/media/raiika-vs-slava-marlow.pdf" type="application/pdf" target="_blank" rel="noopener noreferrer">научной статьи</a> не обойтись, лучше сказать «я в это верю как Тойотолог». Костюм, кстати, у него был прикольнее, чем у «Arca» — более технологичный, звук тоже. Это, конечно же, всё субъективно, и Антон Савенко, и админ «ethereal grooves» имеют право постить и делать что хотят и иметь свою правду, а я, может, ебнулся, что вижу в своей правде истину, но что поделаешь) Обычно напрягает, что люди говорят, как молодые деконстрактед клаб продюсеры ничего не придумали, а потом идут постить в 500-й раз своего «Yung Lean», «Bladee», «Autechre», «Aphex Twin», «Burial», ск-реп и одинаковые афиши техно-вечеринок. Ок, «FITNESSS», может, и не придумал ничего нового, но «Fred Again» или «Skrillex» тогда вообще должны повеситься.</p>
+            <p>Мне это сложно объяснить, видимо, без <a href="assets/media/raiika-vs-slava-marlow.pdf" type="application/pdf" target="_blank" rel="noopener noreferrer">научной статьи</a> не обойтись, лучше сказать «я в это верю как Тойотолог». Костюм, кстати, у него был прикольнее, чем у <span class="artist-name"><span class="artist-quote">«</span>Arca<span class="artist-quote">»</span></span> — более технологичный, звук тоже. Это, конечно же, всё субъективно, и Антон Савенко, и админ <span class="artist-name"><span class="artist-quote">«</span>ethereal grooves<span class="artist-quote">»</span></span> имеют право постить и делать что хотят и иметь свою правду, а я, может, ебнулся, что вижу в своей правде истину, но что поделаешь) Обычно напрягает, что люди говорят, как молодые деконстрактед клаб продюсеры ничего не придумали, а потом идут постить в 500-й раз своего <span class="artist-name"><span class="artist-quote">«</span>Yung Lean<span class="artist-quote">»</span></span>, <span class="artist-name"><span class="artist-quote">«</span>Bladee<span class="artist-quote">»</span></span>, <span class="artist-name"><span class="artist-quote">«</span>Autechre<span class="artist-quote">»</span></span>, <span class="artist-name"><span class="artist-quote">«</span>Aphex Twin<span class="artist-quote">»</span></span>, <span class="artist-name"><span class="artist-quote">«</span>Burial<span class="artist-quote">»</span></span>, ск-реп и одинаковые афиши техно-вечеринок. Ок, <span class="artist-name"><span class="artist-quote">«</span>FITNESSS<span class="artist-quote">»</span></span>, может, и не придумал ничего нового, но <span class="artist-name"><span class="artist-quote">«</span>Fred Again<span class="artist-quote">»</span></span> или <span class="artist-name"><span class="artist-quote">«</span>Skrillex<span class="artist-quote">»</span></span> тогда вообще должны повеситься.</p>
           </div>
         </div>
         <figure class="image-asset image-pair">
@@ -203,7 +206,7 @@
         </figure>
         <div class="turn answer">
           <div class="turn-copy answer-copy">
-            <p>У меня несколько дней назад был такой же диалог с челом, которого <a href="https://t.me/fakeboys01/22361" target="_blank" rel="noopener noreferrer">постили</a> в «fakeboys», он сказал, что «4LL» — колхозная херня. Цитату точную не помню, но я так воспринял) А для кого-то его треки являются таковыми. Где тут объективность? Пусть вначале накрутит такие же треки, тогда я соглашусь, но это вряд ли случится, и работает в обе стороны. Пусть вначале Савенко выложит 5 релизов, как «FITNESSS» и «4LL», а потом говорит, что не было ничего после «Arca», но последний альбом «Arca» — там вообще от задротского саунд-дизайна мало что осталось.</p>
+            <p>У меня несколько дней назад был такой же диалог с челом, которого <a href="https://t.me/fakeboys01/22361" target="_blank" rel="noopener noreferrer">постили</a> в <span class="artist-name"><span class="artist-quote">«</span>fakeboys<span class="artist-quote">»</span></span>, он сказал, что <span class="artist-name"><span class="artist-quote">«</span>4LL<span class="artist-quote">»</span></span> — колхозная херня. Цитату точную не помню, но я так воспринял) А для кого-то его треки являются таковыми. Где тут объективность? Пусть вначале накрутит такие же треки, тогда я соглашусь, но это вряд ли случится, и работает в обе стороны. Пусть вначале Савенко выложит 5 релизов, как <span class="artist-name"><span class="artist-quote">«</span>FITNESSS<span class="artist-quote">»</span></span> и <span class="artist-name"><span class="artist-quote">«</span>4LL<span class="artist-quote">»</span></span>, а потом говорит, что не было ничего после <span class="artist-name"><span class="artist-quote">«</span>Arca<span class="artist-quote">»</span></span>, но последний альбом <span class="artist-name"><span class="artist-quote">«</span>Arca<span class="artist-quote">»</span></span> — там вообще от задротского саунд-дизайна мало что осталось.</p>
           </div>
         </div>
         <div class="turn question" id="question-05" tabindex="-1">
@@ -211,7 +214,7 @@
         </div>
         <div class="turn answer">
           <div class="turn-copy answer-copy">
-            <p>Да это просто примеры, что «4LL», что Савенко, за ними более глубокая проблема скрывается. Речь не только про Савенко, а про совокупность музжуров. И не только про «4LL», а про совокупность андер продюсеров.</p>
+            <p>Да это просто примеры, что <span class="artist-name"><span class="artist-quote">«</span>4LL<span class="artist-quote">»</span></span>, что Савенко, за ними более глубокая проблема скрывается. Речь не только про Савенко, а про совокупность музжуров. И не только про <span class="artist-name"><span class="artist-quote">«</span>4LL<span class="artist-quote">»</span></span>, а про совокупность андер продюсеров.</p>
           </div>
         </div>
         <figure class="pull-quote" id="quote-antinormis">
@@ -219,7 +222,7 @@
         </figure>
         <div class="turn answer">
           <div class="turn-copy answer-copy">
-            <p>Типа даже <a href="https://www.youtube.com/watch?v=d9t0eXNnT1c" target="_blank" rel="noopener noreferrer">тот клип </a>«Daily Slime» — подтверждение моей веры в то, что рано или поздно, может, лет через 5, они тоже будут про такое писать. А сейчас можно только набрасывать на вентилятор или вложить 10к баксов, чтобы каждый этот хуй снял видеоэссе. Меня всегда напрягала, как я уже говорил, вторая тема.</p>
+            <p>Типа даже <a href="https://www.youtube.com/watch?v=d9t0eXNnT1c" target="_blank" rel="noopener noreferrer">тот клип</a> <span class="artist-name"><span class="artist-quote">«</span>Daily Slime<span class="artist-quote">»</span></span> — подтверждение моей веры в то, что рано или поздно, может, лет через 5, они тоже будут про такое писать. А сейчас можно только набрасывать на вентилятор или вложить 10к баксов, чтобы каждый этот хуй снял видеоэссе. Меня всегда напрягала, как я уже говорил, вторая тема.</p>
           </div>
         </div>
         <div class="turn question" id="question-06" tabindex="-1">
@@ -227,7 +230,7 @@
         </div>
         <div class="turn answer">
           <div class="turn-copy answer-copy">
-            <p>Так наоборот, у меня антигейткипинг, я агрессивно всем пишу, чтобы форсили интересный контент, гейткипинг — это обратное поведение) Тут весь цимес в том, что понятие «интересный» у всех разное. Типа если бы «Daily Slime» зафигачил пост: «Узнал про „4LL“, вот это я понимаю саунд-дизайн, ещё мне клип сняла одна участница», я бы вообще только респектовал ему, а он, скорее всего, даже не понимает, о чём тут речь, и не знает, что такое «4LL», а на канале форсит тезисы типа «Платина — это новый Пелевин».</p>
+            <p>Так наоборот, у меня антигейткипинг, я агрессивно всем пишу, чтобы форсили интересный контент, гейткипинг — это обратное поведение) Тут весь цимес в том, что понятие «интересный» у всех разное. Типа если бы <span class="artist-name"><span class="artist-quote">«</span>Daily Slime<span class="artist-quote">»</span></span> зафигачил пост: «Узнал про <span class="artist-name"><span class="artist-quote">„</span>4LL<span class="artist-quote">“</span></span>, вот это я понимаю саунд-дизайн, ещё мне клип сняла одна участница», я бы вообще только респектовал ему, а он, скорее всего, даже не понимает, о чём тут речь, и не знает, что такое <span class="artist-name"><span class="artist-quote">«</span>4LL<span class="artist-quote">»</span></span>, а на канале форсит тезисы типа «Платина — это новый Пелевин».</p>
           </div>
         </div>
         <div class="turn question" id="question-07" tabindex="-1">
@@ -235,15 +238,15 @@
         </div>
         <div class="turn answer">
           <div class="turn-copy answer-copy">
-            <p>Да не, если что-то массовое и при этом сохраняет крутость, как какой-нибудь новый трейлер по «<a href="https://www.youtube.com/watch?v=9eQUtOQXYgQ" target="_blank" rel="noopener noreferrer">StarCraft</a>», звук к которому делал Mick Gordon, который тоже попса уже давно, то я поддерживаю. У меня нет такого деления, вообще пофиг, сколько просмотров — 10 или миллиард.</p>
+            <p>Да не, если что-то массовое и при этом сохраняет крутость, как какой-нибудь новый трейлер по <span class="artist-name"><span class="artist-quote">«</span><a href="https://www.youtube.com/watch?v=9eQUtOQXYgQ" target="_blank" rel="noopener noreferrer">StarCraft</a><span class="artist-quote">»</span></span>, звук к которому делал Mick Gordon, который тоже попса уже давно, то я поддерживаю. У меня нет такого деления, вообще пофиг, сколько просмотров — 10 или миллиард.</p>
           </div>
         </div>
         <div class="turn question" id="question-08" tabindex="-1">
-          <h2 class="turn-copy question-copy" id="question-08-title">Получается ты постоянно борешься за то, чтобы телеграм-музблогеры... начали шарить?</h2>
+          <h2 class="turn-copy question-copy" id="question-08-title">Получается ты постоянно борешься за то, чтобы музблогеры в <span class="artist-name"><span class="artist-quote">«</span>Telegram<span class="artist-quote">»</span></span>... начали шарить?</h2>
         </div>
         <div class="turn answer">
           <div class="turn-copy answer-copy">
-            <p>Скорее я проверяю, если интересные и важные для меня вещи как-то с ними резонируют. У меня в 2015 году вообще был лейбл с нейрохопом (<i>жанр музыки – прим.</i>), тогда «Telegram» ещё не был так популярен и чаще всего его называли помойкой. Я тогда сделал максимум, что мог с этой музыкой и забил лет на 5, ушел в IT. Наверное, года 3-4 назад только начал всё это в «Telegram» опять. С 2015 года вся суть была в том же — искать что-то новое, пытаться понять, почему Денис Жданов, админ паблика «BASSLAND» в «ВК» отдает предпочтение какой-то попсе и проходняку, а андерграунд продюсеров обходит стороной. Хотя на самом деле всё он шарил на нужном ему уровне, как и <a href="https://t.me/archivenormis/5429/14893" target="_blank" rel="noopener noreferrer">Редькин</a>, просто это была не его тема, потому что он нормис в контексте экспериментальной музыки) Сейчас время «Telegram» и ничего не поменялось, только название пабликов и имен людей) Мне по-прежнему <a href="https://www.youtube.com/watch?v=uBeD_bZPYPU" target="_blank" rel="noopener noreferrer">это звучит</a> (<i>речь о треке Hot Pursuit - 50 Caliber</i>), хоть сегодня звук и посерьезнее делают. 10 лет назад я ссался кипятком от такого и так же орал на людей, которые это не выкупают, что «нормисы не шарят», только другими словами. Может, ещё больше поймёшь, почему я топлю за «4LL» и похожий звук — для меня это реализация той сформировавшейся травмы из-за непризнания андера, и я вижу, как сейчас происходит то же самое, но уже с другими людьми; они не будут за себя орать — я поору за них) Просто я не вижу больше смысла делать лейбл, кооперироваться с кем-то, хочется просто искать пиздатый контент, а этой хуйней пусть маркетологи страдают. Я своё отстрадал тогда.</p>
+            <p>Скорее я проверяю, если интересные и важные для меня вещи как-то с ними резонируют. У меня в 2015 году вообще был лейбл с нейрохопом (<i>жанр музыки – прим.</i>), тогда <span class="artist-name"><span class="artist-quote">«</span>Telegram<span class="artist-quote">»</span></span> ещё не был так популярен и чаще всего его называли помойкой. Я тогда сделал максимум, что мог с этой музыкой и забил лет на 5, ушел в IT. Наверное, года 3-4 назад только начал всё это в <span class="artist-name"><span class="artist-quote">«</span>Telegram<span class="artist-quote">»</span></span> опять. С 2015 года вся суть была в том же — искать что-то новое, пытаться понять, почему Денис Жданов, админ паблика <span class="artist-name"><span class="artist-quote">«</span>BASSLAND<span class="artist-quote">»</span></span> в <span class="artist-name"><span class="artist-quote">«</span>ВК<span class="artist-quote">»</span></span> отдает предпочтение какой-то попсе и проходняку, а андерграунд продюсеров обходит стороной. Хотя на самом деле всё он шарил на нужном ему уровне, как и <a href="https://t.me/archivenormis/5429/14893" target="_blank" rel="noopener noreferrer">Редькин</a>, просто это была не его тема, потому что он нормис в контексте экспериментальной музыки) Сейчас время <span class="artist-name"><span class="artist-quote">«</span>Telegram<span class="artist-quote">»</span></span> и ничего не поменялось, только название пабликов и имен людей) Мне по-прежнему <a href="https://www.youtube.com/watch?v=uBeD_bZPYPU" target="_blank" rel="noopener noreferrer">это звучит</a>, хоть сегодня звук и посерьезнее делают. 10 лет назад я ссался кипятком от такого и так же орал на людей, которые это не выкупают, что «нормисы не шарят», только другими словами. Может, ещё больше поймёшь, почему я топлю за <span class="artist-name"><span class="artist-quote">«</span>4LL<span class="artist-quote">»</span></span> и похожий звук — для меня это реализация той сформировавшейся травмы из-за непризнания андера, и я вижу, как сейчас происходит то же самое, но уже с другими людьми; они не будут за себя орать — я поору за них) Просто я не вижу больше смысла делать лейбл, кооперироваться с кем-то, хочется просто искать пиздатый контент, а этой хуйней пусть маркетологи страдают. Я своё отстрадал тогда.</p>
           </div>
         </div>
         <figure class="audio-cue" id="track-hot-pursuit" data-audio-player aria-labelledby="track-hot-pursuit-title">
@@ -270,30 +273,30 @@
         </div>
         <figure class="image-asset">
           <div class="image-frame">
-            <a class="photo-link" href="assets/media/normis-calculator.jpg" data-photo aria-label="Открыть изображение. Скриншот теста «Калькулятор нормиса»">
-              <img src="assets/media/normis-calculator.jpg" width="2560" height="1334" loading="lazy" decoding="async" alt="Скриншот теста «Калькулятор нормиса»">
+            <a class="photo-link" href="assets/media/normis-calculator.png" data-photo aria-label="Открыть изображение. Скриншот теста «Калькулятор нормиса»">
+              <img src="assets/media/normis-calculator.png" width="2910" height="1844" loading="lazy" decoding="async" alt="Скриншот теста «Калькулятор нормиса»">
             </a>
           </div>
           <figcaption><a href="https://iamnhuman.github.io/fakeboys/" target="_blank" rel="noopener noreferrer">iamnhuman.github.io/fakeboys</a> — ироничный тест на слух</figcaption>
         </figure>
         <div class="turn answer">
           <div class="turn-copy answer-copy">
-            <p>А, да я даже не знаю, чё там за калькулятор) Это прикол был, с первого запроса. Я просто «GPT Astra» сказал примерно, что делать, и дал доступ к «Suno».</p>
+            <p>А, да я даже не знаю, чё там за калькулятор) Это прикол был, с первого запроса. Я просто <span class="artist-name"><span class="artist-quote">«</span>GPT Astra<span class="artist-quote">»</span></span> сказал примерно, что делать, и дал доступ к <span class="artist-name"><span class="artist-quote">«</span>Suno<span class="artist-quote">»</span></span>.</p>
           </div>
         </div>
         <div class="turn question" id="question-10" tabindex="-1">
-          <h2 class="turn-copy question-copy" id="question-10-title">Тем не менее. даже это все равно отражает твои попытки повлиять на освещение андерграунда в ру-телеграме, разве не так?</h2>
+          <h2 class="turn-copy question-copy" id="question-10-title">Тем не менее. даже это все равно отражает твои попытки повлиять на освещение андерграунда в русскоязычном <span class="artist-name"><span class="artist-quote">«</span>Telegram<span class="artist-quote">»</span></span>, разве не так?</h2>
         </div>
         <div class="turn answer">
           <div class="turn-copy answer-copy">
-            <p>Ну у меня цель скорее его собирать. Чтобы освещать, надо платить нормисам и вкладывать в рекламу) Я максимум в комментах могу поорать, когда настроение есть — может, это тоже небольшой вклад) Да и Редькин уже давно знает про мою любовь к нему и не реагирует. У меня по 10 акков с «тойотами» в бане у них во всех группах)</p>
+            <p>Ну у меня цель скорее его собирать. Чтобы освещать, надо платить нормисам и вкладывать в рекламу) Я максимум в комментах могу поорать, когда настроение есть — может, это тоже небольшой вклад) Да и <a href="https://t.me/trollnormis/4041" target="_blank" rel="noopener noreferrer">Редькин</a> уже давно знает про мою любовь к нему и не реагирует. У меня по 10 акков с «тойотами» в бане у них во всех группах)</p>
           </div>
         </div>
         <figure class="image-asset image-original" id="toyota-handles">
           <div class="image-frame">
-            <a class="photo-link" href="assets/media/toyota-handles.png" data-photo aria-label="Открыть изображение. Пять аккаунтов с вариантами никнейма Тойоты в Telegram">
-              <img src="assets/media/toyota-handles.png" srcset="assets/media/toyota-handles.png 634w"
-                sizes="317px" width="317" height="253" loading="lazy" decoding="async" alt="Пять аккаунтов с вариантами никнейма Тойоты в Telegram">
+            <a class="photo-link" href="assets/media/toyota-handles.png" data-photo aria-label="Открыть изображение. Шесть аккаунтов с вариантами никнейма Тойоты в Telegram">
+              <img src="assets/media/toyota-handles.png" srcset="assets/media/toyota-handles.png 1038w"
+                sizes="317px" width="317" height="299" loading="lazy" decoding="async" alt="Шесть аккаунтов с вариантами никнейма Тойоты в Telegram">
             </a>
           </div>
         </figure>
@@ -307,7 +310,7 @@
         </div>
         <div class="turn answer">
           <div class="turn-copy answer-copy">
-            <p>Нет такого, даже в самом уёбищном задрипанном канале какого-то школьника случайно может появиться что-то уникальное) Никогда не знаешь, откуда оно придёт. Есть просто каналы, которые вызывают у меня желание пойти срать в комменты, где я пишу, что все, кто не запостил «FITNESSS» и «4LL», — додики. Кажется, более чёткого ответа невозможно дать — любимые каналы были бы те, которые так же топили бы за похожие имена и пытались экспериментировать с подачей контента. Желательно, чтобы это было из интереса, а не из-за того, что какой-то хуй в комментах так сказал, или потому, что «Яндекс» занёс бюджет. В этом плане, видимо, у меня виртуальный нарциссизм. Мне очень нравится подход, когда ты сделал <a href="http://t.me/spamnormis" target="_blank" rel="noopener noreferrer">группу</a> и за 2 дня собрал контента больше, чем у Редькина было за год на канале, но этот подход, очевидно, мало кто понимает. Суть моих каналов в том, чтобы они были моими самыми любимыми и в них отображалось самое любимое.</p>
+            <p>Нет такого, даже в самом уёбищном задрипанном канале какого-то школьника случайно может появиться что-то уникальное) Никогда не знаешь, откуда оно придёт. Есть просто каналы, которые вызывают у меня желание пойти срать в комменты, где я пишу, что все, кто не запостил <span class="artist-name"><span class="artist-quote">«</span>FITNESSS<span class="artist-quote">»</span></span> и <span class="artist-name"><span class="artist-quote">«</span>4LL<span class="artist-quote">»</span></span>, — додики. Кажется, более чёткого ответа невозможно дать — любимые каналы были бы те, которые так же топили бы за похожие имена и пытались экспериментировать с подачей контента. Желательно, чтобы это было из интереса, а не из-за того, что какой-то хуй в комментах так сказал, или потому, что «Яндекс» занёс бюджет. В этом плане, видимо, у меня виртуальный нарциссизм. Мне очень нравится подход, когда ты сделал <a href="http://t.me/spamnormis" target="_blank" rel="noopener noreferrer">группу</a> и за 2 дня собрал контента больше, чем у <a href="https://t.me/archivenormis/5429/14918" target="_blank" rel="noopener noreferrer">Редькина</a> было за год <a href="https://t.me/brokendance" target="_blank" rel="noopener noreferrer">на канале</a>, но этот подход, очевидно, мало кто понимает. Суть моих каналов в том, чтобы они были моими самыми любимыми и в них отображалось самое любимое.</p>
           </div>
         </div>
         <div class="turn question" id="question-12" tabindex="-1">
@@ -315,7 +318,7 @@
         </div>
         <div class="turn answer">
           <div class="turn-copy answer-copy">
-            <p>Есть куча каналов, где бывает что-то крутое и бывает треш, выделить что-то одно невозможно. У меня, например, вызывает испанский стыд то, как какой-нибудь «warhol» ведёт свой канал, но периодически даже там <a href="https://t.me/warhol/14775" target="_blank" rel="noopener noreferrer">бывают</a> посты с интересными именами, хотя за некоторые фразы хочется пробить админу с вертухи. С другой стороны, если бы админ «warhol» не был нормисом, у него бы не было такой аудитории. Может быть, для его целеполагания это и хорошо. Поэтому интерес к андеграунду очень неравномерный и скачкообразный.</p>
+            <p>Есть куча каналов, где бывает что-то крутое и бывает треш, выделить что-то одно невозможно. У меня, например, вызывает испанский стыд то, как какой-нибудь <span class="artist-name"><span class="artist-quote">«</span>Warhol<span class="artist-quote">»</span></span> ведёт свой канал, но периодически даже там <a href="https://t.me/warhol/14775" target="_blank" rel="noopener noreferrer">бывают</a> посты с интересными именами, хотя за некоторые фразы хочется пробить админу с вертухи. С другой стороны, если бы админ <span class="artist-name"><span class="artist-quote">«</span>Warhol<span class="artist-quote">»</span></span> не был нормисом, у него бы не было такой аудитории. Может быть, для его целеполагания это и хорошо. Поэтому интерес к андеграунду очень неравномерный и скачкообразный.</p>
           </div>
         </div>
         <div class="turn question" id="question-13" tabindex="-1">
@@ -323,7 +326,7 @@
         </div>
         <div class="turn answer">
           <div class="turn-copy answer-copy">
-            <p>Тебе не кажется. Большинство из этих людей имеет какую-то рекламу и единственную мотивацию — рост канала, это совсем не то, что нужно для поиска «андера». У меня мотивация найти что-то уникальное и орать на всех, кто не способствует его распространению. Если бы я был из тех, кто каждый день проверяет статистику группы и считает прослушки на Spotify, я бы тоже, наверное, по-другому всё делал. Как минимум, ебанул бы канал с комментами и там 10 человек заставил бы постоянно орать, и крутил бы 50% просмотров. И купил бы рекламу, платные посты, и любой человек, зашедший со стороны, не увидел бы разницы с каналами на 10-50к.</p>
+            <p>Тебе не кажется. Большинство из этих людей имеет какую-то рекламу и единственную мотивацию — рост канала, это совсем не то, что нужно для поиска «андера». У меня мотивация найти что-то уникальное и орать на всех, кто не способствует его распространению. Если бы я был из тех, кто каждый день проверяет статистику группы и считает прослушки на <span class="artist-name"><span class="artist-quote">«</span>Spotify<span class="artist-quote">»</span></span>, я бы тоже, наверное, по-другому всё делал. Как минимум, ебанул бы канал с комментами и там 10 человек заставил бы постоянно орать, и крутил бы 50% просмотров. И купил бы рекламу, платные посты, и любой человек, зашедший со стороны, не увидел бы разницы с каналами на 10-50к.</p>
           </div>
         </div>
         <div class="turn question" id="question-14" tabindex="-1">
@@ -331,15 +334,15 @@
         </div>
         <div class="turn answer">
           <div class="turn-copy answer-copy">
-            <p>Да, и когда там полгода нет ни одного поста с кем-то интересным из андера, то это вызывает желание насрать там обильно в комментах, ты сам объяснил причину) Если бы какой-то из каналов выложил «4LL» и пост собрал бы в 5 раз меньше, а в комментах бы написали «что за хуйню вы постите», ничего с каналом бы не случилось, но даже этого дискурса нету.</p>
+            <p>Да, и когда там полгода нет ни одного поста с кем-то интересным из андера, то это вызывает желание насрать там обильно в комментах, ты сам объяснил причину) Если бы какой-то из каналов выложил <span class="artist-name"><span class="artist-quote">«</span>4LL<span class="artist-quote">»</span></span> и пост собрал бы в 5 раз меньше, а в комментах бы написали «что за хуйню вы постите», ничего с каналом бы не случилось, но даже этого дискурса нету.</p>
           </div>
         </div>
         <div class="turn question" id="question-15" tabindex="-1">
-          <h2 class="turn-copy question-copy" id="question-15-title">Что у тебя сейчас является основным источником инфы и контента по тематикам канала? Телеграм, самостоятельный поиск/гуглинг, ютуб?</h2>
+          <h2 class="turn-copy question-copy" id="question-15-title">Что у тебя сейчас является основным источником инфы и контента по тематикам канала? <span class="artist-name"><span class="artist-quote">«</span>Telegram<span class="artist-quote">»</span></span>, самостоятельный поиск/гуглинг, ютуб?</h2>
         </div>
         <div class="turn answer">
           <div class="turn-copy answer-copy">
-            <p>Да на самом деле я последний год очень много проводил времени за этим делом и думаю, что дальше не будет столько же сил. Я, по сути, жил в «Telegram». Поэтому основной источник — это время. Можно в любой соцсети найти себе контент, потом нужны только силы и время, чтобы его весь потребить и прошерстить. В основном я стараюсь искать что-то необычное во всех видах медиа: от обычных новостных каналов до подборок на «SoundCloud» и просмотра, кого лайкнул продюсер с 10 подписчиками. Ты никогда не знаешь, где найдёшь то самое необычное и интересное, иногда даже какой-нибудь канал Позднякова или «ДВАЧ» могут запостить что-то актуальное, хотя есть ощущение, что это преступление — открывать такие каналы. В идеале это занимает 24/7, не хватает времени просмотреть все подписки за день. Один из примеров: на бендкемпе есть подборки сохранённых релизов разных людей, я сегодня добавил <a href="https://bandcamp.com/asvanyviz2" target="_blank" rel="noopener noreferrer">200 релизов</a> в «прослушать» от одного аккаунта. Ещё, например, сделал себе сайт, который парсит один сабреддит с ИИ-роликами. В «Instagram» до фига подписок — это бесконечная лента контента. Так коплю различные ссылки по различным темам, а потом стараюсь в каком-то виде запостить самое интересное.</p>
+            <p>Да на самом деле я последний год очень много проводил времени за этим делом и думаю, что дальше не будет столько же сил. Я, по сути, жил в <span class="artist-name"><span class="artist-quote">«</span>Telegram<span class="artist-quote">»</span></span>. Поэтому основной источник — это время. Можно в любой соцсети найти себе контент, потом нужны только силы и время, чтобы его весь потребить и прошерстить. В основном я стараюсь искать что-то необычное во всех видах медиа: от обычных новостных каналов до подборок на <span class="artist-name"><span class="artist-quote">«</span>SoundCloud<span class="artist-quote">»</span></span> и просмотра, кого лайкнул продюсер с 10 подписчиками. Ты никогда не знаешь, где найдёшь то самое необычное и интересное, иногда даже какой-нибудь канал Позднякова или <span class="artist-name"><span class="artist-quote">«</span>ДВАЧ<span class="artist-quote">»</span></span> могут запостить что-то актуальное, хотя есть ощущение, что это преступление — открывать такие каналы. В идеале это занимает 24/7, не хватает времени просмотреть все подписки за день. Один из примеров: на бендкемпе есть подборки сохранённых релизов разных людей, я сегодня добавил <a href="https://bandcamp.com/asvanyviz2" target="_blank" rel="noopener noreferrer">200 релизов</a> в «прослушать» от одного аккаунта. Ещё, например, сделал себе сайт, который парсит один сабреддит с ИИ-роликами. В <span class="artist-name"><span class="artist-quote">«</span>Instagram<span class="artist-quote">»</span></span> до фига подписок — это бесконечная лента контента. Так коплю различные ссылки по различным темам, а потом стараюсь в каком-то виде запостить самое интересное.</p>
           </div>
         </div>
         <div class="turn question" id="question-16" tabindex="-1">
@@ -347,27 +350,28 @@
         </div>
         <div class="turn answer">
           <div class="turn-copy answer-copy">
-            <p>Всё это начиналось с одной группы, и постепенно возникала потребность разделить. Недавно стал делать клон Telegram и локальный архив всех этих групп, там уже примерно 25 тысяч постов / сообщений. Теперь, если опять забанят, то хотя бы всё это сохранится. К сожалению, чтобы наладить всю эту систему гиперссылок, как в телеграме, нужно будет попотеть.
+            <p>Всё это начиналось с одной группы, и постепенно возникала потребность разделить. Недавно стал делать клон <span class="artist-name"><span class="artist-quote">«</span>Telegram<span class="artist-quote">»</span></span> и локальный архив всех этих групп, там уже примерно 25 тысяч постов / сообщений. Теперь, если опять забанят, то хотя бы всё это сохранится. К сожалению, чтобы наладить всю эту систему гиперссылок, как в <span class="artist-name"><span class="artist-quote">«</span>Telegram<span class="artist-quote">»</span></span>, нужно будет попотеть.
 Из музыки стараюсь слушать всё подряд, просто прокликиваю быстро то, что не цепляет. Иногда за пару секунд понимаешь, стоит тебе дальше слушать или нет.</p>
           </div>
         </div>
         <figure class="pull-quote" id="quote-hard-dubstep">
-          <blockquote>Конечно, обидно, что ты сидишь, занимаешься этим всю жизнь, самому нравится результат, но у тебя 3 просмотра, а у какого-то долбоеба или «Кай Ангела» на фото с майкой — 100к. Но что поделать, видимо, такая судьба. Я сам был таким же долбоебом когда-то, когда был паблик «Hard Dubstep». Спиженный с закрытого форума релиз приносил тебе тонну лайков — карма.</blockquote>
+          <blockquote>Конечно, обидно, что ты сидишь, занимаешься этим всю жизнь, самому нравится результат, но у тебя 3 просмотра, а у какого-то долбоеба или <span class="artist-name"><span class="artist-quote">«</span>Кай Ангела<span class="artist-quote">»</span></span> на фото с майкой — 100к. Но что поделать, видимо, такая судьба. Я сам был таким же долбоебом когда-то, когда был паблик <span class="artist-name"><span class="artist-quote">«</span>Hard Dubstep<span class="artist-quote">»</span></span>. Спиженный с закрытого форума релиз приносил тебе тонну лайков — карма.</blockquote>
         </figure>
         <div class="turn question" id="question-17" tabindex="-1">
           <h2 class="turn-copy question-copy" id="question-17-title">Отчасти понимаю, наверное, и так есть. Слишком задротские штуки не заходят, потому на свою аудиторию сложно выйти. Да и аудитория эта разрознена по интернету, в одном месте не обитает.</h2>
         </div>
         <div class="turn answer">
           <div class="turn-copy answer-copy">
-            <p>Я тебе рассказывал про создание лейбла и про попытки как-то собрать нейрохоп-продюсеров из рунета в одном месте в 2015. Тогда на нейрохоп всем было примерно так же насрать, как и на деконстрактед клаб сегодня. Даже когда треки с твоего лейбла <a href="https://youtu.be/2tKuE8CjON8?si=d6ex2-ieuoI0FC1c&amp;t=2771" target="_blank" rel="noopener noreferrer">играли</a> такие отцы нейрофанка, как Noisia, важность всего этого события понимали единицы людей. Но тогда был только первый сезон их радио и полмира ещё не попало к ним в выпуски. Сейчас там уже даже треки моей бабушки играли, наверное. Так что за 10 лет в этом плане ничего не поменялось. Может, ещё через 10 лет треки всех деконстрактед клаб продюсеров сыграют на каком-нибудь «NTS radio⁠⁠», уже вот на «radio:trauma» сыграли.</p>
+            <p>Я тебе рассказывал про создание лейбла и про попытки как-то собрать нейрохоп-продюсеров из рунета в одном месте в 2015. Тогда на нейрохоп всем было примерно так же насрать, как и на деконстрактед клаб сегодня. Даже когда треки с твоего лейбла <a href="https://youtu.be/2tKuE8CjON8?si=d6ex2-ieuoI0FC1c&amp;t=2771" target="_blank" rel="noopener noreferrer">играли</a> такие отцы нейрофанка, как <span class="artist-name"><span class="artist-quote">«</span>Noisia<span class="artist-quote">»</span></span>, важность всего этого события понимали единицы людей. Но тогда был только первый сезон их радио и полмира ещё не попало к ним в выпуски. Сейчас там уже даже треки моей бабушки играли, наверное. Так что за 10 лет в этом плане ничего не поменялось. Может, ещё через 10 лет треки всех деконстрактед клаб продюсеров сыграют на каком-нибудь <span class="artist-name"><span class="artist-quote">«</span><a href="https://t.me/hypernormis/68/4740" target="_blank" rel="noopener noreferrer">NTS radio</a>⁠⁠<span class="artist-quote">»</span></span>, уже вот на <span class="artist-name"><span class="artist-quote">«</span><a href="https://t.me/hypernormis/68/4712" target="_blank" rel="noopener noreferrer">radio:trauma</a><span class="artist-quote">»</span></span> сыграли.</p>
           </div>
         </div>
         <hr class="topic-break">
-        <section class="turn question" id="rap" aria-labelledby="rap-title" tabindex="-1">
+        <section class="turn question" id="question-18" aria-labelledby="rap-title" tabindex="-1">
+          <span class="question-alias" id="rap" aria-hidden="true"></span>
           <h2 class="turn-copy question-copy" id="rap-title">Как ты смотришь на современные тренды в "репе" с точки зрения звука? Было ли когда-то ощущение, что это что-то новое?</h2>
           <div class="turn answer">
             <div class="turn-copy answer-copy">
-              <p>Ты про «Lucy Bedroque» и такое всякое? Про «fortuna812⁠⁠» и «Темного Принца»?</p>
+              <p>Ты про <span class="artist-name"><span class="artist-quote">«</span>Lucy Bedroque<span class="artist-quote">»</span></span> и такое всякое? Про <span class="artist-name"><span class="artist-quote">«</span>FORTUNA 812<span class="artist-quote">»</span></span> и <span class="artist-name"><span class="artist-quote">«</span>Темного Принца<span class="artist-quote">»</span></span>?</p>
             </div>
           </div>
           <div class="dialogue-aside" id="question-19" tabindex="-1">
@@ -375,7 +379,7 @@
           </div>
           <div class="turn answer">
             <div class="turn-copy answer-copy">
-              <p>Ну я за этим слежу, но редко что-то цепляет. К нему («Мэдкиду») я относился нейтрально, но когда все музжуры начали это форсить в своем стиле, тоже рвало пердак. Это преподносилось так, что «Soundcloud» появился год назад. А до этого всё было хуйнёй, недостойной внимания и культурологического уважения.</p>
+              <p>Ну я за этим слежу, но редко что-то цепляет. К нему (<span class="artist-name"><span class="artist-quote">«</span>Мэдкиду<span class="artist-quote">»</span></span>) я относился нейтрально, но когда все музжуры начали это форсить в своем стиле, тоже рвало пердак. Это преподносилось так, что <span class="artist-name"><span class="artist-quote">«</span>SoundCloud<span class="artist-quote">»</span></span> появился год назад. А до этого всё было хуйнёй, недостойной внимания и культурологического уважения.</p>
             </div>
           </div>
         </section>
@@ -388,12 +392,13 @@
           </div>
         </div>
         <hr class="topic-break">
-        <div class="turn question" id="timbre" tabindex="-1">
+        <div class="turn question" id="question-21" tabindex="-1">
+          <span class="question-alias" id="timbre" aria-hidden="true"></span>
           <h2 class="turn-copy question-copy" id="timbre-title">Если возвращаться к FITNESSS, мы как-то обсуждали это с друзьями (возможно с твоей подачи кто-то его к нам в чат и принес, кстати), и я тогда пришел к выводу, что да, звук есть, чуйка, атмосфера, стиль, это понятно. Но это чистый саунддизайн, а где музыка? Мне будто бы не хватило "музыки" немного. Визуал у него тоже присутствует, только не маловато ли его?</h2>
         </div>
         <div class="turn answer">
           <div class="turn-copy answer-copy">
-            <p>Это уже другая тема разговора — про тембральный и гармонический слух + ещё от настроения и жизненной ситуации зависит, нужен ли тебе саунд-дизайн и какие эмоции он у тебя будет вызывать. Я лишь оцениваю, что у него этот саунд-дизайн более прогрессивный. Познать это можно только в сравнении с кем-то ещё. Например, был день, когда я находился просто в эйфории от первой части этого <a href="https://soundcloud.com/beatsandbliss/017-alparr" target="_blank" rel="noopener noreferrer">микса</a>, а есть периоды, когда это больно слушать. (Даня) «Порнорэп» <a href="https://t.me/trap_critics/2026?comment=87316" target="_blank" rel="noopener noreferrer">сказал</a>, что это звучит, как будто робота привязали к батарее и ебут. За это я на нём тестировал «<a href="https://t.me/privatenormis/3457?single" target="_blank" rel="noopener noreferrer">Nano Banana</a>», когда она вышла. «Alparr» тоже не понял весь юмор, только я один понял))</p>
+            <p>Это уже другая тема разговора — про тембральный и гармонический слух + ещё от настроения и жизненной ситуации зависит, нужен ли тебе саунд-дизайн и какие эмоции он у тебя будет вызывать. Я лишь оцениваю, что у него этот саунд-дизайн более прогрессивный. Познать это можно только в сравнении с кем-то ещё. Например, был день, когда я находился просто в эйфории от первой части этого <a href="https://soundcloud.com/beatsandbliss/017-alparr" target="_blank" rel="noopener noreferrer">микса</a>, а есть периоды, когда это больно слушать. (Даня) <span class="artist-name"><span class="artist-quote">«</span><a href="https://t.me/archivenormis/3766/15088" target="_blank" rel="noopener noreferrer">Порнорэп</a><span class="artist-quote">»</span></span> <a href="https://t.me/trap_critics/2026?comment=87316" target="_blank" rel="noopener noreferrer">сказал</a>, что это звучит, как будто человека привязали к батарее и ебут. За это я на нём тестировал <span class="artist-name"><span class="artist-quote">«</span><a href="https://t.me/privatenormis/3457?single" target="_blank" rel="noopener noreferrer">Nano Banana</a><span class="artist-quote">»</span></span>, когда она вышла. <span class="artist-name"><span class="artist-quote">«</span>Alparr<span class="artist-quote">»</span></span> тоже не понял весь юмор, только я один понял))</p>
           </div>
         </div>
         <div class="turn question" id="question-22" tabindex="-1">
@@ -401,7 +406,7 @@
         </div>
         <div class="turn answer">
           <div class="turn-copy answer-copy">
-            <p>А визуал у «FITNESSS» — это в основном <a href="https://www.instagram.com/p/DehP5BAp2lU/" target="_blank" rel="noopener noreferrer">записи с лайвов</a>, и то этих записей всего несколько. Крутость там была именно в том, что на стыке разных направлений. Кстати, последнее выступление «Arca» уже копирует «FITNESSS» и не сказал бы, что побеждает.</p>
+            <p>А визуал у <span class="artist-name"><span class="artist-quote">«</span>FITNESSS<span class="artist-quote">»</span></span> — это в основном <a href="https://www.instagram.com/p/DehP5BAp2lU/" target="_blank" rel="noopener noreferrer">записи с лайвов</a>, и то этих записей всего несколько. Крутость там была именно в том, что на стыке разных направлений. Кстати, последнее выступление <span class="artist-name"><span class="artist-quote">«</span>Arca<span class="artist-quote">»</span></span> уже копирует <span class="artist-name"><span class="artist-quote">«</span>FITNESSS<span class="artist-quote">»</span></span> и не сказал бы, что побеждает.</p>
           </div>
         </div>
         <figure class="video-gallery" data-video-gallery aria-label="Выступление FITNESSS с костюмом S4 ENGINE">
@@ -433,14 +438,14 @@
               </video>
             </div>
           </div>
-          <figcaption>Новая версия костюма <a href="https://t.me/hypernormis/68/4676?single" target="_blank" rel="noopener noreferrer">FITNESSS</a> называется «S4 ENGINE». Нормальная такая у создателя данного агрегата майка Тойоты.</figcaption>
+          <figcaption>Новая версия костюма <a href="https://t.me/hypernormis/68/4720" target="_blank" rel="noopener noreferrer">FITNESSS</a> называется «S4 ENGINE». Нормальная такая у создателя данного агрегата майка Тойоты.</figcaption>
         </figure>
         <div class="turn question" id="question-23" tabindex="-1">
           <h2 class="turn-copy question-copy" id="question-23-title">А тебе какого периода больше всего музыка Arca нравится (если нравится)?</h2>
         </div>
         <div class="turn answer">
           <div class="turn-copy answer-copy">
-            <p>Начального. Сейчас не нравится. Один <a href="https://open.spotify.com/track/2D94XNl9XV05mxKfG9wFst" target="_blank" rel="noopener noreferrer">трек</a> понравился (<i>из нового альбома</i> <i>— прим.</i>), но не саунд-дизайном.</p>
+            <p>Начального. Сейчас не нравится. Один <a href="https://open.spotify.com/track/2D94XNl9XV05mxKfG9wFst" target="_blank" rel="noopener noreferrer">трек</a> понравился, но не саунд-дизайном.</p>
           </div>
         </div>
         <div class="turn question" id="question-24" tabindex="-1">
@@ -451,7 +456,7 @@
             <p>Я думаю, на них оказывала влияние совокупность вещей: и EDM, и IDM, и industrial, а не что-то одно конкретное. Как и на меня в том числе. Я вот начинал делать <a href="https://iamnhuman.github.io/bassfunk-releases/" target="_blank" rel="noopener noreferrer">сайт</a>, так и не закончил, там релизы, которые слушал в 2016, специально ничего не убирал и не добавлял, может, малость. Закончу его когда-нибудь.</p>
           </div>
         </div>
-        <figure class="image-asset" id="bassfunk-releases">
+        <figure class="image-asset" id="bassfunk-releases" data-sources-before>
           <div class="image-frame">
             <a class="photo-link" href="assets/media/bassfunk-releases.png" data-photo aria-label="Открыть изображение. Архив Bassfunk Releases с сеткой обложек музыкальных релизов">
               <img src="assets/media/bassfunk-releases.jpg" width="1560" height="1110" loading="lazy" decoding="async" alt="Архив Bassfunk Releases с сеткой обложек музыкальных релизов">
@@ -463,7 +468,7 @@
         </div>
         <div class="turn answer">
           <div class="turn-copy answer-copy">
-            <p>Будет круто, когда нейронка сможет сама проставить все ссылки на артистов и скачать треки к каждому релизу). Касаемо сайтов ещё делаю <a href="https://iamnhuman.github.io/agi" target="_blank" rel="noopener noreferrer">сайт</a> со списком «ИИшников» — напрягает вайбкодинг, руками быстрее, но ради интереса всё равно продолжаю без просмотра кода делать. Это всё ИИ-видео- и фотокреаторы, чисто по визуалу. Я только начал всё это собирать, там есть градация по тегам «А», «АА», «ААА», «ААА+». Только у компании «<a href="https://higgsfield.ai/creator-partnership-program" target="_blank" rel="noopener noreferrer">higgsfield</a>» 1000 креаторов в программе, поэтому собирать их можно бесконечно.</p>
+            <p>Будет круто, когда нейронка сможет сама проставить все ссылки на артистов и скачать треки к каждому релизу). Касаемо сайтов ещё делаю <a href="https://iamnhuman.github.io/agi" target="_blank" rel="noopener noreferrer">сайт</a> со списком «ИИшников» — напрягает вайбкодинг, руками быстрее, но ради интереса всё равно продолжаю без просмотра кода делать. Это всё ИИ-видео- и фотокреаторы, чисто по визуалу. Я только начал всё это собирать, там есть градация по тегам «А», «АА», «ААА», «ААА+». Только у компании <span class="artist-name"><span class="artist-quote">«</span><a href="https://higgsfield.ai/creator-partnership-program" target="_blank" rel="noopener noreferrer">Higgsfield</a><span class="artist-quote">»</span></span> 1000 креаторов в программе, поэтому собирать их можно бесконечно.</p>
           </div>
         </div>
         <div class="turn question" id="question-26" tabindex="-1">
@@ -471,7 +476,7 @@
         </div>
         <div class="turn answer">
           <div class="turn-copy answer-copy">
-            <p>К ИИ-музыке я отношусь рационально, стараюсь пробовать все основные модели и нагенерил тысячи экспериментов, при этом понимаю, что кожаные ещё побеждают в войне громкости. <a href="https://t.me/privatenormis/3639" target="_blank" rel="noopener noreferrer">Это</a> «ElevenLabs» — пока лучшее, что я слышал из мира ИИ, но следующие версии их моделей сильно расстроили, наблюдается регресс. У «Suno» был неплохой апдейт — если <a href="https://fict.bandcamp.com/track/toyotas-never-die-but-you-will" target="_blank" rel="noopener noreferrer">этот трек</a> конкурировал бы по громкости с последним альбомом «2hollis», то я бы уже был на стороне ИИ-музыки, но пока только ожидаю новых моделей — оно уже крутое, но недостаточно.</p>
+            <p>К ИИ-музыке я отношусь рационально, стараюсь пробовать все основные модели и нагенерил тысячи экспериментов, при этом понимаю, что кожаные ещё побеждают в войне громкости. <a href="https://t.me/privatenormis/3639" target="_blank" rel="noopener noreferrer">Это</a> <span class="artist-name"><span class="artist-quote">«</span>ElevenLabs<span class="artist-quote">»</span></span> — пока лучшее, что я слышал из мира ИИ, но следующие версии их моделей сильно расстроили, наблюдается регресс. У <span class="artist-name"><span class="artist-quote">«</span>Suno<span class="artist-quote">»</span></span> был неплохой апдейт — если <a href="https://fict.bandcamp.com/track/toyotas-never-die-but-you-will" target="_blank" rel="noopener noreferrer">этот трек</a> конкурировал бы по громкости с последним альбомом <span class="artist-name"><span class="artist-quote">«</span>2hollis<span class="artist-quote">»</span></span>, то я бы уже был на стороне ИИ-музыки, но пока только ожидаю новых моделей — оно уже крутое, но недостаточно.</p>
           </div>
         </div>
         <div class="turn question" id="question-27" tabindex="-1">
@@ -487,7 +492,7 @@
         </div>
         <div class="turn answer">
           <div class="turn-copy answer-copy">
-            <p>Мне пофиг на ноты, главное, чтобы звук был громкий и чистый, вот это они не умеют пока ещё. Потому что с технологической точки зрения это сложнее, а ноты более математическая фигня. В этом и есть суть слова «тембр». Это то, что отличает жизнь от математики, поэтому и воссоздать сложнее.</p>
+            <p>Мне пофиг на ноты, главное, чтобы звук был громкий и чистый, вот это они не умеют пока ещё. Потому что с технологической точки зрения это сложнее, а ноты более <a href="https://youtu.be/8sgu7yz73yU?si=r7nY01W7yejDMgi7&amp;t=4374" target="_blank" rel="noopener noreferrer">математическая фигня</a>. В этом и есть суть слова «тембр». Это то, что отличает жизнь от математики, поэтому и воссоздать сложнее.</p>
           </div>
         </div>
         <div class="turn question" id="question-29" tabindex="-1">
@@ -504,6 +509,11 @@
         <div class="turn answer">
           <div class="turn-copy answer-copy">
             <p>Не нейронок, а конкретных людей из команды разработчиков конкретной модели, а потом людей, которые нашли крутое сочетание референса и промпта или придумали, как дообучить модель. Вот максимум, что на данном этапе можно мастерингом сделать:</p>
+          </div>
+        </div>
+        <div class="turn answer">
+          <div class="turn-copy answer-copy">
+            <p>Нужно, чтобы она с нуля громко генерила, иначе получается мусор при увеличении громкости. Конечно, если в команде <span class="artist-name"><span class="artist-quote">«</span>Suno<span class="artist-quote">»</span></span> никто не понимает прикол <span class="artist-name"><span class="artist-quote">«</span><a href="https://www.reddit.com/r/audioengineering/comments/11wte7t/100_gecs_mastering_question/" target="_blank" rel="noopener noreferrer">100 gecs</a><span class="artist-quote">»</span></span> или <span class="artist-name"><span class="artist-quote">«</span><a href="https://t.me/archivenormis/3791/12385" target="_blank" rel="noopener noreferrer">Темного Принца</a><span class="artist-quote">»</span></span>, то они ни фига не сделают модель, которая будет конкурировать с кожаными.</p>
           </div>
         </div>
         <figure class="audio-cue" id="sade-versions" data-audio-player data-compare-versions aria-label="S.A.D.E. - Toyotas Never Die, But You Will — две версии">
@@ -535,11 +545,6 @@
           </div>
           <p class="audio-error" data-media-error hidden role="status">Трек не удалось воспроизвести. Его можно скачать по ссылке MP3.</p>
         </figure>
-        <div class="turn answer">
-          <div class="turn-copy answer-copy">
-            <p>Нужно, чтобы она с нуля громко генерила, иначе получается мусор при увеличении громкости. Конечно, если в команде «Suno» никто не понимает прикол «<a href="https://www.reddit.com/r/audioengineering/comments/11wte7t/100_gecs_mastering_question/" target="_blank" rel="noopener noreferrer">100 gecs</a>» или «<a href="https://t.me/archivenormis/3791/12385" target="_blank" rel="noopener noreferrer">Темного Принца</a>», то они ни фига не сделают модель, которая будет конкурировать с кожаными.</p>
-          </div>
-        </div>
         <div class="turn question" id="question-31" tabindex="-1">
           <h2 class="turn-copy question-copy" id="question-31-title">Меня еще веселит в этом, что все эти переборы/арпеджио похожи на группы из жанра тех-дэт метала последних 10-ти лет.</h2>
         </div>
@@ -552,19 +557,20 @@
           <h3 class="turn-copy question-copy" id="question-32-title">Даа, помню как-то была нейронка, которая генерила Archspire 24/7.</h3>
         </div>
         <hr class="topic-break">
-        <div class="turn question" id="noise" tabindex="-1">
+        <div class="turn question" id="question-33" tabindex="-1">
+          <span class="question-alias" id="noise" aria-hidden="true"></span>
           <h2 class="turn-copy question-copy" id="noise-title">Но ты в целом считаешь плохой тенденцией когда что-то называют нейрослопом, видишь в ии какие-то потенциально крутые инструменты полного цикла? Или все же большая часть сейчас выходящего с использованием ии тебе тоже в основном не нравится?</h2>
         </div>
         <div class="turn answer">
           <div class="turn-copy answer-copy">
-            <p>Я считаю, что плохо, когда не разделяют генерации на плохие и хорошие и даже не пытаются это делать. Так было и с электронной музыкой: в начале её становления для многих людей вся электронная музыка была калом. Сейчас есть хорошие по качеству генерации в «seedance», которые просто повторяют одно и то же, вот это я не поддерживаю, но есть много интересного контента.</p>
+            <p>Я считаю, что плохо, когда не разделяют генерации на плохие и хорошие и даже не пытаются это делать. Так было и с электронной музыкой: в начале её становления для многих людей вся электронная музыка была калом. Сейчас есть хорошие по качеству генерации в <span class="artist-name"><span class="artist-quote">«</span>Seedance<span class="artist-quote">»</span></span>, которые просто повторяют одно и то же, вот это я не поддерживаю, но есть также и много интересного контента.</p>
           </div>
         </div>
         <section class="turn question" id="question-34" aria-labelledby="question-34-title" tabindex="-1">
           <h2 class="turn-copy question-copy" id="question-34-title">Лично мне как будто не очень нравится, когда стараются сгенерировать что-то по качеству равное тому, что люди делают руками. Мне кажется, генерация открывает гораздо больше пространства для экспериментов, что условно руками снять или невозможно, или крайне сложно.</h2>
           <div class="turn answer">
             <div class="turn-copy answer-copy">
-              <p>Ну вот «salibi» делает супервсратые генерации, но стильные, тебе нравится? Я считаю, что и такое бывает пиздато, и фотореализм бывает пиздато, просто когда таких аккаунтов 200, то ценность падает, а когда единицы, то за ними интересно наблюдать.</p>
+              <p>Ну вот <span class="artist-name"><span class="artist-quote">«</span>salibi<span class="artist-quote">»</span></span> делает супервсратые генерации, но стильные, тебе нравится? Я считаю, что и такое бывает пиздато, и фотореализм бывает пиздато, просто когда таких аккаунтов 200, то ценность падает, а когда единицы, то за ними интересно наблюдать.</p>
             </div>
           </div>
           <div class="dialogue-aside" id="question-35" tabindex="-1">
@@ -604,7 +610,7 @@
         </div>
         <div class="turn answer">
           <div class="turn-copy answer-copy">
-            <p>Я считаю, что классическая музыка и в целом такой подход получили достаточно охвата в этой жизни и заебало уже. Я не считаю, что семплы с грануляркой — что-то новое, но это для 0,001%. Для других этой темы даже не существует, и я считаю это неправильным. Это как у пещерных людей — у них тоже была живопись, но она отличалась по детализации от современной. Какая разница между кроссовками с базара и «Balenciaga»? На базаре есть даже более удобные, но разница всё же есть — тут так же.</p>
+            <p>Я считаю, что классическая музыка и в целом такой подход получили достаточно охвата в этой жизни и заебало уже. Я не считаю, что семплы с грануляркой — что-то новое, но это для 0,001%. Для других этой темы даже не существует, и я считаю это неправильным. Это как у пещерных людей — у них тоже была живопись, но она отличалась по детализации от современной. Какая разница между кроссовками с базара и <span class="artist-name"><span class="artist-quote">«</span>Balenciaga<span class="artist-quote">»</span></span>? На базаре есть даже более удобные, но разница всё же есть — тут так же.</p>
           </div>
         </div>
         <div class="turn question" id="question-38" tabindex="-1">
@@ -620,7 +626,7 @@
         </div>
         <div class="turn answer">
           <div class="turn-copy answer-copy">
-            <p>Есть до фига, я просто не собираю такое, а больше по обратной стороне музыки, которую боится Виленская. Можно почитать <a href="https://t.me/archivenormis/978/3147" target="_blank" rel="noopener noreferrer">батл</a> с каким-то подписчиком «<a href="https://t.me/vasily_konad" target="_blank" rel="noopener noreferrer">Конада</a>», где он говорит, что всё уже давно придумали в тембральной музыке. Или посмотреть <a href="https://t.me/hypernormis/4351" target="_blank" rel="noopener noreferrer">такой</a> академический пример подхода к «спектральному» звуку. Во многих современных вузах уже, наверное, есть кафедры, где пытаются <a href="https://panayiotiskokoras.com/writings/" target="_blank" rel="noopener noreferrer">научно описывать</a> экспериментальную музыку.</p>
+            <p>Есть до фига, я просто не собираю такое, а больше по обратной стороне музыки, которую боится Виленская. Можно почитать <a href="https://t.me/archivenormis/978/3147" target="_blank" rel="noopener noreferrer">батл</a> с каким-то подписчиком <span class="artist-name"><span class="artist-quote">«</span><a href="https://t.me/vasily_konad" target="_blank" rel="noopener noreferrer">Конада</a><span class="artist-quote">»</span></span>, где он говорит, что всё уже давно придумали в тембральной музыке. Или посмотреть <a href="https://t.me/hypernormis/4351" target="_blank" rel="noopener noreferrer">такой</a> академический пример подхода к «спектральному» звуку. Во многих современных вузах уже, наверное, есть кафедры, где пытаются <a href="https://panayiotiskokoras.com/writings/" target="_blank" rel="noopener noreferrer">научно описывать</a> экспериментальную музыку.</p>
           </div>
         </div>
         <figure class="video-gallery" data-video-gallery data-preview-rows="2" aria-label="Видео Панайотиса Кокораса">
@@ -670,7 +676,8 @@
           </div>
         </figure>
         <hr class="topic-break">
-        <div class="turn question" id="music-journalism" tabindex="-1">
+        <div class="turn question" id="question-40" tabindex="-1">
+          <span class="question-alias" id="music-journalism" aria-hidden="true"></span>
           <h2 class="turn-copy question-copy" id="music-journalism-title">Подытоживая, как думаешь, что будет с музжуром, есть ли тенденции развития?</h2>
         </div>
         <div class="turn answer">
@@ -678,7 +685,8 @@
             <p>Всё зависит в первую очередь от политической ситуации в мире. В такой ситуации, как сегодня, у людей в общей массе с меньшей вероятностью случится развитие психофизических возможностей для восприятия звука. А с музжуром всегда всё одинаково: рано или поздно кто-то вкладывается в проект, который получает хайп, и тогда музжуры активируются. Думаю, так всегда было и будет. Если кто-то будет вкладываться в такую музыку, то эта человеческая многоножка музжуров быстро подхватит волну. Я думаю, что в будущем экспериментальная электронная музыка будет сильнее просачиваться в массы, а вместо неё будут появляться ещё более экстремальные аналоги.</p>
           </div>
         </div>
-        <div class="turn question" id="future-plans" tabindex="-1">
+        <div class="turn question" id="question-41" tabindex="-1">
+          <span class="question-alias" id="future-plans" aria-hidden="true"></span>
           <h2 class="turn-copy question-copy" id="future-plans-title">Какие планы на будущее?</h2>
         </div>
         <div class="turn answer">
@@ -689,52 +697,52 @@
 
         <section class="bonus" id="bonus" aria-labelledby="bonus-title">
           <h2 id="bonus-title">Бонусная часть</h2>
-          <div class="turn question" id="bassfunk" tabindex="-1">
+          <div class="turn question" id="question-42" tabindex="-1">
+            <span class="question-alias" id="bassfunk" aria-hidden="true"></span>
             <h3 class="turn-copy question-copy" id="bassfunk-title">Еще хотел спросить на другую тему: тебе, кстати, нравился бростеп на момент его появления, и вообще подход Skrillex? И как ты застал эру появления бростепа и Skrillex? Были вау ощущения от звука?</h3>
           </div>
           <div class="turn answer">
             <div class="turn-copy answer-copy">
-              <p>У меня когда-то с челом был самый большой паблик в «ВК⁠⁠» про бростеп «<a href="http://vk.com/wall-27403455_245963" target="_blank" rel="noopener noreferrer">Hard Dubstep</a>», а потом нас трахнул другой паблик «<a href="https://vk.ru/thebassland" target="_blank" rel="noopener noreferrer">BASSLAND</a>», я забил на эту всю хуйню и занялся более андерграундным проектом про нейрохоп и саунд-дизайн «bassfunk», а потом и на него забил. А «Skrillex» я знал ещё с форума про Fidget Electro.</p>
-              <p>Тот же человек, который сделал паблик «Hard Dubstep», также был и создателем паблика «UK Jackin House», где я периодически постил музыку, которая предвосхитила появление бростепа больше, чем сам дабстеп — у меня даже остался <a href="https://t.me/trollnormis/2639" target="_blank" rel="noopener noreferrer">список</a>. Это было почти 15 лет назад. До хайпа бростепа одним из самых тяжёлых видов электронной музыки был «Fidget Electro», и <a href="https://www.youtube.com/watch?v=Iy6pJsx--tI" target="_blank" rel="noopener noreferrer">альбом</a>, который Sonny Moore выпустил до первого релиза под именем «Skrillex», был ближе к нему. Свой первый известный бростеп-релиз он записывал в том числе не без помощи «Noisia» — они оказали достаточно сильное влияние на этот популярный мидбас из «<a href="https://www.youtube.com/watch?v=WSeNSzJ2-Jw" target="_blank" rel="noopener noreferrer">Scary Monsters And Nice Sprites</a>», но с таким заявлением многие бы спорили. Т. е. для меня батями всегда были «Noisia».</p>
-              <p>А паблик «bassfunk» сделал изначально менеджер «Teddy Killerz» и позвал там поадминить, но в какой-то момент я стал в него вкладывать 100% времени, как в «antinormis», а с этими всеми персонажами разосрался. «Teddy Killerz» на тот момент были самым масштабным проектом в EDM из СНГ, у их менеджера «<a href="https://vk.ru/garudclub" target="_blank" rel="noopener noreferrer">Гаруда</a>» были выходы на все модные лейблы, они первыми из СНГ залетели на лейбл к «Skrillex» с полноценным релизом, хоть он сейчас из звучит как кал.
-
-<a href="https://open.spotify.com/track/2Vjxr1mtSvlNkuuGsbCBoA?autoplay_ok=1" target="_blank" rel="noopener noreferrer">Вот</a> мой любимый трек у них, потому что там медведь-терминатор)
-
-Я тогда жил в Москве, сидел дома в «ВК» 24/7 и серфил релизы. Занимался всем этим и пока учился, и после учебы. Ещё был момент, что даже сайт сделал, состоящий из векторных <a href="https://t.me/hypernormis/1144" target="_blank" rel="noopener noreferrer">чб логотипов</a> и артворков, где были тысячи ссылок на различные экспериментальные релизы и всякий киберпанк. А потом психанул и <a href="https://t.me/hypernormis/1494" target="_blank" rel="noopener noreferrer">удалил</a> всё из группы «bassfunk» и просрал доступ к базе данных на сайте. Впоследствии «Google» ещё прекратил поддержку сервиса goo.gl, а весь сайт был завязан на эти ссылки, так что восстановить большинство вещей не получилось.</p>
+              <p>У меня когда-то с челом был самый большой паблик в <span class="artist-name"><span class="artist-quote">«</span>ВК⁠⁠<span class="artist-quote">»</span></span> про бростеп <span class="artist-name"><span class="artist-quote">«</span><a href="http://vk.com/wall-27403455_245963" target="_blank" rel="noopener noreferrer">Hard Dubstep</a><span class="artist-quote">»</span></span>, а потом нас трахнул другой паблик <span class="artist-name"><span class="artist-quote">«</span><a href="https://vk.ru/thebassland" target="_blank" rel="noopener noreferrer">BASSLAND</a><span class="artist-quote">»</span></span>, я забил на эту всю хуйню и занялся более андерграундным проектом про нейрохоп и саунд-дизайн <span class="artist-name"><span class="artist-quote">«</span>bassfunk<span class="artist-quote">»</span></span>, а потом и на него забил. А <span class="artist-name"><span class="artist-quote">«</span>Skrillex<span class="artist-quote">»</span></span> я знал ещё с форума про <span class="artist-name"><span class="artist-quote">«</span>Fidget Electro<span class="artist-quote">»</span></span>.</p>
+              <p>Тот же человек, который сделал паблик <span class="artist-name"><span class="artist-quote">«</span>Hard Dubstep<span class="artist-quote">»</span></span>, также был и создателем паблика <span class="artist-name"><span class="artist-quote">«</span>UK Jackin House<span class="artist-quote">»</span></span>, где я периодически постил музыку, которая предвосхитила появление бростепа больше, чем сам дабстеп — у меня даже остался <a href="https://t.me/trollnormis/2639" target="_blank" rel="noopener noreferrer">список</a>. Это было почти 15 лет назад. До хайпа бростепа одним из самых тяжёлых видов электронной музыки был <span class="artist-name"><span class="artist-quote">«</span>Fidget Electro<span class="artist-quote">»</span></span>, и <a href="https://www.youtube.com/watch?v=Iy6pJsx--tI" target="_blank" rel="noopener noreferrer">альбом</a>, который Sonny Moore выпустил до первого релиза под именем <span class="artist-name"><span class="artist-quote">«</span>Skrillex<span class="artist-quote">»</span></span>, был ближе к нему. Свой первый известный бростеп-релиз он записывал в том числе не без помощи <span class="artist-name"><span class="artist-quote">«</span>Noisia<span class="artist-quote">»</span></span> — они оказали достаточно сильное влияние на этот популярный мидбас из <span class="artist-name"><span class="artist-quote">«</span><a href="https://www.youtube.com/watch?v=WSeNSzJ2-Jw" target="_blank" rel="noopener noreferrer">Scary Monsters And Nice Sprites</a><span class="artist-quote">»</span></span>, но с таким заявлением многие бы спорили. Т. е. для меня батями всегда были <span class="artist-name"><span class="artist-quote">«</span>Noisia<span class="artist-quote">»</span></span>.</p>
+              <p>А паблик <span class="artist-name"><span class="artist-quote">«</span>bassfunk<span class="artist-quote">»</span></span> сделал изначально менеджер <span class="artist-name"><span class="artist-quote">«</span>Teddy Killerz<span class="artist-quote">»</span></span> и позвал там поадминить, но в какой-то момент я стал в него вкладывать 100% времени, как в «antinormis», а с этими всеми персонажами разосрался. <span class="artist-name"><span class="artist-quote">«</span>Teddy Killerz<span class="artist-quote">»</span></span> на тот момент были самым масштабным проектом в EDM из СНГ, у их менеджера <span class="artist-name"><span class="artist-quote">«</span><a href="https://vk.ru/garudclub" target="_blank" rel="noopener noreferrer">Гаруда</a><span class="artist-quote">»</span></span> были выходы на все модные лейблы, они первыми из СНГ залетели на лейбл к <span class="artist-name"><span class="artist-quote">«</span>Skrillex<span class="artist-quote">»</span></span> с полноценным релизом, хоть он сейчас из звучит как кал.</p>
+              <p><a href="https://open.spotify.com/track/2Vjxr1mtSvlNkuuGsbCBoA?autoplay_ok=1" target="_blank" rel="noopener noreferrer">Вот</a> мой любимый трек у них, потому что там медведь-терминатор)</p>
+              <p>Я тогда жил в Москве, сидел дома в <span class="artist-name"><span class="artist-quote">«</span>ВК<span class="artist-quote">»</span></span> 24/7 и серфил релизы. Занимался всем этим и пока учился, и после учебы. Ещё был момент, что даже сайт сделал, состоящий из векторных <a href="https://t.me/hypernormis/1144" target="_blank" rel="noopener noreferrer">чб логотипов</a> и артворков, где были тысячи ссылок на различные экспериментальные релизы и всякий киберпанк. А потом психанул и <a href="https://t.me/hypernormis/1494" target="_blank" rel="noopener noreferrer">удалил</a> всё из группы <span class="artist-name"><span class="artist-quote">«</span>bassfunk<span class="artist-quote">»</span></span> и просрал доступ к базе данных на сайте. Впоследствии <span class="artist-name"><span class="artist-quote">«</span>Google<span class="artist-quote">»</span></span> ещё прекратил поддержку сервиса goo.gl, а весь сайт был завязан на эти ссылки, так что восстановить большинство вещей не получилось.</p>
             </div>
           </div>
 
-          <div class="turn question" id="part-2" tabindex="-1">
+          <div class="turn question" id="question-43" tabindex="-1">
+            <span class="question-alias" id="part-2" aria-hidden="true"></span>
             <h3 class="turn-copy question-copy" id="part-2-title"><em>Жесть. А чего удалил? Надоело поддерживать?</em></h3>
           </div>
           <div class="turn answer">
             <div class="turn-copy answer-copy">
-              <p>Потому что вложил дохуя эмоций, сил и не получал отдачи. Сейчас от него осталась <a href="https://vk.ru/necrofuturism" target="_blank" rel="noopener noreferrer">заглушка</a> с ИИ-артворками из 2023 года. Именно в нем были тысячи постов про различный саунд-дизайн и нейро. Хоть некоторые мини-миксы остались с того времени, есть что вспомнить (<a href="https://t.me/archivenormis/818/828" target="_blank" rel="noopener noreferrer">1</a> и <a href="https://soundcloud.com/thereisnopointinlife" target="_blank" rel="noopener noreferrer">2</a>). Там такие треклисты были — по 100 треков в миксе, из которых я сегодня вспомню только 10%. <a href="https://t.me/trollnormis/4108" target="_blank" rel="noopener noreferrer">Последнее</a>, на что меня хватило.</p>
+              <p>Потому что вложил дохуя эмоций, сил и не получал отдачи. Сейчас от него осталась <a href="https://vk.ru/necrofuturism" target="_blank" rel="noopener noreferrer">заглушка</a> с ИИ-артворками из 2023 года. Именно в нем были тысячи постов про различный саунд-дизайн и нейро. Хоть некоторые мини-миксы остались с того времени, есть что вспомнить (<span class="artist-name"><span class="artist-quote">«</span><a href="https://t.me/archivenormis/818/828" target="_blank" rel="noopener noreferrer">1</a><span class="artist-quote">»</span></span> и <span class="artist-name"><span class="artist-quote">«</span><a href="https://soundcloud.com/thereisnopointinlife" target="_blank" rel="noopener noreferrer">2</a><span class="artist-quote">»</span></span>). Там такие треклисты были — по 100 треков в миксе, из которых я сегодня вспомню только 10%. <a href="https://t.me/trollnormis/4108" target="_blank" rel="noopener noreferrer">Последнее</a>, на что меня хватило.</p>
               <p>Я по-прежнему считаю, что мини-миксинг — не менее интересное занятие, чем продакшен треков. Когда ты сводишь не 20 треков за 60 минут, а 60 треков за 20 минут, более охуенного в электронной музыке нет ничего. Это концептуально ебёт всё, что было. Мини-миксы — это всё ещё будущее электронной музыки и вообще музыки, хотя с них она, по сути, и начиналась. Когда нейронки дойдут до своего пика, то сделать какой-нибудь микс из бесконечных ремиксов будет намного легче. Тогда я ещё припомню эту тему нормисам.</p>
             </div>
           </div>
-          <div class="turn question" id="question-42" tabindex="-1">
-            <h3 class="turn-copy question-copy" id="question-42-title">Кстати, тот паблик «Hard Dubstep» щас еще жив?</h3>
+          <div class="turn question" id="question-44" tabindex="-1">
+            <h3 class="turn-copy question-copy" id="question-42-title">Кстати, тот паблик <span class="artist-name"><span class="artist-quote">«</span>Hard Dubstep<span class="artist-quote">»</span></span> щас еще жив?</h3>
           </div>
           <div class="turn answer">
             <div class="turn-copy answer-copy">
-              <p>Да я хз, я большую часть времени тратил на «bassfunk», в который вложил больше всего сил. Ну, короче, это уже не первый раз, когда я что-то начинаю, поэтому столько наглости бывает, ненависти к хайпу и людям — можно понять такого человека) В тг я тоже год собирал всё это заново, а потом по стечению обстоятельств Дуров мне удалил аккаунт, а вместе с ним пропали и все группы, но что нас не убивает, как говорится…</p>
-              <p>Ещё со временем из «ВК» пропало огромное количество треков и все мои подборки того времени похерились, осталось, наверное, 10%:</p>
-              <nav class="collection-index" id="vk-collections" aria-label="Подборки ВКонтакте">
-                <div class="collection-pages" data-preview-image="assets/media/vk-music-for-myself.png">
-                  <a href="https://vk.com/page-47287426_45926664" target="_blank" rel="noopener noreferrer" aria-label="Открыть страницу 1 с музыкальными подборками во ВКонтакте">01</a>
-                  <a href="https://vk.com/page-47287426_46715523" target="_blank" rel="noopener noreferrer" aria-label="Открыть страницу 2 с музыкальными подборками во ВКонтакте">02</a>
-                  <a href="https://vk.com/page-47287426_46729196" target="_blank" rel="noopener noreferrer" aria-label="Открыть страницу 3 с музыкальными подборками во ВКонтакте">03</a>
-                  <a href="https://vk.com/page-47287426_46947506" target="_blank" rel="noopener noreferrer" aria-label="Открыть страницу 4 с музыкальными подборками во ВКонтакте">04</a>
-                  <a href="https://vk.com/page-47287426_47360069" target="_blank" rel="noopener noreferrer" aria-label="Открыть страницу 5 с музыкальными подборками во ВКонтакте">05</a>
-                  <a href="https://vk.com/page-47287426_47818041" target="_blank" rel="noopener noreferrer" aria-label="Открыть страницу 6 с музыкальными подборками во ВКонтакте">06</a>
-                  <a href="https://vk.com/page-47287426_47895954" target="_blank" rel="noopener noreferrer" aria-label="Открыть страницу 7 с музыкальными подборками во ВКонтакте">07</a>
-                  <a href="https://vk.com/page-47287426_49479166" target="_blank" rel="noopener noreferrer" aria-label="Открыть страницу 8 с музыкальными подборками во ВКонтакте">08</a>
-                </div>
-              </nav>
+              <p>Да я хз, я большую часть времени тратил на <span class="artist-name"><span class="artist-quote">«</span>bassfunk<span class="artist-quote">»</span></span>, в который вложил больше всего сил. Ну, короче, это уже не первый раз, когда я что-то начинаю, поэтому столько наглости бывает, ненависти к хайпу и людям — можно понять такого человека) В <span class="artist-name"><span class="artist-quote">«</span>Telegram<span class="artist-quote">»</span></span> я тоже год собирал всё это заново, а потом по стечению обстоятельств Дуров мне удалил аккаунт, а вместе с ним пропали и все группы, но что нас не убивает, как говорится…</p>
+              <p>Ещё со временем из <span class="artist-name"><span class="artist-quote">«</span>ВК<span class="artist-quote">»</span></span> пропало огромное количество треков и все мои подборки того времени похерились, осталось, наверное, 10%:</p>
             </div>
           </div>
-          <figure class="image-asset image-original">
+          <figure class="image-asset image-original collection-archive">
+            <nav class="collection-index" id="vk-collections" aria-label="Подборки ВКонтакте">
+              <div class="collection-pages" data-preview-image="assets/media/vk-music-for-myself.png">
+                <a href="https://vk.com/page-47287426_45926664" target="_blank" rel="noopener noreferrer" aria-label="Открыть страницу 1 с музыкальными подборками во ВКонтакте">01</a>
+                <a href="https://vk.com/page-47287426_46715523" target="_blank" rel="noopener noreferrer" aria-label="Открыть страницу 2 с музыкальными подборками во ВКонтакте">02</a>
+                <a href="https://vk.com/page-47287426_46729196" target="_blank" rel="noopener noreferrer" aria-label="Открыть страницу 3 с музыкальными подборками во ВКонтакте">03</a>
+                <a href="https://vk.com/page-47287426_46947506" target="_blank" rel="noopener noreferrer" aria-label="Открыть страницу 4 с музыкальными подборками во ВКонтакте">04</a>
+                <a href="https://vk.com/page-47287426_47360069" target="_blank" rel="noopener noreferrer" aria-label="Открыть страницу 5 с музыкальными подборками во ВКонтакте">05</a>
+                <a href="https://vk.com/page-47287426_47818041" target="_blank" rel="noopener noreferrer" aria-label="Открыть страницу 6 с музыкальными подборками во ВКонтакте">06</a>
+                <a href="https://vk.com/page-47287426_47895954" target="_blank" rel="noopener noreferrer" aria-label="Открыть страницу 7 с музыкальными подборками во ВКонтакте">07</a>
+                <a href="https://vk.com/page-47287426_49479166" target="_blank" rel="noopener noreferrer" aria-label="Открыть страницу 8 с музыкальными подборками во ВКонтакте">08</a>
+              </div>
+            </nav>
             <div class="image-frame">
               <a class="photo-link" href="assets/media/vk-music-for-myself.png" data-photo aria-label="Открыть изображение. Подборка Music For Myself во ВКонтакте: на месте пропавших треков указано Unknown audio">
                 <img src="assets/media/vk-music-for-myself.png" srcset="assets/media/vk-music-for-myself.png 798w" sizes="399px" width="399" height="749" loading="lazy" decoding="async" alt="Подборка Music For Myself во ВКонтакте: на месте пропавших треков указано Unknown audio">
@@ -744,7 +752,7 @@
           </figure>
           <div class="turn answer">
             <div class="turn-copy answer-copy">
-              <p>Вообще, мы могли бы ещё нейрохоп до сих пор выпускать. С другой стороны, может, это и к лучшему, что всего 5 релизов <a href="https://bassfunk.bandcamp.com/" target="_blank" rel="noopener noreferrer">было</a>. Тогда ещё «Quok» под стол ходил, посылал даже свой ремикс. Вот <a href="https://bassfunk.bandcamp.com/track/the-beginning-3" target="_blank" rel="noopener noreferrer">это</a> первый трек («Voxxin - The Beginning»), который мы релизили. Чел из Америки обиделся, думал, что это какой-то серьёзный лейбл и он получит миллион. Это единственный чел из Америки на лейбле, все остальные русские. Мне до сих пор нравится — экспериментальная нейруха, хоть по качеству уже и проседает.</p>
+              <p>Вообще, мы могли бы ещё нейрохоп до сих пор выпускать. С другой стороны, может, это и к лучшему, что всего 5 релизов <a href="https://bassfunk.bandcamp.com/" target="_blank" rel="noopener noreferrer">было</a>. Тогда ещё <span class="artist-name"><span class="artist-quote">«</span>Quok<span class="artist-quote">»</span></span> под стол ходил, посылал даже свой ремикс. Вот <a href="https://bassfunk.bandcamp.com/track/the-beginning-3" target="_blank" rel="noopener noreferrer">это</a> первый трек, который мы релизили. Чел из Америки обиделся, думал, что это какой-то серьёзный лейбл и он получит миллион. Это единственный чел из Америки на лейбле, все остальные русские. Мне до сих пор нравится — экспериментальная нейруха, хоть по качеству уже и проседает.</p>
             </div>
           </div>
           <figure class="audio-cue" id="track-voxxin" data-audio-player aria-labelledby="track-voxxin-title">
@@ -766,23 +774,28 @@
             </div>
             <p class="audio-error" data-media-error hidden role="status">Трек не удалось воспроизвести. Его можно скачать по ссылке MP3.</p>
           </figure>
-          <div class="turn question" id="question-43" tabindex="-1">
+          <div class="turn question" id="question-45" tabindex="-1">
             <h3 class="turn-copy question-copy" id="question-43-title"><em>Бедолага, он не сразу это понял?</em></h3>
           </div>
           <div class="turn answer">
             <div class="turn-copy answer-copy">
-              <p>Ну я послал этот релиз на все крупные каналы того времени, которые могли такое осветить; один выложил <a href="https://bassfunk.bandcamp.com/track/the-beginning-igor-graphite-remix" target="_blank" rel="noopener noreferrer">ремикс</a>, а не оригинал. Ремикс набрал 100к прослушек, и «Voxxin» обиделся. Ремикс делал «Igor Graphite», которого вообще без сведения и мастеринга брали на все топовые бростеп-лейблы. Он потом <a href="https://soundcloud.com/uplinkaudio/sets/igor-graphite-revenge" target="_blank" rel="noopener noreferrer">выпустился</a> у «Downlink», который отец бростепа, как и «Skrillex». Чтобы ты понимал, тогда это всё звучало инновационнее дефолтного бростепа и казалось некоторым людям самой уникальной хуйней в интернете. Сейчас я, конечно же, понимаю, что это было не так) Вообще, когда я узнал про «Arca», «<a href="https://t.me/hypernormis/376/377" target="_blank" rel="noopener noreferrer">WWWINGS</a>» и <a href="https://vk.ru/wall-32943546_105968" target="_blank" rel="noopener noreferrer">неограйм</a>, то осознал, что всё это был далеко не предел развития саунд-дизайна.</p>
+              <p>Ну я послал этот релиз на все крупные каналы того времени, которые могли такое осветить; один выложил <a href="https://bassfunk.bandcamp.com/track/the-beginning-igor-graphite-remix" target="_blank" rel="noopener noreferrer">ремикс</a>, а не оригинал. Ремикс набрал 100к прослушек, и <span class="artist-name"><span class="artist-quote">«</span>Voxxin<span class="artist-quote">»</span></span> обиделся. Ремикс делал <span class="artist-name"><span class="artist-quote">«</span>Igor Graphite<span class="artist-quote">»</span></span>, которого вообще без сведения и мастеринга брали на все топовые бростеп-лейблы. Он потом <a href="https://soundcloud.com/uplinkaudio/sets/igor-graphite-revenge" target="_blank" rel="noopener noreferrer">выпустился</a> у <span class="artist-name"><span class="artist-quote">«</span>Downlink<span class="artist-quote">»</span></span>, который отец бростепа, как и <span class="artist-name"><span class="artist-quote">«</span>Skrillex<span class="artist-quote">»</span></span>. Чтобы ты понимал, тогда это всё звучало инновационнее дефолтного бростепа и казалось некоторым людям самой уникальной хуйней в интернете. Сейчас я, конечно же, понимаю, что это было не так) Вообще, когда я узнал про <span class="artist-name"><span class="artist-quote">«</span>Arca<span class="artist-quote">»</span></span>, <span class="artist-name"><span class="artist-quote">«</span><a href="https://t.me/hypernormis/376/377" target="_blank" rel="noopener noreferrer">WWWINGS</a><span class="artist-quote">»</span></span> и <a href="https://vk.ru/wall-32943546_105968" target="_blank" rel="noopener noreferrer">неограйм</a>, то осознал, что всё это был далеко не предел развития саунд-дизайна.</p>
             </div>
           </div>
-          <div class="turn question" id="question-44" tabindex="-1">
+          <div class="turn question" id="question-46" tabindex="-1">
             <h3 class="turn-copy question-copy" id="question-44-title"><em>Я бы охерел такое слушать в 2014, наверное даже не понял бы ничего.</em></h3>
           </div>
           <div class="turn answer">
             <div class="turn-copy answer-copy">
-              <p>Когда-то и <a href="https://www.youtube.com/watch?v=Z_oxrZUtPCM" target="_blank" rel="noopener noreferrer">это</a> («Les Petits Pilous - Wake Up») казалось крутым звуком. В день, когда вышел этот трек, он для меня звучал, как «4LL» звучат сегодня. Т. е. я то же самое думал, а сейчас слушаю, и это просто смешно) Для меня когда-то топ-1 треком по саунд-дизайну был <a href="https://www.youtube.com/watch?v=ZsSYase1hJI" target="_blank" rel="noopener noreferrer">этот</a> («ZZT - Lower State of Consciousness») трек. А вот с <a href="https://www.youtube.com/watch?v=qmsbP13xu6k&amp;list=RDEM00DUyPjxvRFDIDKBZSyQ6w&amp;start_radio=1" target="_blank" rel="noopener noreferrer">этого</a> («Mr Oizo - Flat beat») звука началась моя любовь к электронной музыке — 1999 год, настоящий создатель бростепа.</p>
+              <p>Когда-то и <a href="https://www.youtube.com/watch?v=Z_oxrZUtPCM" target="_blank" rel="noopener noreferrer">это</a> казалось крутым звуком. В день, когда вышел этот трек, он для меня звучал, как <span class="artist-name"><span class="artist-quote">«</span>4LL<span class="artist-quote">»</span></span> звучат сегодня. Т. е. я то же самое думал, а сейчас слушаю, и это просто смешно) Для меня когда-то топ-1 треком по саунд-дизайну был <a href="https://www.youtube.com/watch?v=ZsSYase1hJI" target="_blank" rel="noopener noreferrer">этот</a> трек. А вот с <a href="https://www.youtube.com/watch?v=qmsbP13xu6k&amp;list=RDEM00DUyPjxvRFDIDKBZSyQ6w&amp;start_radio=1" target="_blank" rel="noopener noreferrer">этого</a> звука началась моя любовь к электронной музыке — 1999 год, настоящий создатель бростепа.</p>
             </div>
           </div>
-          <figure class="audio-cue" id="electro-tracks" data-audio-player aria-label="Les Petits Pilous, ZZT и Mr Oizo">
+          <div class="turn answer">
+            <div class="turn-copy answer-copy">
+              <p>А вот <a href="https://soundcloud.com/forddnb/joe-ford-culture" target="_blank" rel="noopener noreferrer">это</a> — самый пиздец — треку 13 лет, а часть звука как будто из 2039 года. Риз-бас до сих пор звучит как самый уникальный в мире. Ощущение, что его до сих пор никто не превзошёл) Может, парочка продюсеров типа <a href="https://t.me/archivenormis/818/822" target="_blank" rel="noopener noreferrer">Alon Mor</a>.</p>
+            </div>
+          </div>
+          <figure class="audio-cue" id="electro-tracks" data-audio-player aria-label="Les Petits Pilous, ZZT, Mr Oizo и Joe Ford">
             <div class="audio-deck">
               <div class="player-screen" hidden>
                 <div class="wave-control">
@@ -816,33 +829,17 @@
                     <audio id="track-mr-oizo-audio" controls preload="none" src="assets/media/mr-oizo-flat-beat.mp3" aria-label="Mr Oizo — Flat beat"></audio>
                     <a class="track-download" href="assets/media/mr-oizo-flat-beat.mp3" type="audio/mpeg" download="Flat beat.mp3" aria-label="Скачать MP3. Mr Oizo — Flat beat"><span>MP3</span> <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8m-3-3 3 3 3-3M3 11v2h10v-2"/></svg></a>
                   </div>
+                  <div class="track-entry" id="track-joe-ford">
+                    <span class="track-title" id="track-joe-ford-title">
+                      <span class="track-artist">Joe Ford</span>
+                      <strong>Culture</strong>
+                    </span>
+                    <audio id="track-joe-ford-audio" controls preload="none" src="assets/media/joe-ford-culture.mp3" aria-label="Joe Ford — Culture"></audio>
+                    <a class="track-download" href="assets/media/joe-ford-culture.mp3" type="audio/mpeg" download="Culture.mp3" aria-label="Скачать MP3. Joe Ford — Culture"><span>MP3</span> <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8m-3-3 3 3 3-3M3 11v2h10v-2"/></svg></a>
+                  </div>
                 </div>
                 <span class="playlist-selection" hidden></span>
               </div>
-            </div>
-            <p class="audio-error" data-media-error hidden role="status">Трек не удалось воспроизвести. Его можно скачать по ссылке MP3.</p>
-          </figure>
-          <div class="turn answer">
-            <div class="turn-copy answer-copy">
-              <p>А вот <a href="https://soundcloud.com/forddnb/joe-ford-culture" target="_blank" rel="noopener noreferrer">это</a> («Joe Ford - Culture») — самый пиздец — треку 13 лет, а часть звука как будто из 2039 года. Риз-бас до сих пор звучит как самый уникальный в мире. Ощущение, что его до сих пор никто не превзошёл) Может, парочка продюсеров типа <a href="https://t.me/archivenormis/818/822" target="_blank" rel="noopener noreferrer">Alon Mor</a>.</p>
-            </div>
-          </div>
-          <figure class="audio-cue" id="track-joe-ford" data-audio-player aria-labelledby="track-joe-ford-title">
-            <div class="audio-deck">
-              <div class="player-screen" hidden>
-                <div class="wave-control">
-                  <img data-spectrum-map loading="lazy" decoding="async" alt="">
-                  <canvas class="track-spectrum" data-track-spectrum aria-hidden="true"></canvas>
-                </div>
-              </div>
-              <div class="track-bar" data-duration="332.617868">
-                <span class="track-title" id="track-joe-ford-title">
-                  <span class="track-artist">Joe Ford</span>
-                  <strong>Culture</strong>
-                </span>
-                <a class="track-download" href="assets/media/joe-ford-culture.mp3" type="audio/mpeg" download="Culture.mp3" aria-label="Скачать MP3. Joe Ford — Culture"><span>MP3</span> <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8m-3-3 3 3 3-3M3 11v2h10v-2"/></svg></a>
-              </div>
-              <audio controls preload="none" src="assets/media/joe-ford-culture.mp3" aria-label="Joe Ford — Culture"></audio>
             </div>
             <p class="audio-error" data-media-error hidden role="status">Трек не удалось воспроизвести. Его можно скачать по ссылке MP3.</p>
           </figure>
@@ -855,10 +852,10 @@
         </footer>
       </article>
       <footer class="footer" id="end" tabindex="-1" aria-label="Конец интервью">
-        <img class="footer-sigil" src="assets/art/sigil-fractured-orbit.webp" width="700" height="700" alt="" loading="lazy" decoding="async">
+        <img class="footer-sigil" src="assets/art/sigil-silver-wings.webp" width="1086" height="362" alt="" loading="lazy" decoding="async">
         <a class="reading-link return-link" href="#top">
           <span>К началу</span>
-          <svg viewBox="4 0 16 24" aria-hidden="true"><path d="M12 21V7m-5 5 5-5 5 5"/></svg>
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 14V2m-5 5 5-5 5 5"/></svg>
         </a>
       </footer>
     </div>

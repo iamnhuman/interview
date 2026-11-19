@@ -1,26 +1,44 @@
 "use strict";
 
-function initTheme() {
+function initDisplaySwitch(name, pressedValue, unpressedValue, onChange) {
   const root = document.documentElement;
-  const control = document.querySelector("[data-theme-switch]");
-  const meta = document.querySelector('meta[name="theme-color"]');
+  const attribute = `data-${name}`;
+  const control = document.querySelector(`[${attribute}-switch]`);
 
-  function apply(theme, persist = false) {
-    const value = theme === "light" ? "light" : "dark";
-    root.dataset.theme = value;
-    control.setAttribute("aria-pressed", String(value === "dark"));
-    meta?.setAttribute("content", value === "light" ? "#eeefef" : "#000000");
-    if (persist) {
-      try { localStorage.setItem("interview-theme", value); } catch {}
-    }
+  function setPressed(pressed) {
+    const value = pressed ? pressedValue : unpressedValue;
+    root.setAttribute(attribute, value);
+    control.setAttribute("aria-pressed", String(pressed));
+    onChange?.(value, control);
   }
 
-  control.addEventListener("click", () => apply(root.dataset.theme === "dark" ? "light" : "dark", true));
-  window.addEventListener("storage", (event) => {
-    if (event.key === "interview-theme") apply(event.newValue);
+  control.addEventListener("click", () => setPressed(control.getAttribute("aria-pressed") !== "true"));
+  window.addEventListener("pageshow", event => {
+    if (event.persisted) setPressed(false);
   });
-  apply(root.dataset.theme);
+  setPressed(false);
   control.hidden = false;
+}
+
+function initDisplaySettings() {
+  const meta = document.querySelector('meta[name="theme-color"]');
+  initDisplaySwitch("theme", "light", "dark", (theme, control) => {
+    meta?.setAttribute("content", theme === "light" ? "#eeefef" : "#000000");
+    control.title = theme === "light" ? "Включить тёмную тему" : "Включить светлую тему";
+  });
+  initDisplaySwitch("artist-style", "quoted", "bold", (style, control) => {
+    control.title = style === "quoted" ? "Скрыть кавычки" : "Показать кавычки";
+  });
+}
+
+// Keep artist typography in excerpts while leaving links and other interactive markup in the article.
+function copyReadingText(target, source) {
+  const copy = source.cloneNode(true);
+  for (const note of copy.querySelectorAll(".source-ref, .source-list")) note.remove();
+  for (const element of copy.querySelectorAll(":not(.artist-name, .artist-quote)")) {
+    element.replaceWith(...element.childNodes);
+  }
+  target.replaceChildren(...copy.childNodes);
 }
 
 function initCoverMotion() {
@@ -88,9 +106,9 @@ function initReadingPosition() {
   const navigation = document.querySelector("[data-sigil-navigation]");
   const rail = document.querySelector("[data-sigil-scroll]");
   const thumb = rail.querySelector("[data-scroll-thumb]");
-  const questions = [...document.querySelectorAll(".turn.question")];
+  const questions = [...document.querySelectorAll(".turn.question, .dialogue-aside")];
   if (!questions.length) return;
-  const cover = document.getElementById("cover");
+  const cover = document.getElementById("start");
   const end = document.getElementById("end");
   const sections = [{
     id: cover.id, label: "Начало интервью",
@@ -98,7 +116,7 @@ function initReadingPosition() {
   }, ...questions.map((question, index) => ({
     id: question.id, label: `Вопрос ${index + 1} из ${questions.length}`,
     number: `${String(index + 1).padStart(2, "0")} / ${questions.length}`,
-    title: question.querySelector(".question-copy").textContent.trim(),
+    copy: question.querySelector(".question-copy"),
     sigil: questionSigilSource(index),
   })), {
     id: end.id, label: end.getAttribute("aria-label"),
@@ -141,8 +159,12 @@ function initReadingPosition() {
     if (previewIndex < 0) return;
     const rect = jumps[previewIndex].getBoundingClientRect();
     const top = navigation.getBoundingClientRect().top + 4;
-    const bottom = Math.max(top, window.innerHeight - preview.offsetHeight - 12);
-    preview.style.top = `${Math.max(top, Math.min(bottom, rect.top + rect.height / 2 - preview.offsetHeight / 2))}px`;
+    const height = preview.offsetHeight;
+    const bottom = Math.max(top, window.innerHeight - height - 12);
+    const previewTop = Math.max(top, Math.min(bottom, rect.top + (rect.height - height) / 2));
+    const sigil = activeSigil.getBoundingClientRect();
+    preview.style.top = `${previewTop}px`;
+    activeSigil.style.visibility = sigil.bottom > previewTop && sigil.top < previewTop + height ? "hidden" : "";
   }
 
   function showPreview(index) {
@@ -150,7 +172,9 @@ function initReadingPosition() {
     const section = sections[index];
     preview.classList.toggle("endpoint-preview", section.id === cover.id || section.id === end.id);
     previewNumber.textContent = section.number || "";
-    previewText.textContent = section.title || section.label;
+    previewNumber.hidden = !section.number;
+    if (section.copy) copyReadingText(previewText, section.copy);
+    else previewText.textContent = section.label;
     previewAddress.textContent = jumps[index].getAttribute("href");
     previewSigil.src = section.sigil;
     preview.hidden = false;
@@ -160,13 +184,18 @@ function initReadingPosition() {
   function hidePreview() {
     previewIndex = -1;
     preview.hidden = true;
+    activeSigil.style.visibility = "";
   }
 
   const jumps = sections.map((section, index) => {
     const link = document.createElement("a");
     link.className = "question-jump";
     link.href = `#${section.id}`;
-    link.setAttribute("aria-label", section.title ? `${section.label}. ${section.title}` : section.label);
+    link.setAttribute("aria-label", section.label);
+    if (section.copy) {
+      link.id = `jump-${section.id}`;
+      link.setAttribute("aria-labelledby", `${link.id} ${section.copy.id}`);
+    }
     link.tabIndex = index === 0 ? 0 : -1;
     link.addEventListener("pointerenter", () => showPreview(index));
     link.addEventListener("pointerleave", () => {
@@ -192,9 +221,7 @@ function initReadingPosition() {
 
   function measure() {
     const extent = scrollExtent();
-    const fontSize = parseFloat(getComputedStyle(root).fontSize) || 16;
-    const header = document.querySelector(".masthead").getBoundingClientRect().height;
-    const offset = header + fontSize * 1.5;
+    const offset = parseFloat(getComputedStyle(questions[0]).scrollMarginTop) || 0;
     stops = [0, ...questions.map(question => Math.max(0, Math.min(extent, question.getBoundingClientRect().top + window.scrollY - offset))), extent];
     const travel = Math.max(0, rail.clientHeight - thumb.offsetHeight);
     const interval = travel / (stops.length - 1);
@@ -208,14 +235,14 @@ function initReadingPosition() {
   function update() {
     frame = 0;
     if (dirty || stops[stops.length - 1] !== scrollExtent()) measure();
-    const extent = stops[stops.length - 1];
-    const scrollTop = window.scrollY > 0 && extent - window.scrollY < 1 ? extent : window.scrollY;
-    const position = positionOnTimeline(stops, scrollTop);
+    const scrollTop = window.scrollY;
+    let current = 0;
+    // Fragment navigation can land a fraction of a pixel before the stop.
+    while (scrollTop > 0 && current + 1 < sections.length && stops[current + 1] - scrollTop < 1) current++;
+    const position = positionOnTimeline(stops, Math.max(scrollTop, stops[current]));
     const travel = Math.max(0, rail.clientHeight - thumb.offsetHeight);
     thumb.style.transform = `translateY(${position * travel}px)`;
     rail.setAttribute("aria-valuenow", String(Math.round(position * 100)));
-    let current = 0;
-    while (scrollTop > 0 && current + 1 < sections.length && stops[current + 1] <= scrollTop) current++;
     if (current !== activeIndex) {
       if (activeIndex >= 0) jumps[activeIndex].removeAttribute("aria-current");
       rail.setAttribute("aria-valuetext", sections[current].label);
@@ -613,8 +640,9 @@ function createTrackSpectrum(plot, seek) {
   let audio, track, renderer, events;
   let frame = 0, visible = false, live = false;
   function isPlaying() { return live && !reduced.matches && !audio.paused && !audio.ended && !audio.seeking && !audio.error; }
-  function drawAt(progress) {
-    if (renderer && visible && !document.hidden) renderer.draw(progress * track.duration, isPlaying());
+  function drawAt(progress, playing = isPlaying()) {
+    plot.toggleAttribute("data-playhead-visible", progress > 0 && progress < 1);
+    if (renderer && visible && !document.hidden) renderer.draw(progress * track.duration, playing);
   }
   function tick() {
     frame = 0;
@@ -623,7 +651,7 @@ function createTrackSpectrum(plot, seek) {
     const time = playing ? audio.currentTime : Number(seek.value);
     const ratio = Math.min(1, Math.max(0, time / length));
     plot.style.setProperty("--played", ratio * 100 + "%");
-    renderer.draw(ratio * track.duration, playing);
+    drawAt(ratio, playing);
     if (playing) frame = window.requestAnimationFrame(tick);
   }
   function sync() {
@@ -735,6 +763,16 @@ function enhanceAudio(player) {
   }
   select(choices.find(c => "#" + c.row.id === window.location.hash) || choices[0]);
   plot.parentElement.hidden = false;
+  if (selectionTitle) {
+    // A track fragment should center its whole deck beneath the sticky masthead.
+    const measureJump = () => {
+      const bounds = player.getBoundingClientRect();
+      player.style.setProperty("--playlist-height", `${bounds.height}px`);
+      player.style.setProperty("--choices-top", `${entries[0].getBoundingClientRect().top - bounds.top}px`);
+    };
+    measureJump();
+    new ResizeObserver(measureJump).observe(player);
+  }
 }
 
 function photoSourceRect(photo, width, height) {
@@ -776,8 +814,10 @@ function initPhotoViewer() {
       preview.srcset = photo.src === link.href ? photo.srcset : "";
       preview.src = link.href;
       preview.alt = photo.alt;
-      caption.textContent = link.closest("figure")?.querySelector("figcaption")?.textContent.trim() || "";
-      caption.hidden = !caption.textContent;
+      const sourceCaption = link.closest("figure")?.querySelector("figcaption");
+      if (sourceCaption) copyReadingText(caption, sourceCaption);
+      else caption.replaceChildren();
+      caption.hidden = !caption.textContent.trim();
       dialog.showModal();
       document.body.classList.add("photo-open");
       close.focus();
@@ -799,7 +839,7 @@ function initPhotoViewer() {
   });
 }
 
-initTheme();
+initDisplaySettings();
 for (const player of document.querySelectorAll("[data-audio-player]")) enhanceAudio(player);
 initHeaderPlayback(document.querySelectorAll(".interview audio, .interview video"));
 initReadingPosition();

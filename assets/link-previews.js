@@ -10,10 +10,117 @@
   const picture = card.querySelector("img");
   const video = card.querySelector("video");
   const hover = matchMedia("(any-hover: hover)");
+  const shortDomains = new Map([["open.spotify.com", "spotify.com"]]);
+  const sources = new WeakMap();
   let anchor = null;
   let pending = null;
+  let activeSource = null;
   let timer = 0;
   let line = 0;
+
+  function createSource(link, list, sectionId) {
+    const number = list.children.length + 1;
+    const href = link.getAttribute("href");
+    let site = shortDomains.get(link.hostname) || link.hostname.replace(/^www\./, "") || "В интервью";
+    if (site === "t.me") {
+      const channel = link.pathname.split("/")[1];
+      if (channel) site = `t.me/${channel}`;
+    }
+    if (link.getAttribute("type") === "application/pdf") site = "PDF";
+    const record = linkCards[href] || { title: link.textContent.trim() || href, meta: site };
+    const row = document.createElement("a");
+    row.className = "source-link";
+    row.id = `source-${sectionId}-${number}`;
+    for (const attribute of ["href", "target", "rel", "type"]) {
+      if (link.hasAttribute(attribute)) row.setAttribute(attribute, link.getAttribute(attribute));
+    }
+    const index = document.createElement("span");
+    index.className = "source-index";
+    index.setAttribute("aria-hidden", "true");
+    index.textContent = number;
+    const label = document.createElement("span");
+    label.className = "source-title";
+    label.textContent = record.title;
+    const domain = document.createElement("span");
+    domain.className = "source-site";
+    domain.textContent = record.displayUrl || site;
+    row.append(index, label, domain);
+    const item = document.createElement("li");
+    item.append(row);
+    list.append(item);
+    const source = { number, record, row, links: [row] };
+    sources.set(row, source);
+    return source;
+  }
+
+  function addSourceNumber(link, source) {
+    const jump = document.createElement("a");
+    jump.href = "#" + source.row.id;
+    jump.textContent = source.number;
+    jump.setAttribute("aria-label", `К источнику ${source.number} — ${source.record.title}`);
+    const marker = document.createElement("sup");
+    marker.className = "source-ref";
+    marker.append(jump);
+    let end = link.closest(".artist-name") || link;
+    const after = end.nextSibling;
+    if (after?.nodeType === Node.TEXT_NODE && after.data.startsWith("»")) {
+      after.splitText(1);
+      end = after;
+    }
+    end.after(marker);
+    source.links.push(link, jump);
+    sources.set(link, source);
+    sources.set(jump, source);
+  }
+
+  function buildSourceLists() {
+    const article = document.querySelector(".interview");
+    let section;
+    const sections = [];
+    for (const block of article.querySelectorAll(".question-copy, .answer-copy p, figure, blockquote, figcaption")) {
+      if (block.matches(".question-copy")) {
+        section = {
+          id: block.id.replace(/-title$/, ""),
+          links: [],
+          atEnd: block.parentElement.hasAttribute("data-sources-at-end"),
+        };
+        sections.push(section);
+      }
+      if (!section) continue;
+      section.end = block.closest("figure") || block;
+      if (block.matches("figure")) {
+        if (block.matches("[data-audio-player], [data-video-gallery], [data-sources-before]")) section.listBefore ??= block;
+      } else {
+        section.links.push(...block.querySelectorAll("a[href]:not([download], [data-photo])"));
+      }
+    }
+    for (const { id, links, end, listBefore, atEnd } of sections) {
+      if (!links.length) continue;
+      const list = document.createElement("ol");
+      list.className = "source-list";
+      list.setAttribute("role", "list");
+      list.setAttribute("aria-label", "Источники");
+      const byURL = new Map();
+      for (const link of links) {
+        let source = byURL.get(link.href);
+        if (!source) {
+          source = createSource(link, list, id);
+          byURL.set(link.href, source);
+        }
+        addSourceNumber(link, source);
+      }
+      if (listBefore && !atEnd) listBefore.before(list);
+      else end.after(list);
+    }
+    return sections.flatMap(section => section.links);
+  }
+
+  function highlight(source) {
+    if (source === activeSource) return;
+    for (const link of activeSource?.links || []) link.classList.remove("source-active");
+    for (const link of source?.links || []) link.classList.add("source-active");
+    activeSource = source;
+  }
 
   function place() {
     if (!anchor || card.hidden) return;
@@ -21,14 +128,15 @@
     const width = document.documentElement.clientWidth, height = window.innerHeight;
     if (rect.bottom <= 0 || rect.top >= height || !rect.width) { hide(); return; }
     const x = Math.max(8, Math.min(rect.left, width - card.offsetWidth - 8));
-    const below = rect.bottom + 7;
-    const y = below + card.offsetHeight <= height - 8 ? below : Math.max(8, rect.top - card.offsetHeight - 7);
+    const above = rect.top - card.offsetHeight - 7;
+    const y = above >= 8 ? above : Math.max(8, Math.min(rect.bottom + 7, height - card.offsetHeight - 8));
     card.style.left = `${x}px`;
     card.style.top = `${y}px`;
   }
 
   function hide() {
     clearTimeout(timer);
+    highlight(null);
     pending = null;
     if (anchor) {
       const ids = (anchor.getAttribute("aria-describedby") || "").split(/\s+/).filter(id => id && id !== card.id);
@@ -68,16 +176,35 @@
     video.play().catch(error => { if (error.name !== "AbortError") showFallback(); });
   }
 
+  function setMeta(text = "") {
+    meta.hidden = !text;
+    const parts = text.split(/«(Telegram|Spotify|SoundCloud)»/u);
+    meta.replaceChildren(...parts.map((part, index) => {
+      if (index % 2 === 0) return part;
+      const name = document.createElement("span");
+      name.className = "artist-name";
+      const opening = document.createElement("span");
+      opening.className = "artist-quote";
+      const closing = opening.cloneNode(false);
+      opening.textContent = "«";
+      closing.textContent = "»";
+      name.append(opening, part, closing);
+      return name;
+    }));
+  }
+
   function show(link, record, clientY) {
-    const href = link.getAttribute("href");
-    hide();
-    if (!link.isConnected) return;
+    if (!link.isConnected) { hide(); return; }
+    pending = null;
     anchor = link;
     line = Math.max(0, [...link.getClientRects()].findIndex(rect => clientY >= rect.top && clientY <= rect.bottom));
     arrow.textContent = "↗";
-    address.textContent = href;
-    meta.textContent = record.meta || "";
-    meta.hidden = !record.meta;
+    const destination = activeSource?.row || link;
+    const label = destination.getAttribute("type") === "application/pdf"
+      ? destination.pathname.split("/").pop()
+      : destination.getAttribute("href");
+    address.textContent = record.displayUrl || shortDomains.get(destination.hostname) || label;
+    setMeta(record.meta);
     title.textContent = record.title;
     description.textContent = record.description || "";
     description.hidden = !record.description;
@@ -88,16 +215,26 @@
   }
 
   function request(link, record, y, delay) {
-    clearTimeout(timer);
     if (anchor === link) return;
     hide();
+    highlight(sources.get(link));
     pending = link;
     timer = window.setTimeout(() => show(link, record, y), delay);
   }
+  const citedLinks = buildSourceLists();
+  initDisplaySwitch("bibliography", "shown", "hidden", (value, control) => {
+    const shown = value === "shown";
+    control.title = shown ? "Скрыть библиографию" : "Показать библиографию";
+    for (const link of citedLinks) {
+      if (shown) link.setAttribute("aria-details", sources.get(link).row.id);
+      else link.removeAttribute("aria-details");
+    }
+    hide();
+  });
   const links = document.querySelectorAll("a[href]:not([download], [data-photo])");
   for (const link of links) {
     const group = link.closest("[data-preview-image]");
-    const record = linkCards[link.getAttribute("href")] || (group && {
+    const record = sources.get(link)?.record || linkCards[link.getAttribute("href")] || (group && {
       title: link.getAttribute("aria-label"),
       image: group.dataset.previewImage,
     });
@@ -107,11 +244,10 @@
     });
     link.addEventListener("pointerleave", () => {
       if (pending !== link && anchor !== link) return;
-      clearTimeout(timer);
       if (!link.matches(":focus-visible")) hide();
     });
     link.addEventListener("focus", () => { if (link.matches(":focus-visible")) request(link, record, null, 0); });
-    link.addEventListener("blur", hide);
+    link.addEventListener("blur", () => { if (pending === link || anchor === link) hide(); });
     link.addEventListener("click", hide);
   }
   picture.addEventListener("error", () => { picture.hidden = true; place(); });
@@ -122,4 +258,5 @@
   document.addEventListener("pointerdown", hide);
   window.addEventListener("scroll", hide, { passive: true });
   window.addEventListener("resize", place);
+  new ResizeObserver(place).observe(card);
 })();
