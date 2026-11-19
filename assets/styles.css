@@ -826,6 +826,8 @@ html.has-sigil-scroll::-webkit-scrollbar, html.has-sigil-scroll body::-webkit-sc
   .image-asset { --image-spacing: 2.2rem; }
   .image-half { width: 100%; }
   .image-pair .image-frame { gap: var(--card-gap); }
+  .collection-archive, .collection-archive :is(.image-frame, .photo-link, .photo-link > img) { width: 100%; }
+  .collection-archive figcaption { max-width: none; }
 }
 
 @media (max-width: 37rem) {

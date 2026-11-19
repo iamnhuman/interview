@@ -257,7 +257,7 @@
       else link.removeAttribute("aria-details");
     }
     hide();
-  });
+  }, { preservePosition: true });
   const links = document.querySelectorAll("a[href]:not([download], [data-photo])");
   for (const link of links) {
     const group = link.closest("[data-preview-image]");

@@ -1,15 +1,66 @@
 "use strict";
 
-function initDisplaySwitch(name, pressedValue, unpressedValue, onChange) {
+function readingAnchor() {
+  const top = document.querySelector(".masthead").getBoundingClientRect().bottom;
+  for (const block of document.querySelectorAll("#page-content :is(.cover, h2, h3, p, figure, .footer)")) {
+    const bounds = block.getBoundingClientRect();
+    if (bounds.bottom <= top) continue;
+    if (bounds.top >= top || !block.matches("h2, h3, p")) return block;
+
+    const x = bounds.left + Math.min(8, bounds.width / 2);
+    const y = top + 1;
+    let range = document.caretRangeFromPoint?.(x, y);
+    if (!range) {
+      const caret = document.caretPositionFromPoint?.(x, y);
+      if (!caret) return block;
+      range = document.createRange();
+      range.setStart(caret.offsetNode, caret.offset);
+      range.collapse(true);
+    }
+    const text = range.startContainer;
+    if (text.nodeType === Node.TEXT_NODE && block.contains(text) && !text.parentElement.closest(".source-ref") &&
+      range.getBoundingClientRect().height) return range;
+    return block;
+  }
+  return null;
+}
+
+function preserveReadingPosition(change) {
+  const anchor = window.scrollY > 0 && readingAnchor();
+  if (!anchor) {
+    change();
+    return;
+  }
+
+  const style = document.documentElement.style;
+  const previous = style.getPropertyValue("overflow-anchor");
+  const priority = style.getPropertyPriority("overflow-anchor");
+  // Compensate for the reflow once, even when the browser has its own scroll anchoring.
+  style.setProperty("overflow-anchor", "none", "important");
+  try {
+    const top = anchor.getBoundingClientRect().top;
+    change();
+    const delta = anchor.getBoundingClientRect().top - top;
+    if (Math.abs(delta) > .5) window.scrollBy({ top: delta, behavior: "instant" });
+  } finally {
+    style.setProperty("overflow-anchor", previous, priority);
+  }
+}
+
+function initDisplaySwitch(name, pressedValue, unpressedValue, onChange, { preservePosition = false } = {}) {
   const root = document.documentElement;
   const attribute = `data-${name}`;
   const control = document.querySelector(`[${attribute}-switch]`);
 
   function setPressed(pressed) {
     const value = pressed ? pressedValue : unpressedValue;
-    root.setAttribute(attribute, value);
-    control.setAttribute("aria-pressed", String(pressed));
-    onChange?.(value, control);
+    function update() {
+      root.setAttribute(attribute, value);
+      control.setAttribute("aria-pressed", String(pressed));
+      onChange?.(value, control);
+    }
+    if (preservePosition && root.getAttribute(attribute) !== value) preserveReadingPosition(update);
+    else update();
   }
 
   control.addEventListener("click", () => setPressed(control.getAttribute("aria-pressed") !== "true"));
