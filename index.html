@@ -41,6 +41,9 @@
         </button>
       </div>
       <div class="masthead-actions">
+        <button type="button" data-sigil-scroll-switch hidden aria-label="Шкала вопросов" aria-pressed="true" aria-controls="interview-navigation" title="Скрыть шкалу вопросов">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3.5" y="5" width="17" height="14" rx="1.5"/><path class="rail-ticks" d="M7 8.5h3.5M7 12h3.5M7 15.5h3.5"/></svg>
+        </button>
         <button type="button" data-bibliography-switch hidden aria-label="Библиография" aria-pressed="false" title="Показать библиографию">
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M2.5 5.2c3.4-.9 6.5-.5 9.5 1.2 3-1.7 6.1-2.1 9.5-1.2v13c-3.4-.9-6.5-.5-9.5 1.2-3-1.7-6.1-2.1-9.5-1.2z"/><path class="book-fold" d="M12 6.5v12.6"/></svg>
         </button>
@@ -53,7 +56,7 @@
       </div>
     </div>
   </header>
-  <aside class="sigil-scroll" data-sigil-navigation aria-label="Перемещение по интервью" hidden>
+  <aside class="sigil-scroll" id="interview-navigation" data-sigil-navigation aria-label="Перемещение по интервью" hidden>
     <div class="scroll-track" data-sigil-scroll role="scrollbar" tabindex="0" aria-label="Прокрутка страницы"
       aria-controls="page-content" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
       <span class="scroll-thumb" data-scroll-thumb aria-hidden="true"></span>
@@ -68,7 +71,7 @@
       </div>
       <div class="cover-composition">
         <div class="cover-summary">
-          <p class="cover-deck">И быть в курсе<br>настоящего андера</p>
+          <p class="cover-deck">И быть в курсе<br> настоящего андера</p>
           <a class="reading-link" href="#interview">
             <span>Читать интервью</span>
             <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v12m-5-5 5 5 5-5"/></svg>
@@ -165,7 +168,7 @@
           <p class="audio-error" data-media-error hidden role="status">Трек не удалось воспроизвести. Его можно скачать по ссылке MP3.</p>
           <figcaption class="track-note"><sub><i>трек 4LL, под которым меня заинтересовало обсуждение</i></sub></figcaption>
         </figure>
-        <div class="turn question" id="question-04" tabindex="-1" data-sources-at-end>
+        <div class="turn question" id="question-04" tabindex="-1">
           <span class="question-alias" id="fitnesss" aria-hidden="true"></span>
           <h2 class="turn-copy question-copy" id="fitnesss-title">Я видел, что ты часто упоминаешь <a href="https://www.instagram.com/flt.n3sss/" target="_blank" rel="noopener noreferrer">FITNESSS</a>. Почему тебе кажется, о нем должны говорить? Что, например, он сделал такого, чего не делала Arca?</h2>
         </div>
@@ -174,7 +177,12 @@
             <p>Мне это сложно объяснить, видимо, без <a href="assets/media/raiika-vs-slava-marlow.pdf" type="application/pdf" target="_blank" rel="noopener noreferrer">научной статьи</a> не обойтись, лучше сказать «я в это верю как Тойотолог». Костюм, кстати, у него был прикольнее, чем у <span class="artist-name"><span class="artist-quote">«</span>Arca<span class="artist-quote">»</span></span> — более технологичный, звук тоже. Это, конечно же, всё субъективно, и Антон Савенко, и админ <span class="artist-name"><span class="artist-quote">«</span>ethereal grooves<span class="artist-quote">»</span></span> имеют право постить и делать что хотят и иметь свою правду, а я, может, ебнулся, что вижу в своей правде истину, но что поделаешь) Обычно напрягает, что люди говорят, как молодые деконстрактед клаб продюсеры ничего не придумали, а потом идут постить в 500-й раз своего <span class="artist-name"><span class="artist-quote">«</span>Yung Lean<span class="artist-quote">»</span></span>, <span class="artist-name"><span class="artist-quote">«</span>Bladee<span class="artist-quote">»</span></span>, <span class="artist-name"><span class="artist-quote">«</span>Autechre<span class="artist-quote">»</span></span>, <span class="artist-name"><span class="artist-quote">«</span>Aphex Twin<span class="artist-quote">»</span></span>, <span class="artist-name"><span class="artist-quote">«</span>Burial<span class="artist-quote">»</span></span>, ск-реп и одинаковые афиши техно-вечеринок. Ок, <span class="artist-name"><span class="artist-quote">«</span>FITNESSS<span class="artist-quote">»</span></span>, может, и не придумал ничего нового, но <span class="artist-name"><span class="artist-quote">«</span>Fred Again<span class="artist-quote">»</span></span> или <span class="artist-name"><span class="artist-quote">«</span>Skrillex<span class="artist-quote">»</span></span> тогда вообще должны повеситься.</p>
           </div>
         </div>
-        <figure class="image-asset image-pair">
+        <div class="turn answer">
+          <div class="turn-copy answer-copy">
+            <p>У меня несколько дней назад был такой же диалог с челом, которого <a href="https://t.me/fakeboys01/22361" target="_blank" rel="noopener noreferrer">постили</a> в <span class="artist-name"><span class="artist-quote">«</span>fakeboys<span class="artist-quote">»</span></span>, он сказал, что <span class="artist-name"><span class="artist-quote">«</span>4LL<span class="artist-quote">»</span></span> — колхозная херня. Цитату точную не помню, но я так воспринял) А для кого-то его треки являются таковыми. Где тут объективность? Пусть вначале накрутит такие же треки, тогда я соглашусь, но это вряд ли случится, и работает в обе стороны. Пусть вначале Савенко выложит 5 релизов, как <span class="artist-name"><span class="artist-quote">«</span>FITNESSS<span class="artist-quote">»</span></span> и <span class="artist-name"><span class="artist-quote">«</span>4LL<span class="artist-quote">»</span></span>, а потом говорит, что не было ничего после <span class="artist-name"><span class="artist-quote">«</span>Arca<span class="artist-quote">»</span></span>, но последний альбом <span class="artist-name"><span class="artist-quote">«</span>Arca<span class="artist-quote">»</span></span> — там вообще от задротского саунд-дизайна мало что осталось.</p>
+          </div>
+        </div>
+        <figure class="image-asset image-pair" data-sources-before>
           <div class="image-frame">
             <a class="photo-link" href="assets/media/fitnesss-live.jpg" data-photo aria-label="Открыть изображение. FITNESSS в сценическом костюме со светящимися модулями на спине">
               <img src="assets/media/fitnesss-live.jpg" width="1440" height="1920" loading="lazy" decoding="async" alt="FITNESSS в сценическом костюме со светящимися модулями на спине">
@@ -204,11 +212,6 @@
           </div>
           <p class="audio-error" data-media-error hidden role="status">Трек не удалось воспроизвести. Его можно скачать по ссылке MP3.</p>
         </figure>
-        <div class="turn answer">
-          <div class="turn-copy answer-copy">
-            <p>У меня несколько дней назад был такой же диалог с челом, которого <a href="https://t.me/fakeboys01/22361" target="_blank" rel="noopener noreferrer">постили</a> в <span class="artist-name"><span class="artist-quote">«</span>fakeboys<span class="artist-quote">»</span></span>, он сказал, что <span class="artist-name"><span class="artist-quote">«</span>4LL<span class="artist-quote">»</span></span> — колхозная херня. Цитату точную не помню, но я так воспринял) А для кого-то его треки являются таковыми. Где тут объективность? Пусть вначале накрутит такие же треки, тогда я соглашусь, но это вряд ли случится, и работает в обе стороны. Пусть вначале Савенко выложит 5 релизов, как <span class="artist-name"><span class="artist-quote">«</span>FITNESSS<span class="artist-quote">»</span></span> и <span class="artist-name"><span class="artist-quote">«</span>4LL<span class="artist-quote">»</span></span>, а потом говорит, что не было ничего после <span class="artist-name"><span class="artist-quote">«</span>Arca<span class="artist-quote">»</span></span>, но последний альбом <span class="artist-name"><span class="artist-quote">«</span>Arca<span class="artist-quote">»</span></span> — там вообще от задротского саунд-дизайна мало что осталось.</p>
-          </div>
-        </div>
         <div class="turn question" id="question-05" tabindex="-1">
           <h2 class="turn-copy question-copy" id="question-05-title">Слушай, но не Савенко же единым все-таки. Мне кажется, он себя как какой-то особый задрот по электронной музыке и не преподносит. Скорее так, про попсу?</h2>
         </div>
@@ -277,7 +280,7 @@
               <img src="assets/media/normis-calculator.png" width="2910" height="1844" loading="lazy" decoding="async" alt="Скриншот теста «Калькулятор нормиса»">
             </a>
           </div>
-          <figcaption><a href="https://iamnhuman.github.io/fakeboys/" target="_blank" rel="noopener noreferrer">iamnhuman.github.io/fakeboys</a> — ироничный тест на слух</figcaption>
+          <figcaption>ироничный <a href="https://iamnhuman.github.io/fakeboys/" target="_blank" rel="noopener noreferrer">тест</a> на слух</figcaption>
         </figure>
         <div class="turn answer">
           <div class="turn-copy answer-copy">
@@ -296,7 +299,7 @@
           <div class="image-frame">
             <a class="photo-link" href="assets/media/toyota-handles.png" data-photo aria-label="Открыть изображение. Шесть аккаунтов с вариантами никнейма Тойоты в Telegram">
               <img src="assets/media/toyota-handles.png" srcset="assets/media/toyota-handles.png 1038w"
-                sizes="317px" width="317" height="299" loading="lazy" decoding="async" alt="Шесть аккаунтов с вариантами никнейма Тойоты в Telegram">
+                sizes="467px" width="467" height="441" loading="lazy" decoding="async" alt="Шесть аккаунтов с вариантами никнейма Тойоты в Telegram">
             </a>
           </div>
         </figure>

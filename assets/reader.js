@@ -234,6 +234,7 @@ function initReadingPosition() {
 
   function update() {
     frame = 0;
+    if (navigation.hidden) return;
     if (dirty || stops[stops.length - 1] !== scrollExtent()) measure();
     const scrollTop = window.scrollY;
     let current = 0;
@@ -272,10 +273,11 @@ function initReadingPosition() {
   }
 
   function finishDrag(event) {
-    if (!drag || event.pointerId !== drag.id) return;
+    if (!drag || (event && event.pointerId !== drag.id)) return;
+    const { id } = drag;
     drag = null;
     root.classList.remove("is-sigil-dragging");
-    if (rail.hasPointerCapture(event.pointerId)) rail.releasePointerCapture(event.pointerId);
+    if (rail.hasPointerCapture(id)) rail.releasePointerCapture(id);
   }
 
   rail.addEventListener("pointerdown", (event) => {
@@ -310,6 +312,41 @@ function initReadingPosition() {
   resize.observe(rail);
   navigation.hidden = false;
   root.classList.add("has-sigil-scroll");
+
+  const railSwitch = document.querySelector("[data-sigil-scroll-switch]");
+  if (railSwitch) {
+    const mobile = matchMedia("(max-width: 37rem)");
+    let mobileRailVisible = true;
+
+    function applyRailVisibility() {
+      const visible = !mobile.matches || mobileRailVisible;
+      railSwitch.hidden = !mobile.matches;
+      railSwitch.setAttribute("aria-pressed", String(visible));
+      railSwitch.title = visible ? "Скрыть шкалу вопросов" : "Показать шкалу вопросов";
+      if (!visible) {
+        if (navigation.contains(document.activeElement)) railSwitch.focus({ preventScroll: true });
+        hidePreview();
+        finishDrag();
+      }
+      navigation.hidden = !visible;
+      root.classList.toggle("has-sigil-scroll", visible);
+      dirty = true;
+    }
+
+    railSwitch.addEventListener("click", () => {
+      if (!mobile.matches) return;
+      if (dirty || stops[stops.length - 1] !== scrollExtent()) measure();
+      const position = positionOnTimeline(stops, window.scrollY);
+      mobileRailVisible = !mobileRailVisible;
+      applyRailVisibility();
+      measure();
+      window.scrollTo({ top: scrollTopOnTimeline(stops, position), behavior: "instant" });
+      schedule();
+    });
+    mobile.addEventListener("change", () => { applyRailVisibility(); schedule(); });
+    applyRailVisibility();
+  }
+
   window.addEventListener("scroll", schedule, { passive: true });
   window.addEventListener("resize", invalidate);
   window.addEventListener("load", invalidate);

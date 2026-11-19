@@ -122,7 +122,8 @@ function createMediaControls(bar, { plot, onPosition = () => {}, playButton } = 
     seek.max = String(length); seek.value = String(time);
     const ratio = length ? time / length : 0;
     (plot || seek).style.setProperty("--played", ratio * 100 + "%");
-    current.textContent = timeLabel(time); total.textContent = " / " + timeLabel(length);
+    current.textContent = timeLabel(time);
+    total.textContent = timeLabel(length);
     seek.setAttribute("aria-valuetext", timeLabel(time) + " из " + timeLabel(length));
     onPosition(ratio);
   }
