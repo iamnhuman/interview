@@ -295,6 +295,7 @@ const linkCards = {
   "https://www.youtube.com/watch?v=uBeD_bZPYPU": {
     "title": "Hot Pursuit - 50 Caliber (Bassfunk Recordings)",
     "description": "NeurofunkGrid",
+    "imageLayout": "square",
     "image": "assets/link-thumbnails/b3b5eebcd4dc.jpg"
   },
   "https://iamnhuman.github.io/fakeboys/": {

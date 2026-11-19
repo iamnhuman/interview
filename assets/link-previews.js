@@ -66,8 +66,8 @@
     label.textContent = record.title;
     const domain = document.createElement("span");
     domain.className = "source-site";
-    domain.textContent = record.displayUrl || site;
-    row.append(label, domain, createSourceMark(link));
+    domain.append(createSourceMark(link), record.displayUrl || site);
+    row.append(label, domain);
     const item = document.createElement("li");
     item.append(row);
     list.append(item);

@@ -158,6 +158,7 @@ html.has-sigil-scroll::-webkit-scrollbar, html.has-sigil-scroll body::-webkit-sc
 .skip-link:focus { transform: none; }
 
 .masthead {
+  --header-action-width: 2.75rem;
   position: sticky;
   z-index: 10;
   top: 0;
@@ -188,7 +189,7 @@ html.has-sigil-scroll::-webkit-scrollbar, html.has-sigil-scroll body::-webkit-sc
 .wordmark:hover { text-decoration: underline; }
 .masthead-title { padding-left: .02rem; color: var(--muted); font: 450 .58rem/1.3 var(--body); letter-spacing: .09em; text-transform: uppercase; }
 .masthead-actions { grid-column: 3; justify-self: end; display: flex; align-items: center; }
-.masthead-actions button { position: relative; display: grid; place-items: center; width: 2.75rem; height: 2.75rem; padding: 0; border: 0; border-radius: var(--ui-radius); color: var(--ink); background: transparent; }
+.masthead-actions button { position: relative; display: grid; place-items: center; width: var(--header-action-width); height: 2.75rem; padding: 0; border: 0; border-radius: var(--ui-radius); color: var(--ink); background: transparent; }
 .masthead-actions button:hover { color: var(--muted); }
 .masthead-actions button:focus-visible::after {
   content: ""; position: absolute; inset-inline: 0; inset-block-end: .45rem;
@@ -375,17 +376,12 @@ html.has-sigil-scroll::-webkit-scrollbar, html.has-sigil-scroll body::-webkit-sc
 }
 .source-list:last-child { margin-block-end: 0; }
 .source-list .source-link {
-  position: relative; isolation: isolate; overflow: hidden; display: grid;
+  display: grid;
   grid-template: "title number" 1fr "site site" auto / minmax(0, 1fr) max-content;
   align-items: start; gap: .15rem .5rem;
   height: 100%; padding: .45rem .5rem .45rem .65rem;
   border: 1px solid var(--line); border-radius: var(--ui-radius);
   color: var(--text); background: var(--surface); text-decoration: none;
-}
-.source-mark {
-  position: absolute; z-index: -1; inset-inline-end: .65rem; inset-block-end: .35rem;
-  width: min(3rem, 35%); height: min(3rem, 90%);
-  color: var(--ink); fill: currentColor; opacity: .085; pointer-events: none;
 }
 .source-index {
   grid-area: number; justify-self: end; display: grid; place-items: center;
@@ -395,7 +391,11 @@ html.has-sigil-scroll::-webkit-scrollbar, html.has-sigil-scroll body::-webkit-sc
 }
 .source-title { grid-area: title; font-weight: 550; overflow-wrap: anywhere; }
 .source-list > li:only-child .source-title { grid-column: 1 / -1; }
-.source-site { grid-area: site; color: var(--muted); font-size: .7rem; overflow-wrap: anywhere; }
+.source-site {
+  grid-area: site; display: flex; align-items: flex-start; gap: .32rem;
+  color: var(--muted); font-size: .7rem; overflow-wrap: anywhere;
+}
+.source-mark { flex: none; width: 1.15em; height: 1.35em; fill: currentColor; }
 .source-list .source-link:is(.source-active, :hover, :focus-visible) {
   color: var(--ink); background: var(--surface-raised); border-color: var(--link-line);
 }
@@ -672,9 +672,10 @@ html.has-sigil-scroll::-webkit-scrollbar, html.has-sigil-scroll body::-webkit-sc
 .playlist-bar:has(.playlist-selection) .track-choice:focus-visible { outline-offset: -2px; }
 .version-title { padding: .15rem .45rem; }
 [data-compare-versions] .playlist-bar.media-controls {
-  grid-template: "title clock volume download" auto "list list list list" auto / minmax(0, 1fr) auto auto auto;
+  grid-template: "list list list list" auto "title clock volume download" auto / minmax(0, 1fr) auto auto auto;
 }
 .media-controls .version-title { grid-area: title; }
+[data-compare-versions] .clock { margin-inline-end: 2px; }
 [data-compare-versions] .media-controls .track-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .3rem; }
 [data-compare-versions] .track-choice {
   grid-template-columns: 1rem auto; justify-content: center; gap: .5rem; padding-inline: .7rem;
@@ -774,7 +775,7 @@ html.has-sigil-scroll::-webkit-scrollbar, html.has-sigil-scroll body::-webkit-sc
     grid-template: "list list list" auto "selection selection selection" auto "clock volume download" auto / minmax(0, 1fr) auto auto;
   }
   [data-compare-versions] .playlist-bar.media-controls {
-    grid-template: "title title title" auto "list list list" auto "clock volume download" auto / minmax(0, 1fr) auto auto;
+    grid-template: "list list list" auto "title title title" auto "clock volume download" auto / minmax(0, 1fr) auto auto;
   }
 }
 .footer {
@@ -834,8 +835,10 @@ html.has-sigil-scroll::-webkit-scrollbar, html.has-sigil-scroll body::-webkit-sc
   .masthead-inner { grid-template-columns: minmax(0, 1fr) auto; gap: 0 .5rem; }
   .masthead-brand { grid-area: 1 / 1; }
   .masthead-actions { grid-area: 1 / 2; }
-  .header-player { grid-area: 2 / 1 / 3 / -1; width: 100%; }
+  .header-player { grid-area: 2 / 1 / 3 / -1; width: 100%; gap: 0; }
   .header-jump:not(:has(.header-art:not([hidden]))) { padding-inline-start: 0; }
+  .header-return { margin-inline: calc((var(--header-action-width) - .75rem) / 2); }
+  .header-toggle, .header-stop { width: var(--header-action-width); }
   .header-toggle { color: var(--ink); border-radius: var(--ui-radius); }
   .header-toggle::before { content: none; }
 }
@@ -847,7 +850,7 @@ html.has-sigil-scroll::-webkit-scrollbar, html.has-sigil-scroll body::-webkit-sc
   .cover-main .photo-link { height: 15rem; }
 }
 @media (max-width: 21rem) {
-  .masthead-actions button { width: clamp(1.875rem, 11vw, 2.25rem); }
+  .masthead { --header-action-width: clamp(1.875rem, 11vw, 2.25rem); }
   .wordmark { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 }
 
