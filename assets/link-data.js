@@ -143,11 +143,11 @@ const linkCards = {
     "image": "assets/media/previews/post-fakeboys01-22361.jpg"
   },
   "https://t.me/hypernormis/68/4720": {
-    "title": "FITNESSS live performance",
+    "title": "FITNESSS — S4 ENGINE",
     "displayUrl": "t.me/hypernormis",
-    "meta": "Публикация · 4 нояб. 2025 г.",
-    "description": "live под трек FITNESSS",
-    "image": "assets/media/previews/post-hypernormis-4676.jpg"
+    "meta": "Публикация · 24 нояб. 2025 г.",
+    "description": "Новая версия костюма для диджеинга.",
+    "image": "assets/media/previews/post-hypernormis-4720.jpg"
   },
   "https://iamnhuman.github.io/bassfunk-releases/": {
     "title": "Bassfunk Releases",
@@ -424,9 +424,8 @@ const linkCards = {
     ...trollnormisAvatar
   },
   "https://open.spotify.com/track/2Vjxr1mtSvlNkuuGsbCBoA?autoplay_ok=1": {
-    "title": "Teddynator",
+    "title": "Teddy Killerz - Teddynator",
     "meta": "«Spotify» · 22 мар. 2015 г.",
-    "description": "Teddy Killerz - Teddynator",
     "image": "assets/link-thumbnails/e34dec1f2b61.jpg"
   },
   "https://t.me/hypernormis/1144": {

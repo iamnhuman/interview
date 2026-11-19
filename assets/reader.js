@@ -400,7 +400,7 @@ function initHeaderPlayback(media) {
   function showProgress() {
     const progress = active && Number.isFinite(active.duration) && active.duration > 0
       ? Math.min(1, Math.max(0, active.currentTime / active.duration)) : 0;
-    player.style.setProperty("--header-fill", `${progress * 100}%`);
+    header.style.setProperty("--header-fill", `${progress * 100}%`);
   }
 
   function showVideoFrame() {

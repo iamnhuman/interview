@@ -69,11 +69,6 @@
       img.alt = ""; img.src = video.poster; img.loading = "lazy"; img.decoding = "async";
       const length = element("span", "clip-length"); length.textContent = video.dataset.length;
       const number = element("span", "clip-number"); number.textContent = String(i + 1).padStart(2, "0");
-      if (clips.length === 2) {
-        const prefix = element("span", "clip-prefix");
-        prefix.textContent = "Фрагмент ";
-        number.prepend(prefix);
-      }
       const meta = element("span", "clip-meta"); meta.append(number, length);
       item.append(img, meta); picker.append(item); choices.push(item);
       item.addEventListener("click", () => select(i));
