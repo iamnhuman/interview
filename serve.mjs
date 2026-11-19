@@ -14,9 +14,13 @@ const mime = new Map([
   [".css", "text/css; charset=utf-8"],
   [".js", "text/javascript; charset=utf-8"],
   [".jpg", "image/jpeg"],
+  [".png", "image/png"],
   [".webp", "image/webp"],
   [".svg", "image/svg+xml"],
+  [".pdf", "application/pdf"],
   [".mp3", "audio/mpeg"],
+  [".m4a", "audio/mp4"],
+  [".mp4", "video/mp4"],
   [".woff2", "font/woff2"],
   [".txt", "text/plain; charset=utf-8"],
 ]);

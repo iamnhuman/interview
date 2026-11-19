@@ -91,20 +91,25 @@ function initReadingPosition() {
   const questions = [...document.querySelectorAll(".turn.question")];
   if (!questions.length) return;
   const cover = document.getElementById("cover");
+  const end = document.getElementById("end");
   const sections = [{
-    id: cover.id, label: "Обложка", number: "Обложка",
-    title: cover.querySelector("h1").textContent.trim(),
+    id: cover.id, label: "Начало интервью",
     sigil: cover.querySelector(".heading-sigil").getAttribute("src"),
   }, ...questions.map((question, index) => ({
     id: question.id, label: `Вопрос ${index + 1} из ${questions.length}`,
     number: `${String(index + 1).padStart(2, "0")} / ${questions.length}`,
-    title: question.querySelector("h2").textContent.trim(), sigil: questionSigilSources[index],
-  }))];
+    title: question.querySelector(".question-copy").textContent.trim(),
+    sigil: questionSigilSource(index),
+  })), {
+    id: end.id, label: end.getAttribute("aria-label"),
+    sigil: end.querySelector(".footer-sigil").getAttribute("src"),
+  }];
   const jumpList = navigation.querySelector("[data-question-jumps]");
   const activeSigil = document.createElement("img");
   activeSigil.className = "question-symbol";
   activeSigil.alt = "";
   activeSigil.draggable = false;
+  thumb.append(activeSigil);
   const preview = document.createElement("div");
   preview.className = "question-preview";
   preview.hidden = true;
@@ -112,12 +117,14 @@ function initReadingPosition() {
   const previewNumber = document.createElement("span");
   previewNumber.className = "question-preview-number";
   const previewText = document.createElement("p");
+  const previewAddress = document.createElement("span");
+  previewAddress.className = "question-preview-url";
   const previewSigil = document.createElement("img");
   previewSigil.className = "question-preview-sigil";
   previewSigil.width = 96;
   previewSigil.height = 36;
   previewSigil.alt = "";
-  preview.append(previewNumber, previewText, previewSigil);
+  preview.append(previewNumber, previewText, previewSigil, previewAddress);
   navigation.append(preview);
   let previewIndex = -1;
   let activeIndex = -1;
@@ -141,10 +148,11 @@ function initReadingPosition() {
   function showPreview(index) {
     previewIndex = index;
     const section = sections[index];
-    previewNumber.textContent = section.number;
-    previewText.textContent = section.title;
+    preview.classList.toggle("endpoint-preview", section.id === cover.id || section.id === end.id);
+    previewNumber.textContent = section.number || "";
+    previewText.textContent = section.title || section.label;
+    previewAddress.textContent = jumps[index].getAttribute("href");
     previewSigil.src = section.sigil;
-    previewSigil.classList.toggle("cover-symbol", index === 0);
     preview.hidden = false;
     placePreview();
   }
@@ -158,7 +166,7 @@ function initReadingPosition() {
     const link = document.createElement("a");
     link.className = "question-jump";
     link.href = `#${section.id}`;
-    link.setAttribute("aria-label", `${section.label}. ${section.title}`);
+    link.setAttribute("aria-label", section.title ? `${section.label}. ${section.title}` : section.label);
     link.tabIndex = index === 0 ? 0 : -1;
     link.addEventListener("pointerenter", () => showPreview(index));
     link.addEventListener("pointerleave", () => {
@@ -189,7 +197,7 @@ function initReadingPosition() {
     const offset = header + fontSize * 1.5;
     stops = [0, ...questions.map(question => Math.max(0, Math.min(extent, question.getBoundingClientRect().top + window.scrollY - offset))), extent];
     const travel = Math.max(0, rail.clientHeight - thumb.offsetHeight);
-    const interval = travel / sections.length;
+    const interval = travel / (stops.length - 1);
     for (let i = 0; i < jumps.length; i += 1) {
       jumps[i].style.top = `${thumb.offsetHeight / 2 + interval * i}px`;
       jumps[i].style.height = `${Math.max(1, interval)}px`;
@@ -200,18 +208,20 @@ function initReadingPosition() {
   function update() {
     frame = 0;
     if (dirty || stops[stops.length - 1] !== scrollExtent()) measure();
-    const position = positionOnTimeline(stops, window.scrollY);
+    const extent = stops[stops.length - 1];
+    const scrollTop = window.scrollY > 0 && extent - window.scrollY < 1 ? extent : window.scrollY;
+    const position = positionOnTimeline(stops, scrollTop);
     const travel = Math.max(0, rail.clientHeight - thumb.offsetHeight);
     thumb.style.transform = `translateY(${position * travel}px)`;
     rail.setAttribute("aria-valuenow", String(Math.round(position * 100)));
     let current = 0;
-    while (window.scrollY > 0 && current + 1 < sections.length && stops[current + 1] <= window.scrollY + .5) current++;
+    while (scrollTop > 0 && current + 1 < sections.length && stops[current + 1] <= scrollTop) current++;
     if (current !== activeIndex) {
       if (activeIndex >= 0) jumps[activeIndex].removeAttribute("aria-current");
       rail.setAttribute("aria-valuetext", sections[current].label);
       activeSigil.src = sections[current].sigil;
       activeSigil.classList.toggle("cover-symbol", current === 0);
-      jumps[current].append(activeSigil);
+      activeSigil.classList.toggle("end-symbol", sections[current].id === end.id);
       jumps[current].setAttribute("aria-current", "location");
       activeIndex = current;
       if (!jumps.includes(document.activeElement)) setTabStop(current);
@@ -280,7 +290,7 @@ function initReadingPosition() {
   update();
 }
 
-function initHeaderPlayback(tracks) {
+function initHeaderPlayback(media) {
   const header = document.querySelector(".masthead");
   const player = header.querySelector("[data-header-player]");
   const toggle = header.querySelector("[data-header-toggle]");
@@ -289,385 +299,442 @@ function initHeaderPlayback(tracks) {
   const title = header.querySelector("[data-header-track]");
   const artist = header.querySelector("[data-header-artist]");
   const art = header.querySelector("[data-header-art]");
+  const thumbnail = header.querySelector("[data-header-video]");
+  const thumbnailContext = thumbnail.getContext("2d", { alpha: false });
   let active = null;
-  let followedPlayer = null;
+  let inlineControls = null;
   let inlineVisible = false;
-  const visibility = new IntersectionObserver(entries => {
-    for (const entry of entries) {
-      if (entry.target !== followedPlayer) continue;
-      if (entry.isIntersecting) inlineVisible = true;
-      else if (inlineVisible) clearFollow();
-    }
-    sync();
-  }, { rootMargin: `-${Math.round(header.getBoundingClientRect().height)}px 0px 0px 0px` });
+  let headerHeight = -1;
+  let visibility;
 
-  function clearFollow() {
-    visibility.disconnect();
-    followedPlayer = null;
-    inlineVisible = false;
+  function controlsInView() {
+    const rect = inlineControls?.getBoundingClientRect();
+    return Boolean(rect && rect.width > 0 && rect.height > 0 &&
+      rect.bottom > headerHeight && rect.top < window.innerHeight);
+  }
+
+  function updateVisibility() {
+    const visible = controlsInView();
+    if (inlineVisible === visible) return;
+    inlineVisible = visible;
+    sync();
+  }
+
+  function setActive(item) {
+    active = item;
+    const owner = item?.closest("[data-audio-player], [data-video-gallery]");
+    const controls = owner?.querySelector(".media-controls:not([hidden])") || item;
+    if (controls !== inlineControls) {
+      visibility.disconnect();
+      inlineControls = controls;
+      if (controls) visibility.observe(controls);
+    }
+    inlineVisible = controlsInView();
+    sync();
   }
 
   function showProgress() {
     const progress = active && Number.isFinite(active.duration) && active.duration > 0
       ? Math.min(1, Math.max(0, active.currentTime / active.duration)) : 0;
-    player.style.setProperty("--header-progress", String(progress));
+    player.style.setProperty("--header-fill", `${progress * 100}%`);
+  }
+
+  function showVideoFrame() {
+    thumbnail.hidden = true;
+    if (active?.tagName !== "VIDEO") return;
+    art.hidden = !active.getAttribute("poster");
+    if (!thumbnailContext || player.hidden || document.hidden || active.readyState < 2) return;
+    const size = Math.min(active.videoWidth, active.videoHeight);
+    if (!size) return;
+    try {
+      thumbnailContext.drawImage(active, (active.videoWidth - size) / 2, (active.videoHeight - size) / 2,
+        size, size, 0, 0, thumbnail.width, thumbnail.height);
+      thumbnail.hidden = false;
+      art.hidden = true;
+    } catch { /* The poster stays visible until a decoded frame is available. */ }
   }
 
   function sync() {
     const hadFocus = player.contains(document.activeElement);
     player.hidden = !active || inlineVisible;
-    header.toggleAttribute("data-audio-playing", Boolean(active && !active.paused));
+    header.toggleAttribute("data-media-playing", Boolean(active && !active.paused && !active.ended));
     if (active) {
       const name = active.getAttribute("aria-label");
-      const currentPlayer = active.closest("[data-audio-player]");
-      artist.textContent = currentPlayer.querySelector(".track-artist").textContent;
-      title.textContent = currentPlayer.querySelector(".track-title strong").textContent;
-      const cover = currentPlayer.querySelector(".track-art").getAttribute("src");
-      if (art.getAttribute("src") !== cover) art.setAttribute("src", cover);
+      const video = active.tagName === "VIDEO";
+      const currentPlayer = active.closest("[data-audio-player], [data-video-gallery]");
+      const audioRow = active.closest(".track-entry") || currentPlayer;
+      const clips = video ? [...currentPlayer.querySelectorAll("video")] : [];
+      const trackTitle = currentPlayer.querySelector(".version-title") || audioRow.querySelector(".track-title");
+      artist.textContent = video ? `Видео · ${clips.indexOf(active) + 1} / ${clips.length}` :
+        [trackTitle?.querySelector(".track-artist")?.textContent, audioRow.dataset.version].filter(Boolean).join(" · ");
+      artist.hidden = !artist.textContent;
+      title.textContent = video ? currentPlayer.getAttribute("aria-label") : trackTitle.querySelector("strong").textContent;
+      const poster = video ? active.getAttribute("poster") : null;
+      art.hidden = !poster;
+      if (poster && art.getAttribute("src") !== poster) art.setAttribute("src", poster);
+      if (!poster) art.removeAttribute("src");
       const action = active.paused ? "Продолжить" : "Пауза";
       toggle.title = action;
       toggle.setAttribute("aria-label", `${action} — ${name}`);
-      stop.setAttribute("aria-label", `Выключить трек: ${name}`);
-      jump.href = `#${currentPlayer.id}`;
-      jump.setAttribute("aria-label", `Прыгнуть к треку: ${name}`);
-      if (inlineVisible && hadFocus) currentPlayer.querySelector("[data-play]").focus({ preventScroll: true });
+      stop.title = video ? "Остановить видео" : "Выключить трек";
+      stop.setAttribute("aria-label", stop.title + " — " + name);
+      jump.href = "#" + (video ? active.id : audioRow.id);
+      jump.title = video ? "Перейти к видео" : "Перейти к треку";
+      jump.setAttribute("aria-label", jump.title + " — " + name);
+      if (inlineVisible && hadFocus) (currentPlayer.querySelector("[data-media-play]") || active).focus({ preventScroll: true });
     } else if (hadFocus) {
       header.querySelector(".wordmark").focus({ preventScroll: true });
     }
     showProgress();
+    showVideoFrame();
   }
 
-  const measure = new ResizeObserver(() => {
-    document.documentElement.style.setProperty("--header-height", `${header.getBoundingClientRect().height}px`);
-  });
-  measure.observe(header);
+  function measureHeader() {
+    const height = Math.ceil(header.getBoundingClientRect().height);
+    if (height === headerHeight) return;
+    headerHeight = height;
+    document.documentElement.style.setProperty("--header-height", `${height}px`);
+    visibility?.disconnect();
+    visibility = new IntersectionObserver(updateVisibility, {
+      rootMargin: `-${height}px 0px 0px 0px`, threshold: [0, .01]
+    });
+    if (inlineControls) visibility.observe(inlineControls);
+    updateVisibility();
+  }
+  measureHeader();
+  new ResizeObserver(measureHeader).observe(header);
 
-  jump.addEventListener("click", event => {
-    if (!active || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-    clearFollow();
-    followedPlayer = active.closest("[data-audio-player]");
-    visibility.observe(followedPlayer);
-  });
   toggle.addEventListener("click", () => {
     if (!active) return;
-    if (active.paused) playAudio(active);
+    if (active.paused) playMedia(active);
     else active.pause();
   });
   stop.addEventListener("click", () => {
     active?.pause();
-    active = null;
-    clearFollow();
-    sync();
+    setActive(null);
   });
-  for (const audio of tracks) {
-    for (const event of ["timeupdate", "durationchange", "seeked"]) {
-      audio.addEventListener(event, () => { if (active === audio) showProgress(); });
-    }
-    audio.addEventListener("play", () => {
-      if (active !== audio) clearFollow();
-      active = audio;
-      sync();
+  document.addEventListener("interviewclipchange", event => {
+    if (active !== event.detail.previous) return;
+    setActive(event.detail.current);
+  });
+  for (const item of media) {
+    item.addEventListener("play", () => {
+      if (item.paused || item.ended) return;
+      setActive(item);
+      pauseOtherMedia(item, media);
     });
-    audio.addEventListener("pause", () => { if (active === audio) sync(); });
-    for (const event of ["ended", "error", "emptied"]) audio.addEventListener(event, () => {
-      if (active === audio) { active = null; clearFollow(); sync(); }
+    for (const event of ["timeupdate", "durationchange", "seeked", "loadeddata"]) {
+      item.addEventListener(event, () => {
+        if (active === item) { showProgress(); showVideoFrame(); }
+      });
+    }
+    item.addEventListener("pause", () => { if (active === item) sync(); });
+    for (const event of ["ended", "error", "emptied"]) item.addEventListener(event, () => {
+      if (active === item) setActive(null);
     });
   }
   sync();
 }
 
-function timeLabel(seconds) {
-  const whole = Math.floor(seconds);
-  const minutes = Math.floor(whole / 60);
-  return `${minutes}:${String(whole % 60).padStart(2, "0")}`;
+function unpackSpectrum(track) {
+  const bytes = atob(track.edgeLevels);
+  const levels = new Uint8Array(bytes.length * 2);
+  for (let i = 0; i < bytes.length; i++) {
+    const pair = bytes.charCodeAt(i);
+    levels[i * 2] = pair >> 4;
+    levels[i * 2 + 1] = pair & 15;
+  }
+  return levels;
 }
 
-function createSpectrumEdge(svg, track) {
-  const bands = spectrumBandCount;
-  const packed = atob(track.edgeLevels);
-  const frames = packed.length * 2 / bands;
-  const mask = svg.querySelector(".edge-mask");
-  const front = svg.querySelector(".edge-front");
-  const [far, near] = svg.querySelectorAll(".edge-trail");
-  let lastTime = -1;
+function createSpectrumRenderer(canvas, levels, bands, total) {
+  const ctx = canvas.getContext("2d", { alpha: false });
+  if (!ctx) return null;
+  const frames = levels.length / bands;
+  let width = 0, height = 0, scale = 0, rows, columns, overview, ordinates, ink, paper;
+  let lastSeconds = NaN, lastPlaying;
 
-  function contour(time, offset) {
-    const sample = Math.max(0, Math.min(frames - 1, time * frames / track.duration));
-    const first = Math.floor(sample), second = Math.min(first + 1, frames - 1);
-    const mix = sample - first;
-    let path = "";
-    for (let i = 0; i < bands; i++) {
-      const shift = i % 2 === 0 ? 4 : 0;
-      const a = (packed.charCodeAt((first * bands + i) >> 1) >> shift) & 15;
-      const b = (packed.charCodeAt((second * bands + i) >> 1) >> shift) & 15;
-      const x = Math.min(99, 4 + offset + (a + (b - a) * mix) * 5.25);
-      path += `${i ? "L" : "M"}${x.toFixed(1)} ${(100 * i / (bands - 1)).toFixed(1)}`;
-    }
-    return path;
+  function amplitude(framePosition, band) {
+    const pos = Math.max(0, Math.min(frames - 1, framePosition));
+    const frame = Math.floor(pos), mix = pos - frame;
+    const a = levels[frame * bands + band];
+    const b = levels[Math.min(frame + 1, frames - 1) * bands + band];
+    return (a + (b - a) * mix) / 15;
   }
 
-  return (seconds, reducedMotion) => {
-    const rate = reducedMotion ? 4 : 30;
-    const tick = Math.floor(seconds * rate);
-    const time = tick / rate;
-    if (time === lastTime) return;
-    lastTime = time;
-    const outline = contour(time, 0);
-    mask.setAttribute("d", outline + "L100 100L100 0Z");
-    front.setAttribute("d", outline);
-    near.setAttribute("d", contour(time - .10, 8));
-    far.setAttribute("d", contour(time - .23, 16));
-  };
-}
-
-function initTrackSpectrum(player, audio) {
-  const track = typeof trackSpectra !== "undefined" && trackSpectra[player.id];
-  if (!track) return null;
-  const canvas = player.querySelector("[data-track-spectrum]");
-  const screen = canvas.parentElement;
-  const map = player.querySelector("[data-spectrum-map]");
-  const seek = player.querySelector("[data-seek]");
-  const context = canvas.getContext("2d", { alpha: false });
-  const reduced = matchMedia("(prefers-reduced-motion: reduce)");
-  const drawEdge = createSpectrumEdge(screen.querySelector(".spectrum-edge"), track);
-  const historyFraction = .74;
-  screen.style.setProperty("--edge-width", `${(1 - historyFraction) * 100}%`);
-  let frame = 0, visible = false, live = !audio.paused && !audio.ended, ready = false;
-  let start = 0, span = track.duration, drag = null, previewTime = null;
-
-  function duration() { return Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : track.duration; }
-
-  function position(seconds) {
-    player.style.setProperty("--played", `${100 * seconds / duration()}%`);
-  }
-
-  function draw(seconds) {
-    if (!visible || document.hidden) return;
-    const total = duration();
-    seconds = Math.max(0, Math.min(seconds, total));
-    const sounding = live && !audio.paused && !audio.ended && !audio.seeking;
-    const follow = ready && sounding && !reduced.matches && !drag;
-    const probe = audio.paused && !drag && previewTime !== null;
-    const sampleTime = probe ? previewTime : seconds;
-    drawEdge(sampleTime, reduced.matches);
-    screen.toggleAttribute("data-preview", probe);
-    player.toggleAttribute("data-history-live", Boolean(follow));
-    if (drag) {
-      ({ start, span } = drag);
-    } else if (follow) {
-      const history = Math.max(3.5, Math.min(7, screen.clientWidth / 95));
-      start = Math.max(0, seconds - history);
-      span = Math.max(1 / 48, seconds - start);
-    } else {
-      start = 0;
-      span = total;
-    }
-    screen.style.setProperty("--needle", `${historyFraction * Math.max(0, Math.min(100, (seconds - start) / span * 100))}%`);
-    if (!ready) return;
-    const length = Math.min(span, total - start);
-    const width = canvas.width, height = canvas.height;
-    const historyWidth = Math.round(width * historyFraction);
-    context.fillStyle = "#0b0910";
-    context.fillRect(0, 0, width, height);
-    if (length > 0) {
-      context.drawImage(map, map.naturalWidth * start / total, 0, map.naturalWidth * length / total, map.naturalHeight,
-        0, 0, historyWidth * length / span, height);
-    }
-    // Stretch the exact frequency column at the playhead into the animated outline.
-    const column = Math.min(map.naturalWidth - 1, sampleTime / total * map.naturalWidth);
-    context.drawImage(map, column, 0, 1, map.naturalHeight, historyWidth, 0, width - historyWidth, height);
-  }
-
-  function nextFrame() {
-    frame = 0;
-    const seconds = audio.currentTime;
-    position(seconds);
-    draw(seconds);
-    if (visible && !document.hidden && live && !drag && !reduced.matches && !audio.paused && !audio.ended && !audio.seeking && !audio.error) {
-      frame = window.requestAnimationFrame(nextFrame);
-    }
-  }
-
-  function sync() {
-    window.cancelAnimationFrame(frame);
-    nextFrame();
-  }
-  function resize() {
-    if (!screen.clientWidth || !screen.clientHeight || !context) return;
+  function resize(w, h) {
     const dpr = Math.min(2, window.devicePixelRatio || 1);
-    const w = Math.round(screen.clientWidth * dpr), h = Math.round(screen.clientHeight * dpr);
-    if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
-    context.imageSmoothingEnabled = true;
-    context.imageSmoothingQuality = "high";
-    draw(audio.currentTime);
-  }
-  function loaded() {
-    ready = Boolean(context && map.naturalWidth && map.naturalHeight);
-    player.toggleAttribute("data-spectrum-ready", ready);
-    resize();
-    sync();
-  }
-
-  map.addEventListener("load", loaded);
-  map.src = track.image;
-  if (map.complete && map.naturalWidth) loaded();
-  new ResizeObserver(resize).observe(screen);
-  new IntersectionObserver(([entry]) => {
-    visible = entry.isIntersecting;
-    sync();
-  }).observe(player);
-  audio.addEventListener("playing", () => { previewTime = null; live = true; sync(); });
-  for (const event of ["canplay", "seeked"]) audio.addEventListener(event, () => {
-    live = !audio.paused && !audio.ended && audio.readyState >= 2;
-    sync();
-  });
-  for (const event of ["seeking", "loadedmetadata"]) audio.addEventListener(event, sync);
-  for (const event of ["pause", "waiting", "ended", "error", "emptied"]) audio.addEventListener(event, () => { live = false; sync(); });
-  reduced.addEventListener("change", sync);
-  document.addEventListener("visibilitychange", sync);
-
-  // The large plot seeks within the displayed interval. The strip always spans the whole song.
-  function scrub(event) {
-    const rect = screen.getBoundingClientRect();
-    const fraction = Math.max(0, Math.min(1, (event.clientX - rect.left) / (rect.width * historyFraction)));
-    seek.value = String(Math.max(0, Math.min(duration(), drag.start + fraction * drag.span)));
-    seek.dispatchEvent(new Event("input", { bubbles: true }));
-  }
-  screen.addEventListener("pointerdown", event => {
-    if (!event.isPrimary || event.button !== 0) return;
-    const rect = screen.getBoundingClientRect();
-    if (event.clientX - rect.left > rect.width * historyFraction) return;
-    previewTime = null;
-    drag = { id: event.pointerId, start, span, waitingForTap: event.pointerType === "touch", x: event.clientX, y: event.clientY };
-    screen.setPointerCapture(event.pointerId);
-    if (!drag.waitingForTap) scrub(event);
-  });
-  screen.addEventListener("pointermove", event => {
-    if (!drag && audio.paused && event.pointerType === "mouse") {
-      const rect = screen.getBoundingClientRect();
-      const x = Math.max(0, (event.clientX - rect.left) / rect.width);
-      previewTime = x <= historyFraction ? duration() * x / historyFraction : null;
-      screen.style.setProperty("--probe", `${x * 100}%`);
-      draw(audio.currentTime);
-    }
-    if (!drag || drag.id !== event.pointerId) return;
-    if (drag.waitingForTap) {
-      const dx = Math.abs(event.clientX - drag.x), dy = Math.abs(event.clientY - drag.y);
-      if (dx < 6 || dy > dx) return;
-      drag.waitingForTap = false;
-    }
-    scrub(event);
-  });
-  screen.addEventListener("pointerleave", () => {
-    if (previewTime !== null) { previewTime = null; draw(audio.currentTime); }
-  });
-  function release(event) {
-    if (!drag || drag.id !== event.pointerId) return;
-    drag = null;
-    sync();
-  }
-  screen.addEventListener("lostpointercapture", release);
-  screen.addEventListener("pointercancel", release);
-  screen.addEventListener("pointerup", event => {
-    if (drag && drag.id === event.pointerId && drag.waitingForTap && Math.hypot(event.clientX - drag.x, event.clientY - drag.y) < 6) scrub(event);
-    release(event);
-  });
-  return progress => {
-    const seconds = progress * duration();
-    position(seconds);
-    if (!frame) draw(seconds);
-  };
-}
-
-async function playAudio(audio) {
-  const errorLabel = audio.closest("[data-audio-player]").querySelector("[data-audio-error]");
-  errorLabel.hidden = true;
-  try {
-    await audio.play();
-  } catch (error) {
-    if (error.name !== "AbortError") errorLabel.hidden = false;
-  }
-}
-
-function enhanceAudio(player, tracks) {
-  const audio = player.querySelector("audio");
-  if (!audio.canPlayType("audio/mpeg")) return;
-
-  const controls = player.querySelector(".sound-controls");
-  const play = player.querySelector("[data-play]");
-  const seek = player.querySelector("[data-seek]");
-  const currentLabel = player.querySelector("[data-current]");
-  const durationLabel = player.querySelector("[data-duration]");
-  const errorLabel = player.querySelector("[data-audio-error]");
-  const spectrum = initTrackSpectrum(player, audio);
-  const name = audio.getAttribute("aria-label");
-  let duration = Number(seek.max);
-  let pendingSeek = null;
-
-  function drawPosition(seconds) {
-    const progress = Math.min(1, Math.max(0, seconds / duration));
-    seek.value = String(seconds);
-    const current = timeLabel(seconds);
-    currentLabel.textContent = current;
-    seek.setAttribute("aria-valuetext", `${current} из ${timeLabel(duration)}`);
-    spectrum?.(progress);
-  }
-
-  function drawPlayback() {
-    const playing = !audio.paused && !audio.ended;
-    player.toggleAttribute("data-playing", playing);
-    play.setAttribute("aria-label", `${playing ? "Поставить на паузу" : "Воспроизвести"} ${name}`);
-  }
-
-  play.addEventListener("click", () => {
-    if (!audio.paused && !audio.ended) {
-      audio.pause();
-      return;
-    }
-    playAudio(audio);
-  });
-
-  seek.addEventListener("input", () => {
-    const next = Number(seek.value);
-    if (audio.readyState >= 1) {
-      audio.currentTime = next;
-    } else {
-      pendingSeek = next;
-      if (audio.paused && audio.preload === "none") {
-        audio.preload = "metadata";
-        audio.load();
+    if (!w || !h || (width === w && height === h && scale === dpr)) return;
+    width = w; height = h; scale = dpr;
+    canvas.width = Math.round(w * dpr);
+    canvas.height = Math.round(h * dpr);
+    ctx.setTransform(canvas.width / w, 0, 0, canvas.height / h, 0, 0);
+    ink = ctx.createLinearGradient(0, 0, w, 0);
+    ink.addColorStop(0, "#6a6a6a"); ink.addColorStop(.58, "#969696"); ink.addColorStop(1, "#e2e2e2");
+    paper = ctx.createLinearGradient(0, 0, 0, h);
+    paper.addColorStop(0, "#111111"); paper.addColorStop(1, "#070707");
+    ctx.lineJoin = "round";
+    rows = Math.min(bands, Math.max(12, Math.round(h / 8)));
+    columns = Math.min(320, Math.max(80, Math.round(w / 5)));
+    overview = new Float32Array(rows * (columns + 1));
+    ordinates = new Float32Array(overview.length);
+    for (let row = 0; row < rows; row++) {
+      const band = Math.round(row * (bands - 1) / (rows - 1));
+      for (let x = 0; x <= columns; x++) {
+        overview[row * (columns + 1) + x] = amplitude(x / columns * (frames - 1), band) ** 2;
       }
     }
-    drawPosition(next);
-  });
+    lastPlaying = undefined;
+  }
 
-  audio.addEventListener("loadedmetadata", () => {
-    if (Number.isFinite(audio.duration) && audio.duration > 0) {
-      duration = audio.duration;
-      seek.max = String(duration);
-      durationLabel.textContent = timeLabel(duration);
+  function draw(seconds, playing) {
+    if (!width || !height || (lastPlaying === playing && (!playing || Math.abs(seconds - lastSeconds) < 1 / 36))) return;
+    lastSeconds = seconds; lastPlaying = playing;
+    ctx.fillStyle = paper; ctx.fillRect(0, 0, width, height);
+    const dx = width / columns;
+    const head = width * seconds / total, radius = Math.min(130, width * .2);
+    const framesPerSecond = (frames - 1) / total;
+    let stroke = ink;
+    if (playing) {
+      stroke = ctx.createLinearGradient(head - radius, 0, head + radius, 0);
+      stroke.addColorStop(0, "#a3a3a3"); stroke.addColorStop(.5, "#fafafa"); stroke.addColorStop(1, "#777777");
     }
-    if (pendingSeek !== null) {
-      audio.currentTime = Math.min(pendingSeek, duration);
-      pendingSeek = null;
-    }
-    drawPosition(audio.currentTime);
-  });
 
-  audio.addEventListener("timeupdate", () => drawPosition(pendingSeek ?? audio.currentTime));
-  audio.addEventListener("play", () => {
-    for (const other of tracks) {
-      if (other !== audio && !other.paused) other.pause();
+    let top = Infinity, bottom = -Infinity;
+    for (let row = 0; row < rows; row++) {
+      const band = Math.round(row * (bands - 1) / (rows - 1));
+      const base = .72 * row / (rows - 1);
+      const start = row * (columns + 1);
+      const end = start + columns;
+      for (let x = 0; x <= columns; x++) {
+        const i = start + x;
+        let energy = overview[i];
+        const distance = (x * dx - head) / radius;
+        if (playing && Math.abs(distance) < 1) {
+          // Each band lifts with the recorded transient passing the playhead.
+          const sample = (seconds - Math.abs(distance) * .85) * framesPerSecond;
+          const level = amplitude(sample, band);
+          const attack = Math.max(0, level - amplitude(sample - 2, band));
+          energy += (1 - distance * distance) ** 2 * (.48 * level * level + .95 * attack);
+        }
+        ordinates[i] = base - energy * .24;
+      }
+      top = Math.min(top, ordinates[start], ordinates[end]);
+      bottom = Math.max(bottom, ordinates[start], ordinates[end]);
+      // The quadratic curves round the sample peaks. Measure their visible extrema.
+      for (let i = start + 1; i < end; i++) {
+        const center = ordinates[i];
+        const left = ordinates[i - 1] - center, right = ordinates[i + 1] - center;
+        if (left * right < 0) continue;
+        const turn = left && right ? center + .5 * left * right / (left + right) : center;
+        top = Math.min(top, turn);
+        bottom = Math.max(bottom, turn);
+      }
     }
-    drawPlayback();
-  });
-  audio.addEventListener("pause", drawPlayback);
-  audio.addEventListener("ended", drawPlayback);
-  audio.addEventListener("error", () => { errorLabel.hidden = false; });
 
-  audio.hidden = true;
-  controls.hidden = false;
-  player.setAttribute("data-audio-ready", "");
+    // Fit the recorded ridges between equal margins, including transient peaks.
+    const inset = height * .1;
+    const yScale = (height - 2 * inset) / (bottom - top);
+    for (let row = 0; row < rows; row++) {
+      const start = row * (columns + 1);
+      let lastY = inset + (ordinates[start] - top) * yScale;
+      ctx.beginPath();
+      ctx.moveTo(0, lastY);
+      for (let x = 1; x <= columns; x++) {
+        const y = inset + (ordinates[start + x] - top) * yScale;
+        ctx.quadraticCurveTo((x - 1) * dx, lastY, (x - .5) * dx, (lastY + y) / 2);
+        lastY = y;
+      }
+      ctx.lineTo(width, lastY);
+      ctx.strokeStyle = stroke; ctx.lineWidth = row === rows - 1 ? 1.45 : 1.1; ctx.stroke();
+      ctx.lineTo(width, height); ctx.lineTo(0, height); ctx.closePath();
+      ctx.fillStyle = "rgba(16,16,16,.81)"; ctx.fill();
+    }
+  }
+  return { resize, draw };
+}
+
+function bindSpectrumSeek(plot, seek) {
+  let gesture = null;
+  function point(event, commit) {
+    const rect = plot.getBoundingClientRect();
+    if (!rect.width) return;
+    const fraction = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
+    const seconds = Number(seek.max) * fraction;
+    plot.setAttribute("data-preview", timeLabel(seconds));
+    plot.style.setProperty("--probe", fraction * 100 + "%");
+    if (commit) {
+      gesture.lastX = event.clientX;
+      if (Number(seek.value) === seconds) return;
+      seek.value = String(seconds);
+      seek.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+  }
+  plot.addEventListener("pointerdown", event => {
+    if (!event.isPrimary || event.button !== 0) return;
+    gesture = { id: event.pointerId, x: event.clientX, y: event.clientY, tap: event.pointerType === "touch" };
+    plot.setPointerCapture(event.pointerId);
+    if (!gesture.tap) {
+      seek.focus({ preventScroll: true });
+      point(event, true);
+    }
+  });
+  plot.addEventListener("pointermove", event => {
+    if (!gesture) {
+      if (event.pointerType === "mouse" || event.pointerType === "pen") point(event, false);
+      return;
+    }
+    if (event.pointerId !== gesture.id) return;
+    if (gesture.tap) {
+      const dx = Math.abs(event.clientX - gesture.x), dy = Math.abs(event.clientY - gesture.y);
+      if (dx < 6 || dy > dx) return;
+      gesture.tap = false;
+    }
+    point(event, true);
+  });
+  function release(event) {
+    if (event.pointerId !== gesture?.id) return;
+    if (event.type === "pointerup") {
+      const tap = gesture.tap && Math.hypot(event.clientX - gesture.x, event.clientY - gesture.y) < 6;
+      if (tap || (!gesture.tap && event.clientX !== gesture.lastX)) point(event, true);
+    }
+    gesture = null;
+    plot.removeAttribute("data-preview");
+  }
+  for (const name of ["pointerup", "pointercancel", "lostpointercapture"]) plot.addEventListener(name, release);
+  plot.addEventListener("pointerleave", () => { if (!gesture) plot.removeAttribute("data-preview"); });
+}
+
+function createTrackSpectrum(plot, seek) {
+  bindSpectrumSeek(plot, seek);
+  const canvas = plot.querySelector("[data-track-spectrum]");
+  const picture = plot.querySelector("[data-spectrum-map]");
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)");
+  let audio, track, renderer, events;
+  let frame = 0, visible = false, live = false;
+  function isPlaying() { return live && !reduced.matches && !audio.paused && !audio.ended && !audio.seeking && !audio.error; }
+  function drawAt(progress) {
+    if (renderer && visible && !document.hidden) renderer.draw(progress * track.duration, isPlaying());
+  }
+  function tick() {
+    frame = 0;
+    if (!renderer || !visible || document.hidden) return;
+    const playing = isPlaying(), length = Number(seek.max) || track.duration;
+    const time = playing ? audio.currentTime : Number(seek.value);
+    const ratio = Math.min(1, Math.max(0, time / length));
+    plot.style.setProperty("--played", ratio * 100 + "%");
+    renderer.draw(ratio * track.duration, playing);
+    if (playing) frame = window.requestAnimationFrame(tick);
+  }
+  function sync() {
+    window.cancelAnimationFrame(frame);
+    tick();
+  }
+  function resize() {
+    if (renderer && visible && !document.hidden) renderer.resize(plot.clientWidth, plot.clientHeight);
+    sync();
+  }
+
+  new ResizeObserver(resize).observe(plot);
+  new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; resize(); }).observe(plot);
+  reduced.addEventListener("change", sync);
+  document.addEventListener("visibilitychange", resize);
+  function select(next, data) {
+    events?.abort();
+    audio = next; track = data;
+    live = !audio.paused && audio.readyState >= 2;
+    renderer = createSpectrumRenderer(canvas, unpackSpectrum(track), spectrumBandCount, track.duration);
+    plot.toggleAttribute("data-spectrum-ready", Boolean(renderer));
+    picture.src = track.image;
+    resize();
+    if (!renderer) return;
+    events = new AbortController();
+    const opts = { signal: events.signal };
+    audio.addEventListener("playing", () => { live = true; sync(); }, opts);
+    for (const event of ["canplay", "seeked"]) audio.addEventListener(event, () => {
+      live = !audio.paused && audio.readyState >= 2;
+      sync();
+    }, opts);
+    audio.addEventListener("seeking", sync, opts);
+    for (const event of ["pause", "waiting", "ended", "error", "emptied"]) audio.addEventListener(event, () => { live = false; sync(); }, opts);
+  }
+  return { select, drawAt };
+}
+
+function enhanceAudio(player) {
+  const entries = [...player.querySelectorAll(".track-entry")];
+  const rows = entries.length ? entries : [player];
+  const compareVersions = player.hasAttribute("data-compare-versions");
+  if (typeof trackSpectra === "undefined" || rows.some(row => !trackSpectra[row.id] || !row.querySelector("audio").canPlayType("audio/mpeg"))) return;
+  const bar = player.querySelector(".track-bar"), plot = player.querySelector(".wave-control");
+  const selectionTitle = bar.querySelector(".playlist-selection");
+  const notice = player.querySelector("[data-media-error]");
+  let selected;
+  const choices = rows.map(row => {
+    const audio = row.querySelector("audio"), download = row.querySelector(".track-download"), title = row.querySelector(".track-title");
+    audio.id = row.id + "-audio";
+    title.title = audio.getAttribute("aria-label");
+    const choice = { row, audio, download, track: trackSpectra[row.id] };
+    if (entries.length) {
+      const button = document.createElement("button"), icon = document.createElement("span");
+      button.type = "button"; button.className = "track-choice";
+      button.setAttribute("aria-controls", audio.id);
+      button.setAttribute("aria-label", "Воспроизвести — " + title.title);
+      icon.className = "play-icon"; icon.setAttribute("aria-hidden", "true");
+      title.before(button); button.append(icon, title);
+      if (!compareVersions) {
+        const length = document.createElement("span");
+        length.className = "track-length";
+        length.textContent = timeLabel(choice.track.duration);
+        button.append(length);
+        title.title += " · " + length.textContent;
+      }
+      bar.append(download);
+      choice.button = button;
+      button.addEventListener("click", () => {
+        if (selected === choice && !audio.paused && !audio.ended) { audio.pause(); return; }
+        select(choice); playMedia(audio);
+      });
+      audio.addEventListener("play", () => { if (!audio.paused) select(choice); });
+    }
+    audio.addEventListener("error", () => { if (selected === choice) notice.hidden = false; });
+    audio.hidden = true;
+    return choice;
+  });
+  let spectrum;
+  const controls = createMediaControls(bar, { plot, playButton: choices[0].button, onPosition: p => spectrum?.drawAt(p) });
+  spectrum = createTrackSpectrum(plot, controls.seek);
+  function select(choice) {
+    if (selected === choice) return;
+    const previous = selected?.audio;
+    let time = 0;
+    if (compareVersions && previous && !previous.ended) {
+      time = previous.readyState >= 1 ? previous.currentTime : Number(controls.seek.value);
+    }
+    if (previous) {
+      previous.pause();
+      choice.audio.volume = previous.volume;
+      choice.audio.muted = previous.muted;
+    }
+    selected = choice;
+    if (selectionTitle) {
+      selectionTitle.textContent = choice.audio.getAttribute("aria-label");
+      selectionTitle.hidden = false;
+    }
+    for (const entry of choices) {
+      entry.download.hidden = entry !== choice;
+      if (entry.button) entry.button.setAttribute("aria-current", String(entry === choice));
+    }
+    notice.hidden = !choice.audio.error;
+    controls.select(choice.audio, choice.track.duration, choice.button);
+    spectrum.select(choice.audio, choice.track);
+    if (previous) {
+      if (time !== choice.audio.currentTime) controls.seekTo(Math.min(time, choice.track.duration));
+      player.dispatchEvent(new CustomEvent("interviewclipchange", { bubbles: true, detail: { previous, current: choice.audio } }));
+    }
+  }
+  select(choices.find(c => "#" + c.row.id === window.location.hash) || choices[0]);
+  plot.parentElement.hidden = false;
 }
 
 function photoSourceRect(photo, width, height) {
@@ -687,110 +754,6 @@ function photoSourceRect(photo, width, height) {
   };
 }
 
-function initPhotoEffects() {
-  const links = [...document.querySelectorAll(".image-asset [data-photo]")];
-  if (!links.length) return;
-  const reduced = matchMedia("(prefers-reduced-motion: reduce)");
-  let active = null;
-
-  for (const link of links) {
-    const photo = link.querySelector("img");
-    let canvas;
-    let context;
-    let frame = 0;
-    let lastMove = 0;
-    let width = 0;
-    let height = 0;
-    let pointerX = 0;
-    let pointerY = 0;
-    let source;
-
-    function stop() {
-      if (frame) window.cancelAnimationFrame(frame);
-      frame = 0;
-      link.removeAttribute("data-ripple-active");
-      if (active === stop) active = null;
-    }
-
-    function prepare() {
-      if (!photo.complete || !photo.naturalWidth) return false;
-      if (!canvas) {
-        canvas = document.createElement("canvas");
-        canvas.className = "photo-distortion";
-        canvas.setAttribute("aria-hidden", "true");
-        context = canvas.getContext("2d");
-        if (!context) return false;
-        link.append(canvas);
-      }
-      if (!context) return false;
-      width = photo.clientWidth;
-      height = photo.clientHeight;
-      if (!width || !height) return false;
-      const ratio = Math.min(devicePixelRatio || 1, 1.5);
-      const pixelWidth = Math.round(width * ratio);
-      const pixelHeight = Math.round(height * ratio);
-      if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
-        canvas.width = pixelWidth;
-        canvas.height = pixelHeight;
-      }
-      context.setTransform(ratio, 0, 0, ratio, 0, 0);
-      source = photoSourceRect(photo, width, height);
-      return true;
-    }
-
-    function draw(now) {
-      frame = 0;
-      const energy = Math.exp(-Math.max(0, now - lastMove - 80) / 210);
-      if (energy < .015 || reduced.matches || document.hidden) { stop(); return; }
-      context.clearRect(0, 0, width, height);
-      context.drawImage(photo, source.x, source.y, source.width, source.height, 0, 0, width, height);
-
-      const radius = Math.min(150, Math.max(75, width * .28));
-      const step = Math.max(10, Math.round(radius / 12));
-      const scaleX = source.width / width;
-      const scaleY = source.height / height;
-      const left = Math.max(0, Math.floor((pointerX - radius) / step) * step);
-      const top = Math.max(0, Math.floor((pointerY - radius) / step) * step);
-      for (let y = top; y < Math.min(height, pointerY + radius); y += step) {
-        for (let x = left; x < Math.min(width, pointerX + radius); x += step) {
-          const dx = x + step / 2 - pointerX;
-          const dy = y + step / 2 - pointerY;
-          const distance = Math.hypot(dx, dy);
-          if (distance >= radius) continue;
-          const falloff = (1 - distance / radius) ** 2;
-          const ripple = Math.sin(distance * .065 - now * .009) * falloff * energy * 7;
-          const tileWidth = Math.min(step, width - x);
-          const tileHeight = Math.min(step, height - y);
-          const sampleWidth = tileWidth * scaleX;
-          const sampleHeight = tileHeight * scaleY;
-          const sampleX = Math.max(0, Math.min(photo.naturalWidth - sampleWidth, source.x + (x + dx / Math.max(1, distance) * ripple) * scaleX));
-          const sampleY = Math.max(0, Math.min(photo.naturalHeight - sampleHeight, source.y + (y + dy / Math.max(1, distance) * ripple) * scaleY));
-          context.drawImage(photo, sampleX, sampleY, sampleWidth, sampleHeight, x, y, tileWidth, tileHeight);
-        }
-      }
-      link.setAttribute("data-ripple-active", "");
-      frame = window.requestAnimationFrame(draw);
-    }
-
-    link.addEventListener("pointermove", (event) => {
-      if (event.pointerType === "touch" || reduced.matches) return;
-      if (active && active !== stop) active();
-      if (!prepare()) return;
-      const bounds = photo.getBoundingClientRect();
-      pointerX = Math.max(0, Math.min(width, (event.clientX - bounds.left) / bounds.width * width));
-      pointerY = Math.max(0, Math.min(height, (event.clientY - bounds.top) / bounds.height * height));
-      lastMove = performance.now();
-      active = stop;
-      if (!frame) frame = window.requestAnimationFrame(draw);
-    });
-    link.addEventListener("pointerleave", () => { lastMove = performance.now() - 200; });
-    link.addEventListener("pointerdown", stop);
-    new ResizeObserver(stop).observe(photo);
-  }
-  reduced.addEventListener("change", () => { if (reduced.matches) active?.(); });
-  document.addEventListener("visibilitychange", () => { if (document.hidden) active?.(); });
-}
-
 function initPhotoViewer() {
   const dialog = document.getElementById("photo-viewer");
   if (typeof dialog.showModal !== "function") return;
@@ -806,10 +769,13 @@ function initPhotoViewer() {
       if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
       event.preventDefault();
       trigger = link;
-      const description = link.querySelector("img").alt;
-      photoFrame.dataset.mediaFrame = link.dataset.mediaFrame;
+      const photo = link.querySelector("img");
+      if (link.dataset.mediaFrame) photoFrame.dataset.mediaFrame = link.dataset.mediaFrame;
+      else photoFrame.removeAttribute("data-media-frame");
+      preview.sizes = photo.sizes;
+      preview.srcset = photo.src === link.href ? photo.srcset : "";
       preview.src = link.href;
-      preview.alt = description;
+      preview.alt = photo.alt;
       caption.textContent = link.closest("figure")?.querySelector("figcaption")?.textContent.trim() || "";
       caption.hidden = !caption.textContent;
       dialog.showModal();
@@ -818,21 +784,24 @@ function initPhotoViewer() {
     });
   }
   close.addEventListener("click", () => dialog.close());
+  photoFrame.addEventListener("click", event => {
+    if (event.button === 0 && !event.defaultPrevented) dialog.close();
+  });
   dialog.addEventListener("click", (event) => {
     if (event.target === dialog) dialog.close();
   });
   dialog.addEventListener("close", () => {
     document.body.classList.remove("photo-open");
+    preview.removeAttribute("srcset");
+    preview.removeAttribute("sizes");
     preview.removeAttribute("src");
     trigger?.focus({ preventScroll: true });
   });
 }
 
-const tracks = document.querySelectorAll("[data-audio-player] audio");
 initTheme();
-for (const player of document.querySelectorAll("[data-audio-player]")) enhanceAudio(player, tracks);
-initHeaderPlayback(tracks);
+for (const player of document.querySelectorAll("[data-audio-player]")) enhanceAudio(player);
+initHeaderPlayback(document.querySelectorAll(".interview audio, .interview video"));
 initReadingPosition();
 initCoverMotion();
-initPhotoEffects();
 initPhotoViewer();

@@ -5,26 +5,15 @@
   const arrow = card.querySelector(".link-preview-arrow");
   const title = card.querySelector("strong");
   const description = card.querySelector("p");
+  const meta = card.querySelector(".link-preview-meta");
+  const address = card.querySelector(".link-preview-url");
   const picture = card.querySelector("img");
+  const video = card.querySelector("video");
   const hover = matchMedia("(any-hover: hover)");
   let anchor = null;
   let pending = null;
   let timer = 0;
   let line = 0;
-
-  function details(link) {
-    const href = link.getAttribute("href");
-    const record = linkCards[href];
-    if (record) return { ...record, arrow: "↗" };
-    const target = href.startsWith("#") ? document.getElementById(href.slice(1)) : link.closest("[data-audio-player]");
-    if (!target) return null;
-    if (target.matches("[data-audio-player]")) {
-      return { arrow: "↓", title: target.querySelector(".track-title strong").textContent,
-        description: [target.querySelector(".track-artist").textContent, target.querySelector("[data-duration]").textContent].join(" · ") };
-    }
-    const heading = target.querySelector("h1, h2");
-    return heading ? { arrow: href === "#top" ? "↑" : "↓", title: heading.textContent.trim() } : null;
-  }
 
   function place() {
     if (!anchor || card.hidden) return;
@@ -48,45 +37,80 @@
     }
     anchor = null;
     card.hidden = true;
+    if (!video.hidden) {
+      video.pause();
+      video.hidden = true;
+    }
+    video.onerror = null;
+    picture.removeAttribute("src");
   }
 
-  function show(link, clientY) {
-    const record = details(link);
+  function showMedia(link, record) {
+    picture.dataset.layout = record.imageLayout || "";
+    if (!record.video || !video.canPlayType("video/mp4")) {
+      picture.hidden = !record.image;
+      if (record.image) picture.src = record.animatedImage || record.image;
+      return;
+    }
+    picture.hidden = true;
+    video.poster = record.image;
+    video.muted = true;
+    if (video.getAttribute("src") !== record.video) video.src = record.video;
+    video.hidden = false;
+    function showFallback() {
+      if (anchor !== link || video.hidden) return;
+      video.hidden = true;
+      picture.src = record.animatedImage || record.image;
+      picture.hidden = false;
+      place();
+    }
+    video.onerror = showFallback;
+    video.play().catch(error => { if (error.name !== "AbortError") showFallback(); });
+  }
+
+  function show(link, record, clientY) {
+    const href = link.getAttribute("href");
     hide();
-    if (!record || !link.isConnected) return;
+    if (!link.isConnected) return;
     anchor = link;
     line = Math.max(0, [...link.getClientRects()].findIndex(rect => clientY >= rect.top && clientY <= rect.bottom));
-    arrow.textContent = record.arrow;
+    arrow.textContent = "↗";
+    address.textContent = href;
+    meta.textContent = record.meta || "";
+    meta.hidden = !record.meta;
     title.textContent = record.title;
     description.textContent = record.description || "";
     description.hidden = !record.description;
-    picture.hidden = !record.image;
-    if (record.image) picture.src = record.image;
-    else picture.removeAttribute("src");
     link.setAttribute("aria-describedby", [link.getAttribute("aria-describedby"), card.id].filter(Boolean).join(" "));
     card.hidden = false;
+    showMedia(link, record);
     place();
   }
 
-  function request(link, y, delay) {
+  function request(link, record, y, delay) {
     clearTimeout(timer);
     if (anchor === link) return;
     hide();
     pending = link;
-    timer = window.setTimeout(() => show(link, y), delay);
+    timer = window.setTimeout(() => show(link, record, y), delay);
   }
-  // Question marks have their own preview. Photograph links already show their subject.
-  const links = document.querySelectorAll("a[href]:not([data-photo], .question-jump, .read-link)");
+  const links = document.querySelectorAll("a[href]:not([download], [data-photo])");
   for (const link of links) {
+    const group = link.closest("[data-preview-image]");
+    const record = linkCards[link.getAttribute("href")] || (group && {
+      title: link.getAttribute("aria-label"),
+      image: group.dataset.previewImage,
+    });
+    if (!record) continue;
     link.addEventListener("pointerenter", event => {
-      if (hover.matches && event.pointerType !== "touch") request(link, event.clientY, 240);
+      if (hover.matches && event.pointerType !== "touch") request(link, record, event.clientY, 240);
     });
     link.addEventListener("pointerleave", () => {
       if (pending !== link && anchor !== link) return;
       clearTimeout(timer);
       if (!link.matches(":focus-visible")) hide();
     });
-    link.addEventListener("focus", () => { if (link.matches(":focus-visible")) request(link, null, 0); });
+    link.addEventListener("focus", () => { if (link.matches(":focus-visible")) request(link, record, null, 0); });
     link.addEventListener("blur", hide);
     link.addEventListener("click", hide);
   }

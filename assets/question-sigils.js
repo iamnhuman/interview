@@ -1,8 +1,7 @@
 "use strict";
 
-// Eleven blade silhouettes and four different structures form a fixed alphabet
-// of 44 signs. SVG sources stay sharp in both the small rail and the larger preview.
-const questionSigilSources = (() => {
+// Each question has its own emblem in the reading rail.
+const questionSigilSource = (() => {
   const wings = [
     "M2 10C16 16 24 3 35 10L46 16C30 11 22 23 2 10ZM10 24C24 12 33 16 45 17C30 17 22 27 10 24Z",
     "M4 27C10 7 27 3 46 15L44 18C27 9 15 16 4 27ZM12 5C20 11 29 10 37 13C26 15 17 13 12 5Z",
@@ -23,10 +22,11 @@ const questionSigilSources = (() => {
     "M38 3C40 12 43 15 47 15L48 0L50 15C55 14 58 10 61 5C58 15 54 18 50 18L48 32L46 18C41 18 38 13 38 3ZM36 25L44 20L45 22ZM60 26L52 21L51 23Z",
   ];
   const openingCore = "M31 16Q42 12 48 2Q54 12 65 16Q54 20 48 30Q42 20 31 16ZM39 16L48 20L57 16L48 12Z";
-  return Array.from({ length: 44 }, (_, index) => {
+  return index => {
     const silhouette = index % wings.length;
-    const structure = Math.floor(index / wings.length);
-    const opposite = (silhouette + [0, 3, 7, 0][structure]) % wings.length;
+    const row = Math.floor(index / wings.length);
+    const structure = row % cores.length;
+    const opposite = (silhouette + [0, 3, 7, 0][structure] + Math.floor(row / cores.length)) % wings.length;
     const tilt = structure === 3 ? -6 : 0;
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -2 96 36" fill-rule="evenodd">
       <defs><linearGradient id="silver" x1="0" y1="0" x2="0.2" y2="1">
@@ -40,5 +40,5 @@ const questionSigilSources = (() => {
         <path d="${index === 0 ? openingCore : cores[structure]}"/>
       </g></svg>`;
     return `data:image/svg+xml,${encodeURIComponent(svg)}`;
-  });
+  };
 })();

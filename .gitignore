@@ -1,4 +1,5 @@
 /telegram/
+/.media-sources/
 .env
 .env.*
 .telegram-bot-session-*.json*

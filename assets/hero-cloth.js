@@ -93,6 +93,10 @@
     const crop = gl.getUniformLocation(program, "crop");
     return {
       name: "webgl",
+      refresh() {
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, photo);
+        if (gl.getError() !== gl.NO_ERROR) throw new Error("Texture upload failed");
+      },
       resize(w, h) {
         const ratio = Math.min(window.devicePixelRatio || 1, 2);
         canvas.width = Math.max(1, Math.round(w * ratio));
@@ -102,25 +106,28 @@
         gl.uniform4f(crop, rect.x / photo.naturalWidth, rect.y / photo.naturalHeight, rect.width / photo.naturalWidth, rect.height / photo.naturalHeight);
       },
       draw() {
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
         gl.bufferSubData(gl.ARRAY_BUFFER, 0, surface);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         gl.drawElements(gl.TRIANGLES, faces.length, gl.UNSIGNED_SHORT, 0);
       },
     };
   }
 
-  // Draw the same folds with textured triangles when WebGL is unavailable.
-  // Canvas can draw local photographs this way without reading their pixels.
+  // Paint a continuous light field onto the photograph, then deform that texture.
+  // Both canvases can draw local files without reading pixels from the photograph.
   function software(canvas, photo, surface) {
     const ctx = canvas.getContext("2d", { alpha: false });
     const texture = document.createElement("canvas");
     const source = texture.getContext("2d", { alpha: false });
-    if (!ctx || !source) return null;
+    const lighting = document.createElement("canvas");
+    lighting.width = stride; lighting.height = rows + 1;
+    const lamp = lighting.getContext("2d");
+    if (!ctx || !source || !lamp) return null;
+    const light = lamp.createImageData(stride, rows + 1);
     const xs = new Float32Array(count), ys = new Float32Array(count);
-    const light = new Float32Array(count), changed = new Uint8Array(count);
-    const skip = 2;
-    let w, h;
+    const changed = new Uint8Array(count);
+    let w, h, photoX, photoY, photoWidth, photoHeight;
 
     function triangle(a, b, c) {
       if (!(changed[a] || changed[b] || changed[c])) return;
@@ -131,55 +138,54 @@
       const det = ub * vc - uc * vb;
       const xx = (xb * vc - xc * vb) / det, xy = (xc * ub - xb * uc) / det;
       const yx = (yb * vc - yc * vb) / det, yy = (yc * ub - yb * uc) / det;
-      const shade = (light[a] + light[b] + light[c]) / 3;
+      // Overlap the subpixel antialias fringe with the same opaque, pre-lit texture.
+      const cx = (xs[a] + xs[b] + xs[c]) / 3, cy = (ys[a] + ys[b] + ys[c]) / 3;
+      const bleed = Math.min(.18, 2 / Math.max(1, Math.min(w / columns, h / rows)));
       ctx.save();
       ctx.beginPath();
-      ctx.moveTo(xs[a], ys[a]);
-      ctx.lineTo(xs[b], ys[b]);
-      ctx.lineTo(xs[c], ys[c]);
-      ctx.closePath();
-      ctx.clip();
+      ctx.moveTo(xs[a] + (xs[a] - cx) * bleed, ys[a] + (ys[a] - cy) * bleed);
+      ctx.lineTo(xs[b] + (xs[b] - cx) * bleed, ys[b] + (ys[b] - cy) * bleed);
+      ctx.lineTo(xs[c] + (xs[c] - cx) * bleed, ys[c] + (ys[c] - cy) * bleed);
+      ctx.closePath(); ctx.clip();
       ctx.setTransform(xx, yx, xy, yy, xs[a] - xx * u - xy * v, ys[a] - yx * u - yy * v);
       ctx.drawImage(texture, 0, 0);
-      if (Math.abs(shade) > .01) {
-        ctx.globalAlpha = Math.min(.55, Math.abs(shade));
-        ctx.fillStyle = shade > 0 ? "#fff" : "#000";
-        ctx.fillRect(0, 0, w, h);
-      }
       ctx.restore();
     }
 
     return {
       name: "canvas2d",
       resize(width, height) {
-        const ratio = Math.min(window.devicePixelRatio || 1, 1.5, 900 / width, 650 / height);
+        const ratio = Math.min(window.devicePixelRatio || 1, 1.5, 1100 / width, 900 / height);
         w = canvas.width = texture.width = Math.max(1, Math.round(width * ratio));
         h = canvas.height = texture.height = Math.max(1, Math.round(height * ratio));
         const crop = photoSourceRect(photo, width, height);
-        source.drawImage(photo, crop.x, crop.y, crop.width, crop.height, 0, 0, w, h);
+        const scaleX = w / crop.width, scaleY = h / crop.height;
+        photoX = -crop.x * scaleX; photoY = -crop.y * scaleY;
+        photoWidth = photo.naturalWidth * scaleX; photoHeight = photo.naturalHeight * scaleY;
+        source.imageSmoothingEnabled = true;
       },
       draw(flat) {
+        // Scale the whole source into the canvas, including density-corrected images.
+        source.drawImage(photo, photoX, photoY, photoWidth, photoHeight);
+        if (flat) { ctx.drawImage(texture, 0, 0); return; }
+        for (let i = 0; i < count; i++) {
+          const k = i * 5, u = uv[i * 2], v = uv[i * 2 + 1], z = surface[k + 2];
+          const perspective = 1 - .44 * z;
+          xs[i] = (((u + surface[k]) * 2 - 1 + .10 * z) / perspective + 1) * w / 2;
+          ys[i] = (((v + surface[k + 1]) * 2 - 1 - .14 * z) / perspective + 1) * h / 2;
+          changed[i] = Math.abs(xs[i] - u * w) + Math.abs(ys[i] - v * h) > .1;
+          const nx = surface[k + 3], ny = surface[k + 4];
+          const nz = Math.sqrt(Math.max(0, 1 - nx * nx - ny * ny));
+          const shade = .46 * (-.48 * nx - .60 * ny + .64 * (nz - 1));
+          const grey = shade > 0 ? 255 : 0, off = i * 4;
+          light.data[off] = light.data[off + 1] = light.data[off + 2] = grey;
+          light.data[off + 3] = Math.round(Math.min(.40, Math.abs(shade)) * 255);
+        }
+        lamp.putImageData(light, 0, 0);
+        // Texel centres coincide with mesh vertices. Canvas interpolates light across each cell.
+        source.drawImage(lighting, .5, .5, columns, rows, 0, 0, w, h);
         ctx.drawImage(texture, 0, 0);
-        if (flat) return;
-        for (let y = 0; y <= rows; y += skip) {
-          for (let x = 0; x <= columns; x += skip) {
-            const i = y * stride + x, k = i * 5, u = uv[i * 2], v = uv[i * 2 + 1];
-            const z = surface[k + 2], perspective = 1 - .44 * z;
-            xs[i] = (((u + surface[k]) * 2 - 1 + .10 * z) / perspective + 1) * w / 2;
-            ys[i] = (((v + surface[k + 1]) * 2 - 1 - .14 * z) / perspective + 1) * h / 2;
-            const nx = surface[k + 3], ny = surface[k + 4];
-            const nz = Math.sqrt(Math.max(0, 1 - nx * nx - ny * ny));
-            light[i] = .78 * (-.48 * nx - .60 * ny + .64 * nz - .64);
-            changed[i] = Math.abs(xs[i] - u * w) + Math.abs(ys[i] - v * h) > .08 || Math.abs(light[i]) > .01;
-          }
-        }
-        for (let y = 0; y < rows; y += skip) {
-          for (let x = 0; x < columns; x += skip) {
-            const i = y * stride + x, below = i + skip * stride;
-            triangle(i, below, i + skip);
-            triangle(i + skip, below, below + skip);
-          }
-        }
+        for (let i = 0; i < faces.length; i += 3) triangle(faces[i], faces[i + 1], faces[i + 2]);
       },
     };
   }
@@ -188,6 +194,16 @@
   function cloth(link) {
     const photo = link.querySelector("img");
     let canvas = link.querySelector(".cloth-canvas");
+    const hero = Boolean(canvas);
+    if (!canvas) {
+      canvas = document.createElement("canvas");
+      canvas.className = "cloth-canvas";
+      canvas.setAttribute("aria-hidden", "true");
+      link.append(canvas);
+    }
+    link.draggable = false;
+    photo.draggable = false;
+    let sourceUrl = "";
     const offset = new Float32Array(count * 3), speed = new Float32Array(count * 3);
     const surface = new Float32Array(count * 5);
     const force = new Float32Array(count * 3);
@@ -225,10 +241,13 @@
       const follow = 1 - Math.exp(-42 * dt);
       const hx = (hand.x - hand.u) * aspect * follow, hy = (hand.y - hand.v) * follow;
       hand.u += hx / aspect; hand.v += hy;
-      const travel = Math.hypot(hx, hy), velocityScale = Math.min(1 / dt, 2.8 / Math.max(.00001, travel));
-      const vx = hx * velocityScale, vy = hy * velocityScale, motion = Math.min(1, travel / (1.8 * dt));
-      const reach = .14 + .055 * motion, damping = Math.exp(-5.8 * dt);
+      const travel = Math.hypot(hx, hy);
+      const velocityScale = Math.min(1 / dt, 2.8 / Math.max(.00001, travel));
+      const brushX = hx * velocityScale, brushY = hy * velocityScale;
+      const motion = Math.min(1, travel / Math.max(.00001, 1.8 * dt));
+      const reach = .14 + .055 * motion;
       const lift = (reduced.matches ? .45 : 1) * (.032 + .115 * motion);
+      const damping = Math.exp(-5.8 * dt);
       const pullX = grip ? grip.ox + Math.max(-.5, Math.min(.5, (hand.u - grip.u) * aspect)) : 0;
       const pullY = grip ? grip.oy + Math.max(-.5, Math.min(.5, hand.v - grip.v)) : 0;
       let energy = 0;
@@ -237,8 +256,7 @@
           const i = y * stride + x, k = i * 3, u = uv[i * 2], v = uv[i * 2 + 1];
           const ox = offset[k], oy = offset[k + 1], oz = offset[k + 2];
           let fx = force[k] - 22 * ox, fy = force[k + 1] - 22 * oy + .8 * Math.abs(oz), fz = force[k + 2] - 27 * oz;
-          // Hover brushes the currently deformed surface. Holding keeps the same cloth
-          // fibres in the hand, even if the pointer reverses or passes over an old fold.
+          // Keep the same fibres in the hand throughout a drag.
           if (grip) {
             const dx = (u - grip.nodeU) * aspect, dy = v - grip.nodeV;
             const weight = Math.max(0, 1 - (dx * dx + dy * dy) / .012) ** 2;
@@ -248,8 +266,8 @@
           } else if (hand.active) {
             const dx = (u - hand.u) * aspect + ox, dy = v - hand.v + oy;
             const weight = Math.max(0, 1 - (dx * dx + dy * dy) / (reach * reach)) ** 2;
-            fx += weight * 55 * (vx - speed[k]);
-            fy += weight * 55 * (vy - speed[k + 1]);
+            fx += weight * 55 * (brushX - speed[k]);
+            fy += weight * 55 * (brushY - speed[k + 1]);
             fz += weight * (295 * (lift - oz) - 12 * speed[k + 2]);
           }
           speed[k] = (speed[k] + dt * fx) * damping;
@@ -280,12 +298,14 @@
         }
       }
       renderer.draw(flat);
+      link.toggleAttribute("data-cloth-moving", !flat);
       link.setAttribute("data-cloth-ready", renderer.name);
     }
 
     function reset() {
       window.cancelAnimationFrame(frame);
       frame = 0; last = 0; hand.active = false; grip = null; flat = true;
+      link.removeAttribute("data-cloth-moving");
       offset.fill(0); speed.fill(0); surface.fill(0);
     }
 
@@ -325,8 +345,18 @@
 
     function prepare() {
       if (!visible || document.hidden || !photo.complete || !photo.naturalWidth || !link.clientWidth || !link.clientHeight) return;
+      if (!renderer && !hero && !hand.active) return;
+      const src = photo.currentSrc || photo.src;
+      if (sourceUrl && sourceUrl !== src) {
+        reset();
+        width = height = 0;
+        try { renderer?.refresh?.(); } catch { useSoftware(); }
+      }
+      sourceUrl = src;
       if (!renderer) {
-        try { renderer = webGL(canvas, photo, surface); } catch { renderer = null; }
+        if (window.location.protocol !== "file:" || src.startsWith("data:")) {
+          try { renderer = webGL(canvas, photo, surface); } catch { renderer = null; }
+        }
         if (!renderer) useSoftware();
       }
       if (!renderer) return;
@@ -344,7 +374,7 @@
       }
       if (!revealed) {
         revealed = true;
-        if (!reduced.matches && !hand.active) {
+        if (hero && !reduced.matches && !hand.active) {
           for (let y = 1; y < rows; y++) {
             for (let x = 1; x < columns; x++) {
               const dx = (x / columns - (aspect > 1.2 ? .65 : .36)) * aspect, dy = y / rows - .32;
@@ -363,7 +393,7 @@
     }
 
     function touch(event) {
-      if (event.isPrimary === false || !link.clientWidth || !link.clientHeight) return;
+      if (event.isPrimary === false || !photo.complete || !photo.naturalWidth || !link.clientWidth || !link.clientHeight) return;
       const rect = link.getBoundingClientRect();
       const px = event.clientX - rect.left - rect.width / 2, py = event.clientY - rect.top - rect.height / 2;
       const localX = fromScreen ? fromScreen.a * px + fromScreen.c * py : px;
@@ -372,14 +402,16 @@
       const y = Math.max(0, Math.min(1, .5 + localY / link.clientHeight));
       if (!hand.active) { hand.u = x; hand.v = y; }
       hand.x = x; hand.y = y; hand.active = true; flat = false;
+      if (!renderer) prepare();
       if (grip && Math.hypot(event.clientX - grip.clientX, event.clientY - grip.clientY) > 6) grip.moved = true;
       wake();
     }
 
     function pick(event) {
-      if (!renderer || event.isPrimary === false || event.button !== 0) return;
+      if (event.isPrimary === false || event.button !== 0) return;
       suppressClick = false;
       touch(event);
+      if (!renderer || !hand.active) return;
       let nearest = stride + 1, best = Infinity;
       for (let y = 1; y < rows; y++) {
         for (let x = 1; x < columns; x++) {
@@ -398,11 +430,14 @@
     }
 
     function release() { hand.active = false; grip = null; wake(); }
-    link.addEventListener("pointerenter", touch);
-    link.addEventListener("pointermove", touch);
+    function move(event) {
+      if (grip ? grip.id === event.pointerId : event.pointerType !== "touch" && !event.buttons) touch(event);
+    }
+    link.addEventListener("pointerenter", move);
+    link.addEventListener("pointermove", move);
     link.addEventListener("pointerdown", pick);
-    link.addEventListener("pointerleave", () => { if (!grip) release(); });
-    link.addEventListener("pointercancel", event => { if (event.isPrimary !== false) release(); });
+    link.addEventListener("pointerleave", event => { if (!grip && event.isPrimary !== false) release(); });
+    link.addEventListener("pointercancel", event => { if (grip && grip.id === event.pointerId) release(); });
     link.addEventListener("lostpointercapture", event => { if (grip && grip.id === event.pointerId) release(); });
     link.addEventListener("pointerup", event => {
       if (!grip || grip.id !== event.pointerId) return;
@@ -430,7 +465,7 @@
     reduced.addEventListener("change", () => { reset(); prepare(); });
   }
 
-  function start() { document.querySelectorAll(".cover [data-photo]").forEach(cloth); }
+  function start() { document.querySelectorAll("[data-photo], .lightbox-photo").forEach(cloth); }
   // A directly opened HTML file needs origin-clean copies to upload or sample its local photographs.
   if (window.location.protocol === "file:") {
     const textures = document.createElement("script");
