@@ -11,6 +11,12 @@
   const video = card.querySelector("video");
   const hover = matchMedia("(any-hover: hover)");
   const shortDomains = new Map([["open.spotify.com", "spotify.com"]]);
+  const sourceMarks = new Map([
+    ["bandcamp.com", "bandcamp"], ["fandom.com", "fandom"], ["github.io", "github"],
+    ["higgsfield.ai", "higgsfield"], ["instagram.com", "instagram"], ["reddit.com", "reddit"],
+    ["soundcloud.com", "soundcloud"], ["spotify.com", "spotify"], ["t.me", "telegram"],
+    ["vk.com", "vk"], ["vk.ru", "vk"], ["youtu.be", "youtube"], ["youtube.com", "youtube"],
+  ]);
   const sources = new WeakMap();
   let anchor = null;
   let pending = null;
@@ -18,7 +24,21 @@
   let timer = 0;
   let line = 0;
 
-  function createSource(link, list, sectionId) {
+  function createSourceMark(link) {
+    const domain = link.hostname.split(".").slice(-2).join(".");
+    const icon = link.getAttribute("type") === "application/pdf" ? "document" : sourceMarks.get(domain) || "website";
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    const use = document.createElementNS(svg.namespaceURI, "use");
+    svg.setAttribute("class", "source-mark");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("aria-hidden", "true");
+    svg.setAttribute("focusable", "false");
+    use.setAttribute("href", `assets/art/source-marks.svg#${icon}`);
+    svg.append(use);
+    return svg;
+  }
+
+  function createSource(link, list, sectionId, numbered) {
     const number = list.children.length + 1;
     const href = link.getAttribute("href");
     let site = shortDomains.get(link.hostname) || link.hostname.replace(/^www\./, "") || "В интервью";
@@ -34,17 +54,20 @@
     for (const attribute of ["href", "target", "rel", "type"]) {
       if (link.hasAttribute(attribute)) row.setAttribute(attribute, link.getAttribute(attribute));
     }
-    const index = document.createElement("span");
-    index.className = "source-index";
-    index.setAttribute("aria-hidden", "true");
-    index.textContent = number;
+    if (numbered) {
+      const index = document.createElement("span");
+      index.className = "source-index";
+      index.setAttribute("aria-hidden", "true");
+      index.textContent = number;
+      row.append(index);
+    }
     const label = document.createElement("span");
     label.className = "source-title";
     label.textContent = record.title;
     const domain = document.createElement("span");
     domain.className = "source-site";
     domain.textContent = record.displayUrl || site;
-    row.append(index, label, domain);
+    row.append(label, domain, createSourceMark(link));
     const item = document.createElement("li");
     item.append(row);
     list.append(item);
@@ -53,7 +76,11 @@
     return source;
   }
 
-  function addSourceNumber(link, source) {
+  function connectSourceLink(link, source, numbered) {
+    source.links.push(link);
+    sources.set(link, source);
+    if (!numbered) return;
+
     const jump = document.createElement("a");
     jump.href = "#" + source.row.id;
     jump.textContent = source.number;
@@ -68,8 +95,7 @@
       end = after;
     }
     end.after(marker);
-    source.links.push(link, jump);
-    sources.set(link, source);
+    source.links.push(jump);
     sources.set(jump, source);
   }
 
@@ -100,14 +126,15 @@
       list.className = "source-list";
       list.setAttribute("role", "list");
       list.setAttribute("aria-label", "Источники");
+      const numbered = new Set(links.map(link => link.href)).size > 1;
       const byURL = new Map();
       for (const link of links) {
         let source = byURL.get(link.href);
         if (!source) {
-          source = createSource(link, list, id);
+          source = createSource(link, list, id, numbered);
           byURL.set(link.href, source);
         }
-        addSourceNumber(link, source);
+        connectSourceLink(link, source, numbered);
       }
       if (listBefore && !atEnd) listBefore.before(list);
       else end.after(list);

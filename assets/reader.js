@@ -733,8 +733,22 @@ function enhanceAudio(player) {
   if (typeof trackSpectra === "undefined" || rows.some(row => !trackSpectra[row.id] || !row.querySelector("audio").canPlayType("audio/mpeg"))) return;
   const bar = player.querySelector(".track-bar"), plot = player.querySelector(".wave-control");
   const selectionTitle = bar.querySelector(".playlist-selection");
+  const trackName = selectionTitle || bar.querySelector(".track-title strong");
+  const trackNameText = document.createElement("span");
+  trackNameText.textContent = trackName.textContent;
+  trackName.replaceChildren(trackNameText);
+  trackName.classList.add("track-name-scroll");
+  trackName.title = trackNameText.textContent;
   const notice = player.querySelector("[data-media-error]");
   let selected;
+
+  function measureTrackName() {
+    const distance = Math.max(0, Math.ceil(trackNameText.getBoundingClientRect().width - trackName.clientWidth));
+    trackName.style.setProperty("--track-name-shift", `${-distance}px`);
+    trackName.style.setProperty("--track-name-duration", `${Math.max(4, distance / 32 + 2)}s`);
+    trackName.toggleAttribute("data-title-overflow", distance > 1);
+  }
+
   const choices = rows.map(row => {
     const audio = row.querySelector("audio"), download = row.querySelector(".track-download"), title = row.querySelector(".track-title");
     audio.id = row.id + "-audio";
@@ -783,13 +797,16 @@ function enhanceAudio(player) {
     }
     selected = choice;
     if (selectionTitle) {
-      selectionTitle.textContent = choice.audio.getAttribute("aria-label");
+      selectionTitle.removeAttribute("data-title-overflow");
+      trackNameText.textContent = choice.audio.getAttribute("aria-label");
+      selectionTitle.title = trackNameText.textContent;
       selectionTitle.hidden = false;
     }
     for (const entry of choices) {
       entry.download.hidden = entry !== choice;
       if (entry.button) entry.button.setAttribute("aria-current", String(entry === choice));
     }
+    measureTrackName();
     notice.hidden = !choice.audio.error;
     controls.select(choice.audio, choice.track.duration, choice.button);
     spectrum.select(choice.audio, choice.track);
@@ -800,6 +817,8 @@ function enhanceAudio(player) {
   }
   select(choices.find(c => "#" + c.row.id === window.location.hash) || choices[0]);
   plot.parentElement.hidden = false;
+  new ResizeObserver(measureTrackName).observe(trackName);
+  document.fonts?.ready.then(measureTrackName);
   if (selectionTitle) {
     // A track fragment should center its whole deck beneath the sticky masthead.
     const measureJump = () => {
