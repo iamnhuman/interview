@@ -9,6 +9,7 @@
   const address = card.querySelector(".link-preview-url");
   const picture = card.querySelector("img");
   const video = card.querySelector("video");
+  const markSymbols = document.getElementById("source-marks")?.content;
   const hover = matchMedia("(any-hover: hover)");
   const shortDomains = new Map([["open.spotify.com", "spotify.com"]]);
   const sourceMarks = new Map([
@@ -27,14 +28,14 @@
   function createSourceMark(link) {
     const domain = link.hostname.split(".").slice(-2).join(".");
     const icon = link.getAttribute("type") === "application/pdf" ? "document" : sourceMarks.get(domain) || "website";
+    const symbol = markSymbols?.querySelector(`#${icon}`);
+    if (!symbol) return null;
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    const use = document.createElementNS(svg.namespaceURI, "use");
-    svg.setAttribute("class", "source-mark");
-    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("class", `source-mark source-mark-${icon}`);
+    svg.setAttribute("viewBox", symbol.getAttribute("viewBox"));
     svg.setAttribute("aria-hidden", "true");
     svg.setAttribute("focusable", "false");
-    use.setAttribute("href", `assets/art/source-marks.svg#${icon}`);
-    svg.append(use);
+    for (const shape of symbol.children) svg.append(shape.cloneNode(true));
     return svg;
   }
 
@@ -66,7 +67,9 @@
     label.textContent = record.title;
     const domain = document.createElement("span");
     domain.className = "source-site";
-    domain.append(createSourceMark(link), record.displayUrl || site);
+    const mark = createSourceMark(link);
+    if (mark) domain.append(mark);
+    domain.append(record.displayUrl || site);
     row.append(label, domain);
     const item = document.createElement("li");
     item.append(row);

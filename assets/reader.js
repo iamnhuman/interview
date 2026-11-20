@@ -777,28 +777,39 @@ function createTrackSpectrum(plot, seek) {
   return { select, drawAt };
 }
 
+function initTrackTitleScroll(titles) {
+  function measure(title) {
+    const text = title.firstElementChild;
+    const distance = Math.max(0, Math.ceil(text.getBoundingClientRect().width - title.clientWidth));
+    title.style.setProperty("--track-name-shift", `${-distance}px`);
+    title.style.setProperty("--track-name-duration", `${Math.max(4, distance / 32 + 2)}s`);
+    title.toggleAttribute("data-title-overflow", distance > 1);
+  }
+
+  const resize = new ResizeObserver(entries => {
+    for (const { target } of entries) measure(target);
+  });
+  for (const title of titles) {
+    const text = document.createElement("span");
+    text.append(...title.childNodes);
+    title.append(text);
+    title.classList.add("track-name-scroll");
+    title.title = text.textContent;
+    measure(title);
+    resize.observe(title);
+  }
+  document.fonts?.ready.then(() => titles.forEach(measure));
+}
+
 function enhanceAudio(player) {
   const entries = [...player.querySelectorAll(".track-entry")];
   const rows = entries.length ? entries : [player];
   const compareVersions = player.hasAttribute("data-compare-versions");
+  const trackPlaylist = player.hasAttribute("data-track-playlist");
   if (typeof trackSpectra === "undefined" || rows.some(row => !trackSpectra[row.id] || !row.querySelector("audio").canPlayType("audio/mpeg"))) return;
   const bar = player.querySelector(".track-bar"), plot = player.querySelector(".wave-control");
-  const selectionTitle = bar.querySelector(".playlist-selection");
-  const trackName = selectionTitle || bar.querySelector(".track-title strong");
-  const trackNameText = document.createElement("span");
-  trackNameText.textContent = trackName.textContent;
-  trackName.replaceChildren(trackNameText);
-  trackName.classList.add("track-name-scroll");
-  trackName.title = trackNameText.textContent;
   const notice = player.querySelector("[data-media-error]");
   let selected;
-
-  function measureTrackName() {
-    const distance = Math.max(0, Math.ceil(trackNameText.getBoundingClientRect().width - trackName.clientWidth));
-    trackName.style.setProperty("--track-name-shift", `${-distance}px`);
-    trackName.style.setProperty("--track-name-duration", `${Math.max(4, distance / 32 + 2)}s`);
-    trackName.toggleAttribute("data-title-overflow", distance > 1);
-  }
 
   const choices = rows.map(row => {
     const audio = row.querySelector("audio"), download = row.querySelector(".track-download"), title = row.querySelector(".track-title");
@@ -847,17 +858,10 @@ function enhanceAudio(player) {
       choice.audio.muted = previous.muted;
     }
     selected = choice;
-    if (selectionTitle) {
-      selectionTitle.removeAttribute("data-title-overflow");
-      trackNameText.textContent = choice.audio.getAttribute("aria-label");
-      selectionTitle.title = trackNameText.textContent;
-      selectionTitle.hidden = false;
-    }
     for (const entry of choices) {
       entry.download.hidden = entry !== choice;
       if (entry.button) entry.button.setAttribute("aria-current", String(entry === choice));
     }
-    measureTrackName();
     notice.hidden = !choice.audio.error;
     controls.select(choice.audio, choice.track.duration, choice.button);
     spectrum.select(choice.audio, choice.track);
@@ -868,14 +872,16 @@ function enhanceAudio(player) {
   }
   select(choices.find(c => "#" + c.row.id === window.location.hash) || choices[0]);
   plot.parentElement.hidden = false;
-  new ResizeObserver(measureTrackName).observe(trackName);
-  document.fonts?.ready.then(measureTrackName);
-  if (selectionTitle) {
+  const titles = trackPlaylist ? [...bar.querySelectorAll(".track-list .track-title strong")] : [bar.querySelector(".track-title strong")];
+  initTrackTitleScroll(titles);
+  if (trackPlaylist) {
     // A track fragment should center its whole deck beneath the sticky masthead.
     const measureJump = () => {
       const bounds = player.getBoundingClientRect();
       player.style.setProperty("--playlist-height", `${bounds.height}px`);
-      player.style.setProperty("--choices-top", `${entries[0].getBoundingClientRect().top - bounds.top}px`);
+      for (const entry of entries) {
+        entry.style.setProperty("--track-offset", `${entry.getBoundingClientRect().top - bounds.top}px`);
+      }
     };
     measureJump();
     new ResizeObserver(measureJump).observe(player);

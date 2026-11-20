@@ -295,7 +295,7 @@ const linkCards = {
   "https://www.youtube.com/watch?v=uBeD_bZPYPU": {
     "title": "Hot Pursuit - 50 Caliber (Bassfunk Recordings)",
     "description": "NeurofunkGrid",
-    "imageLayout": "square",
+    "imageLayout": "square-fill",
     "image": "assets/link-thumbnails/b3b5eebcd4dc.jpg"
   },
   "https://iamnhuman.github.io/fakeboys/": {
@@ -334,7 +334,7 @@ const linkCards = {
     "image": "assets/link-thumbnails/necrotrap-target-practice.webp"
   },
   "https://t.me/antihauntologyhauntologyclub/885": {
-    "title": "anti-hauntology hauntology club",
+    "title": "anti-hauntology club",
     "meta": "Публикация · 9 окт. 2026 г.",
     "imageLayout": "avatar",
     "image": "assets/media/previews/antihauntologyhauntologyclub-avatar.jpg",
@@ -455,7 +455,7 @@ const linkCards = {
     "image": "assets/link-thumbnails/fa32d027c90e.jpg"
   },
   "https://t.me/trollnormis/4108": {
-    "title": "труп коли редькина",
+    "title": "труп коли редькина minimix",
     "displayUrl": "t.me/trollnormis",
     "meta": "Публикация · 12 авг. 2026 г.",
     ...trollnormisAvatar

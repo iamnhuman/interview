@@ -38,10 +38,14 @@
       gallery.style.setProperty("--clip-ratio", String(ratio));
       gallery.toggleAttribute("data-portrait", ratio < 1 && clips.length > 1);
     }
-    function select(index) {
+    function select(index, { fromThumbnail = false } = {}) {
       const next = clips[index], previous = clip;
-      if (previous === next) return;
-      const resume = previous && !previous.paused && !previous.ended;
+      if (previous === next) {
+        if (fromThumbnail && (next.paused || next.ended)) playMedia(next);
+        return;
+      }
+      const finished = previous?.ended;
+      const shouldPlay = fromThumbnail || (previous && (finished || !previous.paused));
       if (previous) {
         previous.pause();
         next.muted = previous.muted; next.volume = previous.volume; next.playbackRate = previous.playbackRate;
@@ -54,11 +58,12 @@
       });
       const [minutes, seconds] = clip.dataset.length.split(":").map(Number);
       controls.select(clip, minutes * 60 + seconds);
+      if ((fromThumbnail || finished) && clip.currentTime > 0) controls.seekTo(0);
       fullscreen.button.setAttribute("aria-controls", clip.id);
       notice.hidden = !clip.error;
       fitFrame();
       if (previous) gallery.dispatchEvent(new CustomEvent("interviewclipchange", { bubbles: true, detail: { previous, current: clip } }));
-      if (resume) playMedia(clip);
+      if (shouldPlay) playMedia(clip);
     }
     clips.forEach((video, i) => {
       const item = element("button", "clip-choice");
@@ -71,7 +76,7 @@
       const number = element("span", "clip-number"); number.textContent = String(i + 1).padStart(2, "0");
       const meta = element("span", "clip-meta"); meta.append(number, length);
       item.append(img, meta); picker.append(item); choices.push(item);
-      item.addEventListener("click", () => select(i));
+      item.addEventListener("click", () => select(i, { fromThumbnail: true }));
       video.addEventListener("click", () => {
         if (clip !== video) return;
         if (video.paused || video.ended) playMedia(video); else video.pause();
