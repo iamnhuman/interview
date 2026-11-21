@@ -1,16 +1,17 @@
 "use strict";
 
 (() => {
-  const trigger = document.querySelector("[data-sigil-trigger]");
+  const triggers = document.querySelectorAll("[data-sigil-trigger]");
   const preview = document.querySelector("[data-sigil-hover]");
   const viewer = document.getElementById("sigil-viewer");
-  if (!trigger || !preview || typeof viewer?.showModal !== "function") return;
+  if (!triggers.length || !preview || typeof viewer?.showModal !== "function") return;
 
   const stage = viewer.querySelector("[data-sigil-stage]");
   const close = viewer.querySelector("[data-sigil-close]");
   const status = viewer.querySelector("[data-sigil-status]");
   const canvas = stage.querySelector("[data-sigil-canvas]");
   const fallbackCanvas = stage.querySelector("[data-sigil-fallback]");
+  const poster = stage.querySelector("img");
   const events = new AbortController();
   const { signal } = events;
   let scene, camera, turntable, yawAxis, pitchAxis;
@@ -27,13 +28,11 @@
     scene.add(turntable, key, fill);
   }
 
-  let renderer, model, reflections, software;
-  const materialMetalness = new Map();
-  let loading = false;
+  const models = new Map();
+  let activeTrigger, mounted, renderer, reflections, software;
   let webGLUnavailable = false;
   let softwareUnavailable = false;
   let contextLost = false;
-  let ready = false;
   let frame = 0;
   let previous = 0;
   let hovering = false;
@@ -72,7 +71,8 @@
     }
   }
 
-  function mountModel() {
+  function prepareModel(model) {
+    const materialMetalness = new Map();
     const center = new THREE.Box3().setFromObject(model).getCenter(new THREE.Vector3());
     const vertex = new THREE.Vector3();
     let radiusSquared = 0;
@@ -86,13 +86,21 @@
       }
     });
 
-    // Tripo exported this sigil flat in the YZ plane.
+    // Both Tripo sigils are flat in the YZ plane.
     const facing = new THREE.Group();
     facing.rotation.y = -Math.PI / 2;
     facing.scale.setScalar(1 / Math.sqrt(radiusSquared));
     model.position.sub(center);
     facing.add(model);
-    turntable.add(facing);
+    return { facing, materialMetalness };
+  }
+
+  function applyMaterialLighting() {
+    if (!mounted) return;
+    for (const [material, metalness] of mounted.materialMetalness) {
+      material.metalness = reflections ? metalness : Math.min(metalness, .3);
+      material.needsUpdate = true;
+    }
   }
 
   function lightModel() {
@@ -111,10 +119,7 @@
         renderer.autoClear = true;
       }
     }
-    for (const [material, metalness] of materialMetalness) {
-      material.metalness = reflections ? metalness : Math.min(metalness, .3);
-      material.needsUpdate = true;
-    }
+    applyMaterialLighting();
   }
 
   function stop() {
@@ -129,7 +134,7 @@
   }
 
   function schedule() {
-    const modelReady = ready && (canRenderWebGL() || !softwareUnavailable);
+    const modelReady = mounted && (canRenderWebGL() || !softwareUnavailable);
     if (modelReady && isShowing() && !document.hidden && !frame && !signal.aborted) {
       frame = requestAnimationFrame(draw);
     }
@@ -137,14 +142,14 @@
 
   function showError() {
     delete stage.dataset.live;
-    delete trigger.dataset.sigilPreviewing;
+    delete activeTrigger.dataset.sigilPreviewing;
     status.textContent = "Не удалось открыть модель.";
     status.hidden = false;
   }
 
   function showFrame(mode) {
     if (stage.dataset.live !== mode) stage.dataset.live = mode;
-    if (hovering && !trigger.hasAttribute("data-sigil-previewing")) trigger.dataset.sigilPreviewing = "";
+    if (hovering && !activeTrigger.hasAttribute("data-sigil-previewing")) activeTrigger.dataset.sigilPreviewing = "";
     if (!status.hidden) status.hidden = true;
   }
 
@@ -153,7 +158,7 @@
   }
 
   function drawModel() {
-    if (!ready || !canRenderWebGL()) return false;
+    if (!mounted || !canRenderWebGL()) return false;
     try {
       renderer.render(scene, camera);
       showFrame("model");
@@ -167,7 +172,7 @@
   }
 
   function drawSoftware(stamp, spinning) {
-    if (!ready || softwareUnavailable) return false;
+    if (!mounted || softwareUnavailable) return false;
     if (spinning && stage.dataset.live === "software" && stamp - softwareStamp < 32) return true;
     try {
       software ??= createSoftwareSigil(fallbackCanvas, turntable);
@@ -198,7 +203,7 @@
   }
 
   function resize() {
-    if (!isShowing() || !ready) return;
+    if (!isShowing() || !mounted) return;
     if (!renderer && !contextLost && !webGLUnavailable) {
       initRenderer();
       if (canRenderWebGL()) lightModel();
@@ -231,12 +236,14 @@
     if (signal.aborted) return;
     events.abort();
     stop();
-    ready = false;
     software = undefined;
     delete stage.dataset.live;
-    delete trigger.dataset.sigilPreviewing;
+    if (activeTrigger) delete activeTrigger.dataset.sigilPreviewing;
     size.disconnect();
-    disposeModel(model);
+    for (const pending of models.values()) {
+      void pending.then(({ facing }) => disposeModel(facing), () => {});
+    }
+    models.clear();
     reflections?.dispose();
     renderer?.dispose();
   }
@@ -260,14 +267,15 @@
     }
   }
 
-  function loadBackup() {
+  function loadBackup(trigger) {
     // A local HTML file can load scripts even when the browser blocks fetch() for file URLs.
     return new Promise((resolve, reject) => {
       const script = document.createElement("script");
-      script.src = stage.dataset.sigilBackup;
+      script.src = trigger.dataset.sigilBackup;
       script.onload = () => {
-        const encoded = globalThis.sigilModelData;
-        delete globalThis.sigilModelData;
+        // The original hero backup exposes its bytes globally.
+        const encoded = script.sigilModelData ?? globalThis.sigilModelData;
+        if (script.sigilModelData === undefined) delete globalThis.sigilModelData;
         script.remove();
         try {
           if (typeof encoded !== "string") throw new Error("Sigil backup unavailable");
@@ -287,11 +295,11 @@
     });
   }
 
-  async function loadModel() {
+  async function loadModel(trigger) {
     const loader = new THREE.GLTFLoader();
     if (window.location.protocol !== "file:") {
       try {
-        const response = await fetch(stage.dataset.sigilModel, { signal });
+        const response = await fetch(trigger.dataset.sigilModel, { signal });
         if (!response.ok) throw new Error("Sigil model unavailable");
         return await loader.parseAsync(await response.arrayBuffer(), "");
       } catch (error) {
@@ -299,35 +307,38 @@
         console.warn("Не удалось загрузить основной GLB сигила.", error);
       }
     }
-    return loader.parseAsync(await loadBackup(), "");
+    return loader.parseAsync(await loadBackup(trigger), "");
   }
 
   async function start() {
-    if (!isShowing() || ready || loading || signal.aborted) return;
+    if (!isShowing() || mounted || signal.aborted) return;
     if (!scene) { showError(); return; }
-    loading = true;
-    try {
-      const loaded = await loadModel();
-      if (signal.aborted) { disposeModel(loaded.scene); return; }
-      model = loaded.scene;
-      mountModel();
-
-      ready = true;
-      resize();
-      schedule();
-    } catch (error) {
-      if (signal.aborted) return;
-      if (!ready) {
+    const trigger = activeTrigger;
+    const pending = models.get(trigger) ?? loadModel(trigger).then(({ scene: model }) => {
+      try {
+        return prepareModel(model);
+      } catch (error) {
         disposeModel(model);
-        model?.removeFromParent();
-        model = undefined;
-        materialMetalness.clear();
+        throw error;
       }
+    });
+    models.set(trigger, pending);
+    let next;
+    try {
+      next = await pending;
+    } catch (error) {
+      if (models.get(trigger) === pending) models.delete(trigger);
+      if (signal.aborted || activeTrigger !== trigger || !isShowing()) return;
       console.warn("Не удалось загрузить 3D-сигил.", error);
       showError();
-    } finally {
-      loading = false;
+      return;
     }
+    if (signal.aborted || activeTrigger !== trigger || !isShowing() || mounted) return;
+    mounted = next;
+    turntable.add(mounted.facing);
+    applyMaterialLighting();
+    resize();
+    schedule();
   }
 
   const size = new ResizeObserver(resize);
@@ -339,13 +350,25 @@
     preview.hidden = true;
     viewer.insertBefore(stage, status);
     stage.tabIndex = 0;
-    delete trigger.dataset.sigilPreviewing;
+    delete activeTrigger.dataset.sigilPreviewing;
     stop();
+  }
+
+  function activate(trigger) {
+    if (activeTrigger === trigger) return;
+    hidePreview();
+    mounted?.facing.removeFromParent();
+    mounted = undefined;
+    software = undefined;
+    softwareUnavailable = false;
+    delete stage.dataset.live;
+    activeTrigger = trigger;
+    poster.src = trigger.querySelector("img").src;
   }
 
   function positionPreview() {
     if (!hovering) return;
-    const bounds = trigger.getBoundingClientRect();
+    const bounds = activeTrigger.getBoundingClientRect();
     const { innerWidth: width, innerHeight: height } = window;
     if (bounds.bottom <= 0 || bounds.top >= height) { hidePreview(); return; }
     const radius = preview.clientWidth / 2;
@@ -355,19 +378,37 @@
     preview.style.top = `${y}px`;
   }
 
-  trigger.addEventListener("pointerenter", event => {
-    if (viewer.open || (event.pointerType !== "mouse" && event.pointerType !== "pen")) return;
-    hovering = true;
-    preview.hidden = false;
-    stage.tabIndex = -1;
-    preview.append(stage);
-    positionPreview();
-    turntable?.rotation.set(.09, 0, -.14);
-    resize();
-    void start();
-    schedule();
-  }, { signal });
-  trigger.addEventListener("pointerleave", hidePreview, { signal });
+  for (const trigger of triggers) {
+    trigger.addEventListener("pointerenter", event => {
+      if (viewer.open || (event.pointerType !== "mouse" && event.pointerType !== "pen")) return;
+      activate(trigger);
+      hovering = true;
+      preview.hidden = false;
+      stage.tabIndex = -1;
+      preview.append(stage);
+      positionPreview();
+      turntable?.rotation.set(.09, 0, -.14);
+      resize();
+      void start();
+      schedule();
+    }, { signal });
+    trigger.addEventListener("pointerleave", () => {
+      if (activeTrigger === trigger) hidePreview();
+    }, { signal });
+    trigger.addEventListener("click", () => {
+      if (viewer.open) return;
+      hidePreview();
+      activate(trigger);
+      viewer.showModal();
+      close.focus({ preventScroll: true });
+      turntable?.rotation.set(.09, 0, -.14);
+      status.textContent = "Загрузка модели…";
+      status.hidden = Boolean(stage.dataset.live);
+      resize();
+      void start();
+      schedule();
+    }, { signal });
+  }
   window.addEventListener("scroll", positionPreview, { passive: true, signal });
   window.addEventListener("resize", positionPreview, { signal });
 
@@ -407,18 +448,6 @@
     rotate(...steps[event.key]);
   }, { signal });
 
-  trigger.addEventListener("click", () => {
-    if (viewer.open) return;
-    hidePreview();
-    viewer.showModal();
-    close.focus({ preventScroll: true });
-    turntable?.rotation.set(.09, 0, -.14);
-    status.textContent = "Загрузка модели…";
-    status.hidden = Boolean(stage.dataset.live);
-    resize();
-    void start();
-    schedule();
-  }, { signal });
   close.addEventListener("click", () => viewer.close(), { signal });
   viewer.addEventListener("click", event => {
     if (event.target === viewer) viewer.close();
@@ -428,7 +457,7 @@
     pointer = undefined;
     delete stage.dataset.dragging;
     stop();
-    trigger.focus({ preventScroll: true });
+    activeTrigger?.focus({ preventScroll: true });
   }, { signal });
   canvas.addEventListener("webglcontextlost", event => {
     event.preventDefault();
@@ -443,12 +472,11 @@
     webGLUnavailable = false;
     requestAnimationFrame(() => {
       if (signal.aborted || contextLost) return;
-      if (ready && canRenderWebGL()) {
+      if (canRenderWebGL()) {
         lightModel();
         resize();
-      } else if (isShowing()) {
-        void start();
       }
+      if (isShowing() && !mounted) void start();
     });
   }, { signal });
   document.addEventListener("visibilitychange", () => document.hidden ? stop() : schedule(), { signal });

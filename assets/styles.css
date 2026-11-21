@@ -149,8 +149,10 @@ html.has-sigil-scroll::-webkit-scrollbar, html.has-sigil-scroll body::-webkit-sc
   border: 1px solid var(--line); border-radius: var(--ui-radius); box-shadow: 0 .3rem 1.2rem #0003;
   color: var(--ink); background: var(--surface); overflow-wrap: anywhere; text-decoration: none;
 }
+.link-preview[data-linked-title] { pointer-events: auto; }
+.link-preview strong a { text-decoration-color: var(--metal); }
 .link-preview :is(img, video) { flex: none; width: 4.8rem; height: auto; aspect-ratio: 1; object-fit: cover; border-radius: var(--ui-radius); }
-.link-preview :is(img, video)[data-layout="left"] { object-position: left center; }
+.link-preview :is(img, video)[data-layout="left"] { padding-block: .24rem; object-position: left center; background: #000; }
 .link-preview :is(img, video)[data-layout="square"] { object-fit: contain; background: var(--page); }
 .link-preview img[data-layout="square-fill"] {
   --preview-zoom: 1.38;
@@ -286,22 +288,24 @@ html.has-sigil-scroll::-webkit-scrollbar, html.has-sigil-scroll body::-webkit-sc
   text-transform: uppercase;
 }
 
-.heading-sigil {
+:is(.heading-sigil, .footer-sigil-trigger) {
   position: relative;
   display: block;
+  padding: 0; border: 0; background: transparent;
+  cursor: zoom-in; user-select: none;
+}
+.heading-sigil {
   width: 110%;
   aspect-ratio: 1;
   margin: 0 0 -5% -5%;
-  padding: 0; border: 0; background: transparent;
-  cursor: zoom-in; user-select: none;
 }
 .heading-sigil img {
   width: 100%;
   height: auto;
   transform: rotate(-8deg);
 }
-.heading-sigil[data-sigil-previewing] img { visibility: hidden; }
-.heading-sigil:focus-visible::after, .sigil-viewer-stage:focus-visible::after {
+[data-sigil-trigger][data-sigil-previewing] img { visibility: hidden; }
+:is(.heading-sigil, .footer-sigil-trigger, .sigil-viewer-stage):focus-visible::after {
   content: ""; position: absolute; inset-inline: 0; inset-block-end: 0;
   width: 1.25rem; height: 1px; margin-inline: auto; background: var(--metal);
 }
@@ -422,6 +426,11 @@ html.has-sigil-scroll::-webkit-scrollbar, html.has-sigil-scroll body::-webkit-sc
   border: 1px solid var(--line); border-radius: var(--ui-radius);
   color: var(--text); background: var(--surface); text-decoration: none;
 }
+.source-list div.source-link { position: relative; }
+a.source-title { position: relative; z-index: 1; width: fit-content; text-decoration-color: var(--link-line); }
+a.source-site { text-decoration: none; }
+a.source-site::before { content: ""; position: absolute; inset: 0; }
+a.source-site:focus-visible::before { outline: 1px solid var(--metal); outline-offset: 1px; border-radius: var(--ui-radius); }
 .source-index {
   grid-area: number; justify-self: end; display: grid; place-items: center;
   min-width: 1.2rem; height: 1.2rem; padding-inline: .2rem; border-radius: .3rem;
@@ -686,13 +695,9 @@ html.has-sigil-scroll::-webkit-scrollbar, html.has-sigil-scroll body::-webkit-sc
   color: var(--quote-ink); background: var(--quote-paper);
 }
 .pull-quote::before {
-  content: ""; display: block; height: 1.75rem; margin-bottom: .875rem;
-  background: url("art/sigil-divider-grand.webp") center / auto 100% no-repeat;
+  content: ""; display: block; height: 2.25rem; margin-bottom: .875rem;
+  background: url("art/sigil-blade-wings.webp") center / auto 100% no-repeat;
   filter: brightness(var(--quote-sigil-brightness));
-}
-#quote-antinormis::before {
-  height: 2.25rem;
-  background-image: url("art/sigil-blade-wings.webp");
 }
 .pull-quote blockquote strong { font-weight: inherit; }
 .audio-cue {
@@ -927,7 +932,8 @@ html.has-sigil-scroll::-webkit-scrollbar, html.has-sigil-scroll body::-webkit-sc
   display: flex; justify-content: space-between; align-items: center; gap: 1rem;
   margin-block-start: clamp(3rem, 6vw, 5.25rem); padding-block: .75rem clamp(1.5rem, 3vw, 2rem);
 }
-.footer-sigil { width: clamp(9rem, 18vw, 13rem); max-width: 48%; height: auto; transform: translateX(-10px); }
+.footer-sigil-trigger { width: clamp(9rem, 18vw, 13rem); max-width: 48%; transform: translateX(-10px); }
+.footer-sigil { width: 100%; height: auto; }
 .return-link { display: inline-grid; grid-auto-flow: column; align-self: end; align-content: end; gap: .375em; }
 .return-link svg { width: .875em; height: .875em; transform: translateY(-.075em); }
 

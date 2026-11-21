@@ -95,10 +95,10 @@ const linkCards = {
     ...archivenormisAvatar
   },
   "https://t.me/archivenormis/5429/12636": {
-    "title": "Arca и SOPHIE",
+    "title": "Arca live",
     "displayUrl": "t.me/archivenormis",
     "meta": "Сын Люцифера · 24 июл. 2026 г.",
-    "description": "Пост о последнем треке с альбома Arca и его сходстве с музыкой SOPHIE.",
+    "description": "Сходство костюма Arca и FITNESSS",
     "imageLayout": "square",
     "image": "assets/media/previews/post-archivenormis-12636.jpg"
   },
@@ -184,7 +184,8 @@ const linkCards = {
     ...slopnormisAvatar
   },
   "https://t.me/slopnormis/942/3578": {
-    "title": "moriartymega",
+    "title": "М О Р И А Р Т И",
+    "titleUrl": "https://www.youtube.com/@moriartymega",
     "displayUrl": "t.me/slopnormis",
     "meta": "slopnormis · 28 окт. 2026 г.",
     "description": "Реакция на ИИ-контент канала moriartymega.",
@@ -210,6 +211,10 @@ const linkCards = {
     "meta": "antinormis 🚷 · 1 авг. 2025 г.",
     "description": "Интервью для notesfromcake и sabukaru. Грязь динозавров и ключи от Тойоты.",
     "image": "assets/media/previews/post-hypernormis-4413.jpg"
+  },
+  "https://www.instagram.com/0ll668/": {
+    "title": "@0ll668",
+    "meta": "Instagram"
   },
   "https://t.me/hypernormis/376/377": {
     "title": "WWWINGS",
@@ -253,7 +258,8 @@ const linkCards = {
     "displayUrl": "t.me/trollnormis",
     "meta": "Сын Люцифера · 13 янв. 2025 г.",
     "description": "подборка различных старых комментов",
-    ...trollnormisAvatar
+    "imageLayout": "square",
+    "image": "assets/media/previews/post-trollnormis-140.png"
   },
   "https://t.me/trollnormis/4142": {
     "title": "SCP",
@@ -272,7 +278,7 @@ const linkCards = {
     "video": "assets/media/previews/post-trollnormis-4041.mp4"
   },
   "https://t.me/archivenormis/5429/14801": {
-    "title": "Сир Сойлок — новый клип",
+    "title": "Савенко про клип Сира Сойлока",
     "displayUrl": "t.me/archivenormis",
     "meta": "а можно потанцевальней? · 28 окт. 2026 г.",
     "description": "Пост о новом клипе и недавней EP артиста. Видео · 0:25",

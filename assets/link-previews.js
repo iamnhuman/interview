@@ -39,6 +39,13 @@
     return svg;
   }
 
+  function setTitleLink(link, record) {
+    link.href = record.titleUrl;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.textContent = record.title;
+  }
+
   function createSource(link, list, sectionId, numbered) {
     const number = list.children.length + 1;
     const href = link.getAttribute("href");
@@ -49,11 +56,18 @@
     }
     if (link.getAttribute("type") === "application/pdf") site = "PDF";
     const record = linkCards[href] || { title: link.textContent.trim() || href, meta: site };
-    const row = document.createElement("a");
+    const row = document.createElement(record.titleUrl ? "div" : "a");
     row.className = "source-link";
     row.id = `source-${sectionId}-${number}`;
+    const label = document.createElement(record.titleUrl ? "a" : "span");
+    label.className = "source-title";
+    if (record.titleUrl) setTitleLink(label, record);
+    else label.textContent = record.title;
+    const domain = document.createElement(record.titleUrl ? "a" : "span");
+    domain.className = "source-site";
+    const destination = record.titleUrl ? domain : row;
     for (const attribute of ["href", "target", "rel", "type"]) {
-      if (link.hasAttribute(attribute)) row.setAttribute(attribute, link.getAttribute(attribute));
+      if (link.hasAttribute(attribute)) destination.setAttribute(attribute, link.getAttribute(attribute));
     }
     if (numbered) {
       const index = document.createElement("span");
@@ -62,11 +76,6 @@
       index.textContent = number;
       row.append(index);
     }
-    const label = document.createElement("span");
-    label.className = "source-title";
-    label.textContent = record.title;
-    const domain = document.createElement("span");
-    domain.className = "source-site";
     const mark = createSourceMark(link);
     if (mark) domain.append(mark);
     domain.append(record.displayUrl || site);
@@ -74,8 +83,9 @@
     const item = document.createElement("li");
     item.append(row);
     list.append(item);
-    const source = { number, record, row, links: [row] };
-    sources.set(row, source);
+    const source = { number, record, row, destination, links: [row] };
+    sources.set(destination, source);
+    if (record.titleUrl) sources.set(label, source);
     return source;
   }
 
@@ -154,7 +164,9 @@
 
   function place() {
     if (!anchor || card.hidden) return;
-    const rect = anchor.getClientRects()[line] || anchor.getBoundingClientRect();
+    const row = sources.get(anchor)?.row;
+    const reference = row?.contains(anchor) ? row : anchor;
+    const rect = reference.getClientRects()[line] || reference.getBoundingClientRect();
     const width = document.documentElement.clientWidth, height = window.innerHeight;
     if (rect.bottom <= 0 || rect.top >= height || !rect.width) { hide(); return; }
     const x = Math.max(8, Math.min(rect.left, width - card.offsetWidth - 8));
@@ -162,6 +174,11 @@
     const y = above >= 8 ? above : Math.max(8, Math.min(rect.bottom + 7, height - card.offsetHeight - 8));
     card.style.left = `${x}px`;
     card.style.top = `${y}px`;
+  }
+
+  function queueHide() {
+    clearTimeout(timer);
+    timer = window.setTimeout(hide, 220);
   }
 
   function hide() {
@@ -231,13 +248,22 @@
     anchor = link;
     line = Math.max(0, [...link.getClientRects()].findIndex(rect => clientY >= rect.top && clientY <= rect.bottom));
     arrow.textContent = "↗";
-    const destination = activeSource?.row || link;
+    const destination = activeSource?.destination || link;
     const label = destination.getAttribute("type") === "application/pdf"
       ? destination.pathname.split("/").pop()
       : destination.getAttribute("href");
     address.textContent = record.previewAddress || record.displayUrl || shortDomains.get(destination.hostname) || label;
     setMeta(record.meta);
-    title.textContent = record.title;
+    card.toggleAttribute("data-linked-title", Boolean(record.titleUrl));
+    card.setAttribute("role", record.titleUrl ? "group" : "tooltip");
+    if (record.titleUrl) {
+      const titleLink = document.createElement("a");
+      setTitleLink(titleLink, record);
+      titleLink.tabIndex = -1;
+      title.replaceChildren(titleLink);
+    } else {
+      title.textContent = record.title;
+    }
     description.textContent = record.description || "";
     description.hidden = !record.description;
     link.setAttribute("aria-describedby", [link.getAttribute("aria-describedby"), card.id].filter(Boolean).join(" "));
@@ -247,7 +273,10 @@
   }
 
   function request(link, record, y, delay) {
-    if (anchor === link) return;
+    if (anchor === link) {
+      clearTimeout(timer);
+      return;
+    }
     hide();
     highlight(sources.get(link));
     pending = link;
@@ -276,18 +305,26 @@
     });
     link.addEventListener("pointerleave", () => {
       if (pending !== link && anchor !== link) return;
-      if (!link.matches(":focus-visible")) hide();
+      if (link.matches(":focus-visible")) return;
+      if (record.titleUrl && anchor === link) queueHide();
+      else hide();
     });
     link.addEventListener("focus", () => { if (link.matches(":focus-visible")) request(link, record, null, 0); });
-    link.addEventListener("blur", () => { if (pending === link || anchor === link) hide(); });
+    link.addEventListener("blur", event => {
+      if ((pending === link || anchor === link) && !card.contains(event.relatedTarget)) hide();
+    });
     link.addEventListener("click", hide);
   }
+  card.addEventListener("pointerenter", () => clearTimeout(timer));
+  card.addEventListener("pointerleave", event => {
+    if (anchor && !anchor.contains(event.relatedTarget) && !anchor.matches(":focus-visible")) queueHide();
+  });
   picture.addEventListener("error", () => { picture.hidden = true; place(); });
   document.addEventListener("keydown", event => {
     if (event.key !== "Escape") return;
     hide();
   });
-  document.addEventListener("pointerdown", hide);
+  document.addEventListener("pointerdown", event => { if (!card.contains(event.target)) hide(); });
   window.addEventListener("scroll", hide, { passive: true });
   window.addEventListener("resize", place);
   new ResizeObserver(place).observe(card);

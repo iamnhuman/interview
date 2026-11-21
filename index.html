@@ -18,7 +18,7 @@
   <meta name="theme-color" content="#000000">
   <link rel="icon" type="image/webp" href="assets/art/sigil-fractured-orbit.webp">
   <link rel="stylesheet" href="assets/fonts/fonts.css">
-  <link rel="stylesheet" href="assets/styles.css?v=6">
+  <link rel="stylesheet" href="assets/styles.css?v=9">
   <script src="assets/sound-data.js" defer></script>
   <script src="assets/question-sigils.js" defer></script>
   <script src="assets/media-controls.js" defer></script>
@@ -27,9 +27,9 @@
   <script src="assets/hero-cloth.js" defer></script>
   <script src="assets/vendor/three-r170.js?v=2" defer></script>
   <script src="assets/sigil-software.js" defer></script>
-  <script src="assets/sigil.js?v=6" defer></script>
-  <script src="assets/link-data.js" defer></script>
-  <script src="assets/link-previews.js" defer></script>
+  <script src="assets/sigil.js?v=7" defer></script>
+  <script src="assets/link-data.js?v=3" defer></script>
+  <script src="assets/link-previews.js?v=2" defer></script>
 </head>
 <body id="top">
   <a class="skip-link" href="#interview">К началу интервью</a>
@@ -83,7 +83,7 @@
     <section class="cover wrap" id="start" aria-labelledby="title">
       <div class="cover-heading">
         <h1 id="title"><span class="cover-kicker">Как понять</span> <span class="cover-word">Неограйм</span></h1>
-        <button class="heading-sigil" type="button" data-sigil-trigger aria-haspopup="dialog" aria-controls="sigil-viewer" aria-label="Открыть 3D-модель сигила">
+        <button class="heading-sigil" type="button" data-sigil-trigger data-sigil-model="assets/art/hero-sigil.glb?v=2" data-sigil-backup="assets/art/hero-sigil-data.js" aria-haspopup="dialog" aria-controls="sigil-viewer" aria-label="Открыть 3D-модель верхнего сигила">
           <img src="assets/art/sigil-thorn-halo.webp" width="880" height="880" alt="" decoding="async" draggable="false">
         </button>
       </div>
@@ -132,7 +132,7 @@
         </div>
         <div class="turn answer">
           <div class="turn-copy answer-copy">
-            <p>А потом я так же стал угорать с <span class="artist-name"><span class="artist-quote">«</span>Тойоты<span class="artist-quote">»</span></span> и случайно узнал про проект <span class="artist-name"><span class="artist-quote">«</span><a href="https://fict.info/" target="_blank" rel="noopener noreferrer">Церковь Тойоты</a><span class="artist-quote">»</span></span>. Тогда <span class="artist-name"><span class="artist-quote">«</span><a href="https://t.me/hypernormis/3/4413" target="_blank" rel="noopener noreferrer">011668</a><span class="artist-quote">»</span></span>, создатель всего этого движа, коллабил с <span class="artist-name"><span class="artist-quote">«</span><a href="https://t.me/thequietplace/9417" target="_blank" rel="noopener noreferrer">S280F</a><span class="artist-quote">»</span></span>, и это казалось самым свежим звуком. Потом я узнал, что готовится <a href="https://fict.bandcamp.com/album/toyotathon" target="_blank" rel="noopener noreferrer">компиляция</a> <span class="artist-name"><span class="artist-quote">«</span>Церкви Тойоты<span class="artist-quote">»</span></span> почти на 100 треков, и с тех пор стал себя ассоциировать со всем этим движем. На тот момент складывалось ощущение, что благодаря таким проектам у этой музыки ещё есть шансы) Т. е. так получилось, что многое из того, что делает <span class="artist-name"><span class="artist-quote">«</span>011668<span class="artist-quote">»</span></span>, резонировало с тем, как я вижу экспериментальную деятельность в интернете, поэтому я продолжил развивать своё ответвление <span class="artist-name"><span class="artist-quote">«</span>Тойоты<span class="artist-quote">»</span></span> в рунете, только более темную версию. Если зайти к <span class="artist-name"><span class="artist-quote">«</span>011668<span class="artist-quote">»</span></span> на страницу в <span class="artist-name"><span class="artist-quote">«</span>Instagram<span class="artist-quote">»</span></span>, может показаться, что там рандомный поток чуши и бессмысленного мерча, но если углубиться, то можно обнаружить отсылки к <a href="https://t.me/slopnormis/2737/3590" target="_blank" rel="noopener noreferrer">Nick Land</a>, <span class="artist-name"><span class="artist-quote">«</span><a href="https://hijinx.world/interactive/2026-ccru-graph/" target="_blank" rel="noopener noreferrer">CCRU</a><span class="artist-quote">»</span></span> или <span class="artist-name"><span class="artist-quote">«</span><a href="https://t.me/slopnormis/2737/3642" target="_blank" rel="noopener noreferrer">Palantir</a><span class="artist-quote">»</span></span>, заигрывание с различными философскими темами. А если у тебя богатое воображение, то можно приметить и ещё что-то. Выглядит как то, чем должно быть настоящее искусство в современном интернете, — скрещивание медиумов и сатира над тем, что сейчас актуально.</p>
+            <p>А потом я так же стал угорать с <span class="artist-name"><span class="artist-quote">«</span>Тойоты<span class="artist-quote">»</span></span> и случайно узнал про проект <span class="artist-name"><span class="artist-quote">«</span><a href="https://fict.info/" target="_blank" rel="noopener noreferrer">Церковь Тойоты</a><span class="artist-quote">»</span></span>. Тогда <span class="artist-name"><span class="artist-quote">«</span><a href="https://t.me/hypernormis/3/4413" target="_blank" rel="noopener noreferrer">011668</a><span class="artist-quote">»</span></span>, создатель всего этого движа, коллабил с <span class="artist-name"><span class="artist-quote">«</span><a href="https://t.me/thequietplace/9417" target="_blank" rel="noopener noreferrer">S280F</a><span class="artist-quote">»</span></span>, и это казалось самым свежим звуком. Потом я узнал, что готовится <a href="https://fict.bandcamp.com/album/toyotathon" target="_blank" rel="noopener noreferrer">компиляция</a> <span class="artist-name"><span class="artist-quote">«</span>Церкви Тойоты<span class="artist-quote">»</span></span> почти на 100 треков, и с тех пор стал себя ассоциировать со всем этим движем. На тот момент складывалось ощущение, что благодаря таким проектам у этой музыки ещё есть шансы) Т. е. так получилось, что многое из того, что делает <span class="artist-name"><span class="artist-quote">«</span>011668<span class="artist-quote">»</span></span>, резонировало с тем, как я вижу экспериментальную деятельность в интернете, поэтому я продолжил развивать своё ответвление <span class="artist-name"><span class="artist-quote">«</span>Тойоты<span class="artist-quote">»</span></span> в рунете, только более темную версию. Если зайти к <span class="artist-name"><span class="artist-quote">«</span>011668<span class="artist-quote">»</span></span> на <a href="https://www.instagram.com/0ll668/" target="_blank" rel="noopener noreferrer">страницу</a> в <span class="artist-name"><span class="artist-quote">«</span>Instagram<span class="artist-quote">»</span></span>, может показаться, что там рандомный поток чуши и бессмысленного мерча, но если углубиться, то можно обнаружить отсылки к <a href="https://t.me/slopnormis/2737/3590" target="_blank" rel="noopener noreferrer">Nick Land</a>, <span class="artist-name"><span class="artist-quote">«</span><a href="https://hijinx.world/interactive/2026-ccru-graph/" target="_blank" rel="noopener noreferrer">CCRU</a><span class="artist-quote">»</span></span> или <span class="artist-name"><span class="artist-quote">«</span><a href="https://t.me/slopnormis/2737/3642" target="_blank" rel="noopener noreferrer">Palantir</a><span class="artist-quote">»</span></span>, заигрывание с различными философскими темами. А если у тебя богатое воображение, то можно приметить и ещё что-то. Выглядит как то, чем должно быть настоящее искусство в современном интернете, — скрещивание медиумов и сатира над тем, что сейчас актуально.</p>
           </div>
         </div>
         <figure class="image-asset image-pair image-pair-square image-pair-stack" data-sources-before>
@@ -377,16 +377,6 @@
               </a>
             </li>
             <li style="--profile-x: 89%; --profile-y: 41.5%">
-              <a class="toyota-profile" href="https://t.me/toyotanoid" target="_blank" rel="noopener noreferrer">
-                <span class="toyota-profile-avatar">
-                  <img src="assets/media/previews/toyotanoid-avatar.jpg?v=d7676705" width="320" height="320" loading="lazy" decoding="async" alt="">
-                  <video data-profile-video="assets/media/previews/toyotanoid-avatar.mp4?v=d7676705" data-profile-animation="assets/media/previews/toyotanoid-avatar.webp?v=d7676705" muted loop playsinline preload="none" aria-hidden="true"></video>
-                </span>
-                <span class="toyota-profile-name">Тойотанойд</span>
-                <span class="toyota-profile-handle">@toyotanoid</span>
-              </a>
-            </li>
-            <li style="--profile-x: 23%; --profile-y: 70%">
               <a class="toyota-profile" href="https://t.me/toyotex" target="_blank" rel="noopener noreferrer">
                 <span class="toyota-profile-avatar">
                   <img src="assets/media/previews/toyotex-avatar.jpg" width="320" height="320" loading="lazy" decoding="async" alt="">
@@ -394,6 +384,16 @@
                 </span>
                 <span class="toyota-profile-name">Тойотекс</span>
                 <span class="toyota-profile-handle">@toyotex</span>
+              </a>
+            </li>
+            <li style="--profile-x: 23%; --profile-y: 70%">
+              <a class="toyota-profile" href="https://t.me/toyotanoid" target="_blank" rel="noopener noreferrer">
+                <span class="toyota-profile-avatar">
+                  <img src="assets/media/previews/toyotanoid-avatar.jpg?v=d7676705" width="320" height="320" loading="lazy" decoding="async" alt="">
+                  <video data-profile-video="assets/media/previews/toyotanoid-avatar.mp4?v=d7676705" data-profile-animation="assets/media/previews/toyotanoid-avatar.webp?v=d7676705" muted loop playsinline preload="none" aria-hidden="true"></video>
+                </span>
+                <span class="toyota-profile-name">Тойотанойд</span>
+                <span class="toyota-profile-handle">@toyotanoid</span>
               </a>
             </li>
             <li style="--profile-x: 51%; --profile-y: 74%">
@@ -974,7 +974,9 @@
         </footer>
       </article>
       <footer class="footer" id="end" tabindex="-1" aria-label="Конец интервью">
-        <img class="footer-sigil" src="assets/art/sigil-silver-wings.webp" width="1086" height="362" alt="" loading="lazy" decoding="async">
+        <button class="footer-sigil-trigger" type="button" data-sigil-trigger data-sigil-model="assets/art/footer-sigil.glb" data-sigil-backup="assets/art/footer-sigil-data.js" aria-haspopup="dialog" aria-controls="sigil-viewer" aria-label="Открыть 3D-модель нижнего сигила">
+          <img class="footer-sigil" src="assets/art/sigil-silver-wings.webp" width="1086" height="362" alt="" loading="lazy" decoding="async" draggable="false">
+        </button>
         <a class="reading-link return-link" href="#top">
           <span>К началу</span>
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 14V2m-5 5 5-5 5 5"/></svg>
@@ -1026,7 +1028,7 @@
       <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M14 8H2m5-5L2 8l5 5"/></svg>
       <span>Назад</span>
     </button>
-    <div class="sigil-viewer-stage" data-sigil-stage data-sigil-model="assets/art/hero-sigil.glb?v=2" data-sigil-backup="assets/art/hero-sigil-data.js" role="group" tabindex="0" aria-label="Сигил. Поворачивайте модель перетаскиванием или клавишами со стрелками.">
+    <div class="sigil-viewer-stage" data-sigil-stage role="group" tabindex="0" aria-label="Сигил. Поворачивайте модель перетаскиванием или клавишами со стрелками.">
       <img src="assets/art/sigil-thorn-halo.webp" width="880" height="880" alt="" loading="lazy" decoding="async">
       <canvas data-sigil-canvas aria-hidden="true"></canvas>
       <canvas data-sigil-fallback width="768" height="768" aria-hidden="true"></canvas>
