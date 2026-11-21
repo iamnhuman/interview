@@ -16,6 +16,7 @@ const mime = new Map([
   [".jpg", "image/jpeg"],
   [".png", "image/png"],
   [".webp", "image/webp"],
+  [".glb", "model/gltf-binary"],
   [".svg", "image/svg+xml"],
   [".pdf", "application/pdf"],
   [".mp3", "audio/mpeg"],

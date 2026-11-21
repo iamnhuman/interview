@@ -80,6 +80,9 @@ function initDisplaySettings() {
   initDisplaySwitch("artist-style", "quoted", "bold", (style, control) => {
     control.title = style === "quoted" ? "Скрыть кавычки" : "Показать кавычки";
   });
+  initDisplaySwitch("question-numbers", "shown", "hidden", (value, control) => {
+    control.title = value === "shown" ? "Скрыть номера на шкале" : "Показать номера на шкале";
+  });
 }
 
 // Keep artist typography in excerpts while leaving links and other interactive markup in the article.
@@ -90,48 +93,6 @@ function copyReadingText(target, source) {
     element.replaceWith(...element.childNodes);
   }
   target.replaceChildren(...copy.childNodes);
-}
-
-function initCoverMotion() {
-  const cover = document.querySelector(".cover-heading");
-  const reduced = matchMedia("(prefers-reduced-motion: reduce)");
-  let frame = 0;
-  let visible = true;
-  let pointerX = 0;
-  let pointerY = 0;
-
-  function update() {
-    frame = 0;
-    const bounds = cover.getBoundingClientRect();
-    const phase = reduced.matches ? 0 : Math.max(0, Math.min(1, -bounds.top / Math.max(1, bounds.height)));
-    const x = reduced.matches ? 0 : pointerX;
-    const y = reduced.matches ? 0 : pointerY;
-    cover.style.setProperty("--cover-turn", `${-8 + x * 13 + phase * 28}deg`);
-    cover.style.setProperty("--cover-lean", `${x * 20}deg`);
-    cover.style.setProperty("--cover-drift", `${y * 5 + phase * 12}px`);
-  }
-
-  function schedule() {
-    if (!frame && visible) frame = window.requestAnimationFrame(update);
-  }
-
-  cover.addEventListener("pointermove", (event) => {
-    if (reduced.matches || event.pointerType === "touch") return;
-    const bounds = cover.getBoundingClientRect();
-    pointerX = Math.max(-1, Math.min(1, (event.clientX - bounds.left) / bounds.width * 2 - 1));
-    pointerY = Math.max(-1, Math.min(1, (event.clientY - bounds.top) / bounds.height * 2 - 1));
-    schedule();
-  });
-  cover.addEventListener("pointerleave", () => { pointerX = 0; pointerY = 0; schedule(); });
-  const visibility = new IntersectionObserver(([entry]) => {
-    visible = entry.isIntersecting;
-    if (visible) schedule();
-  });
-  visibility.observe(cover);
-  window.addEventListener("scroll", schedule, { passive: true });
-  window.addEventListener("resize", schedule);
-  reduced.addEventListener("change", schedule);
-  schedule();
 }
 
 function positionOnTimeline(stops, scrollTop) {
@@ -162,15 +123,15 @@ function initReadingPosition() {
   const cover = document.getElementById("start");
   const end = document.getElementById("end");
   const sections = [{
-    id: cover.id, label: "Начало интервью",
-    sigil: cover.querySelector(".heading-sigil").getAttribute("src"),
+    id: cover.id, label: "Начало интервью", marker: "↓",
+    sigil: cover.querySelector(".heading-sigil img").getAttribute("src"),
   }, ...questions.map((question, index) => ({
     id: question.id, label: `Вопрос ${index + 1} из ${questions.length}`,
     number: `${String(index + 1).padStart(2, "0")} / ${questions.length}`,
     copy: question.querySelector(".question-copy"),
     sigil: questionSigilSource(index),
   })), {
-    id: end.id, label: end.getAttribute("aria-label"),
+    id: end.id, label: end.getAttribute("aria-label"), marker: "↑",
     sigil: end.querySelector(".footer-sigil").getAttribute("src"),
   }];
   const jumpList = navigation.querySelector("[data-question-jumps]");
@@ -247,6 +208,11 @@ function initReadingPosition() {
       link.id = `jump-${section.id}`;
       link.setAttribute("aria-labelledby", `${link.id} ${section.copy.id}`);
     }
+    const marker = document.createElement("span");
+    marker.className = "question-jump-number";
+    marker.textContent = section.marker ?? String(index);
+    marker.setAttribute("aria-hidden", "true");
+    link.append(marker);
     link.tabIndex = index === 0 ? 0 : -1;
     link.addEventListener("pointerenter", () => showPreview(index));
     link.addEventListener("pointerleave", () => {
@@ -274,10 +240,12 @@ function initReadingPosition() {
     const extent = scrollExtent();
     const offset = parseFloat(getComputedStyle(questions[0]).scrollMarginTop) || 0;
     stops = [0, ...questions.map(question => Math.max(0, Math.min(extent, question.getBoundingClientRect().top + window.scrollY - offset))), extent];
-    const travel = Math.max(0, rail.clientHeight - thumb.offsetHeight);
+    const thumbHeight = thumb.offsetHeight;
+    const travel = Math.max(0, rail.clientHeight - thumbHeight);
     const interval = travel / (stops.length - 1);
+    navigation.style.setProperty("--tick-interval", `${interval}px`);
     for (let i = 0; i < jumps.length; i += 1) {
-      jumps[i].style.top = `${thumb.offsetHeight / 2 + interval * i}px`;
+      jumps[i].style.top = `${thumbHeight / 2 + interval * i}px`;
       jumps[i].style.height = `${Math.max(1, interval)}px`;
     }
     dirty = false;
@@ -921,8 +889,6 @@ function initPhotoViewer() {
       event.preventDefault();
       trigger = link;
       const photo = link.querySelector("img");
-      if (link.dataset.mediaFrame) photoFrame.dataset.mediaFrame = link.dataset.mediaFrame;
-      else photoFrame.removeAttribute("data-media-frame");
       preview.sizes = photo.sizes;
       preview.srcset = photo.src === link.href ? photo.srcset : "";
       preview.src = link.href;
@@ -952,9 +918,76 @@ function initPhotoViewer() {
   });
 }
 
+function initToyotaProfiles() {
+  const profiles = document.getElementById("toyota-handles");
+  if (!profiles) return;
+
+  const avatarUpdates = Array.from(profiles.querySelectorAll("[data-profile-video]"), video => {
+    const avatar = video.parentElement;
+    const link = avatar.parentElement;
+    const picture = video.previousElementSibling;
+    const still = picture.getAttribute("src");
+    const animation = video.dataset.profileAnimation;
+    let hovered = false, focused = false, active = false, useAnimation = false;
+    let revision = 0;
+
+    function showAnimation() {
+      useAnimation = true;
+      video.pause();
+      delete video.dataset.profileActive;
+      if (active) picture.src = animation;
+    }
+
+    function update() {
+      const requested = !document.hidden && (hovered || focused);
+      if (requested === active) return;
+      active = requested;
+      const current = ++revision;
+      if (!active) {
+        delete video.dataset.profileActive;
+        video.pause();
+        if (!video.error && video.currentTime > 0) video.currentTime = 0;
+        if (useAnimation) picture.src = still;
+        return;
+      }
+      if (useAnimation) {
+        picture.src = animation;
+        return;
+      }
+      video.muted = true;
+      if (!video.getAttribute("src")) {
+        video.poster = still;
+        video.src = video.dataset.profileVideo;
+      }
+      function play() {
+        if (current !== revision || useAnimation) return;
+        video.dataset.profileActive = "";
+        video.play().catch(error => {
+          if (current === revision && error.name !== "AbortError") showAnimation();
+        });
+      }
+      if (video.seeking) video.addEventListener("seeked", play, { once: true });
+      else play();
+    }
+
+    link.addEventListener("pointerenter", event => {
+      if (event.pointerType !== "mouse" && event.pointerType !== "pen") return;
+      focused = false;
+      hovered = true;
+      update();
+    });
+    link.addEventListener("pointerleave", () => { hovered = false; update(); });
+    link.addEventListener("focus", () => { focused = link.matches(":focus-visible"); update(); });
+    link.addEventListener("blur", () => { focused = false; update(); });
+    video.addEventListener("error", showAnimation);
+    return update;
+  });
+  document.addEventListener("visibilitychange", () => avatarUpdates.forEach(update => update()));
+}
+
 initDisplaySettings();
+initToyotaProfiles();
 for (const player of document.querySelectorAll("[data-audio-player]")) enhanceAudio(player);
-initHeaderPlayback(document.querySelectorAll(".interview audio, .interview video"));
+initHeaderPlayback(document.querySelectorAll(".interview audio, .interview video:not([data-profile-video])"));
 initReadingPosition();
-initCoverMotion();
 initPhotoViewer();

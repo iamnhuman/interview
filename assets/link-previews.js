@@ -107,7 +107,7 @@
     let section;
     const sections = [];
     for (const block of article.querySelectorAll(".question-copy, .answer-copy p, figure, blockquote, figcaption")) {
-      if (block.matches(".question-copy")) {
+      if (block.matches(".question-copy") && !block.parentElement.hasAttribute("data-sources-continue")) {
         section = {
           id: block.id.replace(/-title$/, ""),
           links: [],
@@ -184,7 +184,9 @@
   }
 
   function showMedia(link, record) {
-    picture.dataset.layout = record.imageLayout || "";
+    const layout = record.imageLayout || "";
+    picture.dataset.layout = layout;
+    video.dataset.layout = layout;
     if (!record.video || !video.canPlayType("video/mp4")) {
       picture.hidden = !record.image;
       if (record.image) picture.src = record.animatedImage || record.image;
@@ -233,7 +235,7 @@
     const label = destination.getAttribute("type") === "application/pdf"
       ? destination.pathname.split("/").pop()
       : destination.getAttribute("href");
-    address.textContent = record.displayUrl || shortDomains.get(destination.hostname) || label;
+    address.textContent = record.previewAddress || record.displayUrl || shortDomains.get(destination.hostname) || label;
     setMeta(record.meta);
     title.textContent = record.title;
     description.textContent = record.description || "";

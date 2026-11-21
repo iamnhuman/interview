@@ -7,14 +7,160 @@ const trollnormisAvatar = {
   animatedImage: "assets/media/previews/trollnormis-avatar.webp"
 };
 
+const archivenormisAvatar = {
+  imageLayout: "avatar",
+  image: "assets/media/previews/archivenormis-avatar.jpg",
+  video: "assets/media/previews/archivenormis-avatar.mp4",
+  animatedImage: "assets/media/previews/archivenormis-avatar.webp"
+};
+
+const aginormisAvatar = {
+  imageLayout: "avatar",
+  image: "assets/media/previews/aginormis-avatar.jpg",
+  video: "assets/media/previews/aginormis-avatar.mp4",
+  animatedImage: "assets/media/previews/aginormis-avatar.webp"
+};
+
+const slopnormisAvatar = {
+  imageLayout: "avatar",
+  image: "assets/media/previews/slopnormis-avatar.jpg",
+  video: "assets/media/previews/slopnormis-avatar.mp4",
+  animatedImage: "assets/media/previews/slopnormis-avatar.webp"
+};
+
+const spamnormisCard = {
+  title: "spamnormis",
+  meta: "«Telegram»",
+  description: "Бесконечный поток ссылок и находок.",
+  imageLayout: "avatar",
+  image: "assets/link-thumbnails/25ca361f4746.jpg",
+  video: "assets/media/previews/spamnormis-avatar.mp4",
+  animatedImage: "assets/media/previews/spamnormis-avatar.webp"
+};
+
 // Link previews from the interview, Telegram publications, Open Graph and oEmbed.
 const linkCards = {
+  "https://t.me/addlist/gx2YCKe_ynxkODJi": {
+    "title": "папка normis",
+    "meta": "Папка в «Telegram»",
+    "description": "Каналы и группы Тойоты.",
+    "imageLayout": "avatar",
+    "image": "assets/media/previews/normis-folder-avatar.jpg",
+    "video": "assets/media/previews/normis-folder-avatar.mp4",
+    "animatedImage": "assets/media/previews/normis-folder-avatar.webp"
+  },
+  "https://t.me/hypernormis": {
+    "title": "hypernormis",
+    "meta": "«Telegram»",
+    "description": "Основной канал. Саунддизайн и экспериментальная музыка с разделами по жанрам.",
+    "imageLayout": "avatar",
+    "image": "assets/media/previews/hypernormis-avatar.jpg"
+  },
+  "https://t.me/spamnormis": spamnormisCard,
+  "http://t.me/spamnormis": spamnormisCard,
+  "https://t.me/subnormis": {
+    "title": "subnormis",
+    "meta": "«Telegram»",
+    "description": "Находки из мира дизайна и экспериментальной электроники.",
+    "imageLayout": "avatar",
+    "image": "assets/media/previews/subnormis-avatar.jpg",
+    "video": "assets/media/previews/subnormis-avatar.mp4",
+    "animatedImage": "assets/media/previews/subnormis-avatar.webp"
+  },
+  "https://t.me/slopnormis": {
+    "title": "slopnormis",
+    "meta": "«Telegram»",
+    "description": "Новости о новых моделях ИИ и материалы об акселерационизме.",
+    ...slopnormisAvatar
+  },
+  "https://t.me/aginormis": {
+    "title": "aginormis",
+    "meta": "«Telegram»",
+    "description": "Хайлайты из мира ИИ. Видеоклипы музыкантов, реклама и кино с использованием ИИ.",
+    ...aginormisAvatar
+  },
+  "https://t.me/aginormis/1363": {
+    "title": "новая волна ИИшников",
+    "displayUrl": "t.me/aginormis",
+    "meta": "aginormis · 20 окт. 2026 г.",
+    "description": "Заметка о визуальном тренде и подборка роликов из разных каналов.",
+    "imageLayout": "square",
+    "image": "assets/media/previews/post-aginormis-1363.jpg",
+    "video": "assets/media/previews/post-aginormis-1363.mp4"
+  },
+  "https://t.me/archivenormis": {
+    "title": "archivenormis",
+    "meta": "«Telegram»",
+    "description": "Архив от кино до репостов комментариев из музыкальных каналов.",
+    ...archivenormisAvatar
+  },
+  "https://t.me/archivenormis/5429/12636": {
+    "title": "Arca и SOPHIE",
+    "displayUrl": "t.me/archivenormis",
+    "meta": "Сын Люцифера · 24 июл. 2026 г.",
+    "description": "Пост о последнем треке с альбома Arca и его сходстве с музыкой SOPHIE.",
+    "imageLayout": "square",
+    "image": "assets/media/previews/post-archivenormis-12636.jpg"
+  },
+  "https://t.me/archivenormis/3766/12512": {
+    "title": "Frequent и Темный Принц",
+    "displayUrl": "t.me/archivenormis",
+    "meta": "archivenormis · 17 июл. 2026 г.",
+    "description": "Сравнение звучания Темного Принца со старыми треками Frequent на SoundCloud.",
+    "imageLayout": "avatar",
+    "image": "assets/media/previews/headroom-inc-avatar.jpg"
+  },
+  "https://t.me/archivenormis/3657": {
+    "title": "Zapret",
+    "displayUrl": "t.me/archivenormis",
+    "meta": "Тема в «Telegram»",
+    ...archivenormisAvatar
+  },
+  "https://t.me/trollnormis": {
+    "title": "trollnormis",
+    "meta": "«Telegram»",
+    "description": "Скандалы, интриги и расследования. Подборки о музыкальных журналистах по хештегам.",
+    ...trollnormisAvatar
+  },
+  "https://t.me/hatenormis": {
+    "title": "hatenormis",
+    "meta": "«Telegram»",
+    "description": "Борьба с неолуддитами, запрещенка и всякий хлам",
+    "imageLayout": "avatar",
+    "image": "assets/media/previews/hatenormis-avatar.jpg",
+    "video": "assets/media/previews/hatenormis-avatar.mp4",
+    "animatedImage": "assets/media/previews/hatenormis-avatar.webp"
+  },
+  "https://t.me/privatenormis": {
+    "title": "privatenormis",
+    "meta": "«Telegram»",
+    "description": "заметки про ИИ",
+    "imageLayout": "avatar",
+    "image": "assets/media/previews/privatenormis-avatar.jpg",
+    "video": "assets/media/previews/privatenormis-avatar.mp4",
+    "animatedImage": "assets/media/previews/privatenormis-avatar.webp"
+  },
+  "https://t.me/stocknormis": {
+    "title": "stocknormis",
+    "meta": "«Telegram»",
+    "description": "Тесты нейросетей и материалы для ссылок из основных каналов.",
+    "imageLayout": "avatar",
+    "image": "assets/media/previews/stocknormis-avatar.jpg"
+  },
   "https://fict.info/": {
     "title": "First International Church of Toyota",
     "meta": "fict.info",
     "description": "Los Angeles. Las Vegas. Tokyo.",
     "imageLayout": "square",
     "image": "assets/link-thumbnails/fict-info.png"
+  },
+  "https://t.me/thequietplace/8490": {
+    "title": "Анна Виленская о тембральном слухе",
+    "displayUrl": "t.me/thequietplace",
+    "meta": "Тихое Место · 3 мар. 2024 г.",
+    "description": "Фрагмент интервью о том, чем тембральный слух отличается от гармонического.",
+    "imageLayout": "square",
+    "image": "assets/media/previews/post-thequietplace-8490.jpg"
   },
   "https://t.me/thequietplace/9417": {
     "title": "S280F",
@@ -30,21 +176,33 @@ const linkCards = {
     "imageLayout": "square",
     "image": "assets/link-thumbnails/hijinx-ccru-graph.jpg"
   },
+  "https://t.me/slopnormis/942/3538": {
+    "title": "MyHooD_Recordzz",
+    "displayUrl": "t.me/slopnormis",
+    "meta": "slopnormis · 19 окт. 2026 г.",
+    "description": "Реплика о конкурсе с призовым фондом 220 USDT.",
+    ...slopnormisAvatar
+  },
+  "https://t.me/slopnormis/942/3578": {
+    "title": "moriartymega",
+    "displayUrl": "t.me/slopnormis",
+    "meta": "slopnormis · 28 окт. 2026 г.",
+    "description": "Реакция на ИИ-контент канала moriartymega.",
+    ...slopnormisAvatar
+  },
   "https://t.me/slopnormis/2737/3590": {
     "title": "Nick Land",
     "displayUrl": "t.me/slop",
     "meta": "slopnormis · 2 нояб. 2026 г.",
     "description": "Запись разговора с Ником Ландом об искусственном интеллекте.",
-    "imageLayout": "avatar",
-    "image": "assets/media/previews/slopnormis-avatar.jpg"
+    ...slopnormisAvatar
   },
   "https://t.me/slopnormis/2737/3642": {
     "title": "Palantir",
     "displayUrl": "t.me/slop",
     "meta": "slopnormis · 16 нояб. 2026 г.",
     "description": "Разговор о будущем ИИ и о Хайдеггере.",
-    "imageLayout": "avatar",
-    "image": "assets/media/previews/slopnormis-avatar.jpg"
+    ...slopnormisAvatar
   },
   "https://t.me/hypernormis/3/4413": {
     "title": "Интервью 011668",
@@ -83,6 +241,20 @@ const linkCards = {
     "imageLayout": "square",
     "image": "assets/link-thumbnails/tropical-interface-vk.jpg"
   },
+  "https://t.me/trollnormis/4134": {
+    "title": "Виленская",
+    "displayUrl": "t.me/trollnormis",
+    "meta": "trollnormis · 1 сент. 2026 г.",
+    "description": "Ироничная подборка ссылок на интервью и материалы об Анне Виленской.",
+    ...trollnormisAvatar
+  },
+  "https://t.me/trollnormis/140": {
+    "title": "Многоножка",
+    "displayUrl": "t.me/trollnormis",
+    "meta": "Сын Люцифера · 13 янв. 2025 г.",
+    "description": "подборка различных старых комментов",
+    ...trollnormisAvatar
+  },
   "https://t.me/trollnormis/4142": {
     "title": "SCP",
     "displayUrl": "t.me/trollnormis",
@@ -91,19 +263,29 @@ const linkCards = {
     ...trollnormisAvatar
   },
   "https://t.me/trollnormis/4041": {
-    "title": "Когда дали бесплатные кредиты в Seedance 2",
+    "title": "Seedance Редькин",
     "displayUrl": "t.me/trollnormis",
     "meta": "trollnormis · 7 июня 2026 г.",
-    "description": "Видео с тегом #редькин · 0:14",
+    "description": "когда дали бесплатные кредиты в Seedance 2",
     "imageLayout": "square",
-    "image": "assets/media/previews/post-trollnormis-4041.jpg"
+    "image": "assets/media/previews/post-trollnormis-4041.jpg",
+    "video": "assets/media/previews/post-trollnormis-4041.mp4"
+  },
+  "https://t.me/archivenormis/5429/14801": {
+    "title": "Сир Сойлок — новый клип",
+    "displayUrl": "t.me/archivenormis",
+    "meta": "а можно потанцевальней? · 28 окт. 2026 г.",
+    "description": "Пост о новом клипе и недавней EP артиста. Видео · 0:25",
+    "image": "assets/media/previews/post-archivenormis-14801.jpg",
+    "video": "assets/media/previews/post-archivenormis-14801.mp4"
   },
   "https://t.me/archivenormis/5429/14918": {
     "title": "нишевый Редькин",
     "displayUrl": "t.me/archivenormis",
     "meta": "archivenormis · 6 нояб. 2026 г.",
     "description": "Видео в ответ на реплику «нишевый» · 0:20",
-    "image": "assets/media/previews/post-archivenormis-14918.jpg"
+    "image": "assets/media/previews/post-archivenormis-14918.jpg",
+    "video": "assets/media/previews/post-archivenormis-14918.mp4"
   },
   "https://t.me/brokendance": {
     "title": "Сломанные пляски",
@@ -125,6 +307,18 @@ const linkCards = {
     "description": "Участница 4LL",
     "imageLayout": "avatar",
     "image": "assets/media/previews/salibi-avatar.jpg"
+  },
+  "http://t.me/salibium/2251?comment=3326": {
+    "title": "Комментарий к публикации salibi",
+    "meta": "«Telegram»",
+    "imageLayout": "avatar",
+    "image": "assets/media/previews/salibium-avatar.jpg"
+  },
+  "http://t.me/ushko2000/3386?comment=19246": {
+    "title": "ᎽᗯᏦᗝ vol.2",
+    "meta": "Комментарий в «Telegram»",
+    "imageLayout": "avatar",
+    "image": "assets/media/previews/ushko2000-avatar.jpg"
   },
   "http://t.me/dailyslime": {
     "title": "Daily Slime",
@@ -178,8 +372,7 @@ const linkCards = {
     "displayUrl": "t.me/archivenormis",
     "meta": "Публикация · 19 нояб. 2025 г.",
     "description": "спор с подписчиком конада",
-    "imageLayout": "avatar",
-    "image": "assets/media/previews/archivenormis-avatar.jpg"
+    ...archivenormisAvatar
   },
   "https://t.me/vasily_konad": {
     "title": "Вася Конад",
@@ -191,9 +384,9 @@ const linkCards = {
   "http://vk.com/wall-27403455_245963": {
     "title": "Hard Dubstep",
     "meta": "ВКонтакте · Запись",
-    "description": "Запись на стене сообщества «BASS † SQUAD».",
-    "imageLayout": "avatar",
-    "image": "assets/link-thumbnails/bass-squad-vk.jpg"
+    "description": "Запись на стене бывшего паблика «Hard Dubstep».",
+    "imageLayout": "square",
+    "image": "assets/link-thumbnails/hard-dubstep-legion.png"
   },
   "https://vk.ru/thebassland": {
     "title": "BASSLAND",
@@ -202,12 +395,25 @@ const linkCards = {
     "imageLayout": "avatar",
     "image": "assets/link-thumbnails/bassland-vk.jpg"
   },
+  "https://vk.ru/zerojke": {
+    "title": "Денис Жданов",
+    "meta": "ВКонтакте · Профиль",
+    "displayUrl": "vk.ru/zerojke",
+    "imageLayout": "avatar",
+    "image": "assets/link-thumbnails/denis-zhdanov.jpg"
+  },
   "https://vk.ru/garudclub": {
     "title": "Гнездо Гаруда",
     "meta": "ВКонтакте · Сообщество",
     "description": "Я - Гаруд. Добро пожаловать в мое «Гнездо».",
     "imageLayout": "avatar",
     "image": "assets/link-thumbnails/garuda-vk.jpg"
+  },
+  "https://owsla.com/release/teddy-killerz-teddy-massacre/": {
+    "title": "Teddy Killerz — Teddy Massacre",
+    "meta": "OWSLA · 12 нояб. 2013 г.",
+    "imageLayout": "square",
+    "image": "assets/link-thumbnails/owsla-logo.png"
   },
   "https://www.youtube.com/watch?v=Iy6pJsx--tI": {
     "title": "Gypsyhook",
@@ -218,6 +424,7 @@ const linkCards = {
   "https://youtu.be/8sgu7yz73yU?si=r7nY01W7yejDMgi7&t=4374": {
     "title": "ИЗОБРЕТАЕМ НОВЫЕ НОТЫ. Пушной, Семихатов и Сурдин",
     "meta": "YouTube · Вселенная Плюс · 1:12:54",
+    "description": "ссылка на отрывок из выпуска",
     "image": "assets/link-thumbnails/izobretaem-novye-noty.jpg"
   },
   "https://www.youtube.com/watch?v=WSeNSzJ2-Jw": {
@@ -254,9 +461,13 @@ const linkCards = {
     "description": "соц. сети: linktr.ee/toyotamuzik сотрудничество: @idontbelieveinhumanrights",
     "image": "assets/link-thumbnails/81e7412b413c.jpg"
   },
-  "https://soundcloud.com/4_ll": {
-    "title": "4LL",
-    "image": "assets/link-thumbnails/cb0f9bba00a8.jpg"
+  "https://t.me/hypernormis/1/4749": {
+    "title": "Новая EP 4LL",
+    "displayUrl": "t.me/hypernormis",
+    "meta": "antinormis 🚷 · 13 дек. 2025 г.",
+    "description": "Видео из поста о релизе · 0:26",
+    "image": "assets/media/previews/post-hypernormis-4749.jpg",
+    "video": "assets/media/previews/post-hypernormis-4749.mp4"
   },
   "https://bluenoise1.bandcamp.com/album/organa": {
     "title": "Blue Noise - Organa LP",
@@ -268,12 +479,33 @@ const linkCards = {
     "description": "Музыкальный блог и серия миксов VK: vk.com/etherealgrooves SoundCloud: https://soundcloud.com/etherealgroovesofficial eternal love",
     "image": "assets/link-thumbnails/4b3bf2ddefff.jpg"
   },
+  "https://t.me/egrooves/10103": {
+    "title": "Антон Савенко — ethereal selection",
+    "displayUrl": "t.me/egrooves",
+    "meta": "ethereal grooves · 13 сент. 2025 г.",
+    "description": "Плейлист Антона Савенко с любимой классикой и новым треком Iglooghost.",
+    "imageLayout": "square",
+    "image": "assets/media/previews/post-egrooves-10103.jpg"
+  },
+  "https://t.me/egrooves/10648": {
+    "title": "Daily Slime — ethereal selection",
+    "displayUrl": "t.me/egrooves",
+    "meta": "ethereal grooves · 25 окт. 2025 г.",
+    "description": "Мультижанровый плейлист, который Виталя Daily Slime собрал для ethereal selection.",
+    "imageLayout": "square",
+    "image": "assets/media/previews/post-egrooves-10648.jpg"
+  },
   "assets/media/raiika-vs-slava-marlow.pdf": {
     "title": "Научная формализация «продвинутости» музыки",
     "meta": "PDF · 6 страниц",
     "description": "Сравнение музыки Raiika, Slava Marlow и Max Martin по тембру, ритму и форме.",
     "image": "assets/link-thumbnails/raiika-vs-slava-marlow.png",
     "imageLayout": "page"
+  },
+  "https://www.youtube.com/watch?v=bBsShBdDuxk": {
+    "title": "Дора | ASMR",
+    "meta": "YouTube · goshakartsev",
+    "image": "assets/link-thumbnails/dora-asmr.jpg"
   },
   "https://www.youtube.com/watch?v=d9t0eXNnT1c": {
     "title": "Vitman The Prince - Цветы",
@@ -286,14 +518,15 @@ const linkCards = {
     "image": "assets/link-thumbnails/7d23eef4334d.jpg"
   },
   "https://t.me/archivenormis/5429/14893": {
-    "title": "Редькин Seedance",
+    "title": "Редькин vs Gundam",
     "displayUrl": "t.me/archivenormis",
     "meta": "Публикация · 4 нояб. 2026 г.",
     "description": "Видео · 0:21",
-    "image": "assets/media/previews/post-archivenormis-14893.jpg"
+    "image": "assets/media/previews/post-archivenormis-14893.jpg",
+    "video": "assets/media/previews/post-archivenormis-14893.mp4"
   },
   "https://www.youtube.com/watch?v=uBeD_bZPYPU": {
-    "title": "Hot Pursuit - 50 Caliber (Bassfunk Recordings)",
+    "title": "Hot Pursuit - 50 Caliber",
     "description": "NeurofunkGrid",
     "imageLayout": "square-fill",
     "image": "assets/link-thumbnails/b3b5eebcd4dc.jpg"
@@ -301,14 +534,16 @@ const linkCards = {
   "https://iamnhuman.github.io/fakeboys/": {
     "title": "Калькулятор нормиса",
     "description": "Ты слышишь ноты. Но слышишь ли спектр? Проверь себя: 8 вопросов, психофизика слуха и манифест андерграунда.",
+    "imageLayout": "left",
     "image": "assets/link-thumbnails/84eed4934ad9.jpg"
   },
-  "http://t.me/spamnormis": {
-    "title": "spamnormis",
-    "imageLayout": "avatar",
-    "image": "assets/link-thumbnails/25ca361f4746.jpg",
-    "video": "assets/media/previews/spamnormis-avatar.mp4",
-    "animatedImage": "assets/media/previews/spamnormis-avatar.webp"
+  "https://t.me/dailyslime/15038": {
+    "title": "Платина — новый Пелевин",
+    "displayUrl": "t.me/dailyslime",
+    "meta": "Daily Slime · 18 апр. 2025 г.",
+    "description": "Автор сравнивает эстетику Платины с Пелевиным и противопоставляет её альбому I AM MUSIC.",
+    "imageLayout": "square",
+    "image": "assets/media/previews/post-dailyslime-15038.jpg"
   },
   "https://t.me/warhol/14775": {
     "title": "Полья",
@@ -332,6 +567,43 @@ const linkCards = {
     "meta": "Aesthetics Wiki",
     "imageLayout": "square",
     "image": "assets/link-thumbnails/necrotrap-target-practice.webp"
+  },
+  "https://t.me/makraaaa/2587": {
+    "title": "Lucy Bedroque — c",
+    "displayUrl": "t.me/makraaaa",
+    "meta": "MAKRA · 29 сент. 2026 г.",
+    "description": "Рецензия на альбом. Оценка 6/10, из треков автор выделяет Speed demon.",
+    "imageLayout": "square",
+    "image": "assets/media/previews/post-makraaaa-2587.jpg"
+  },
+  "https://t.me/copilotbukakke/1561": {
+    "title": "Fred Again",
+    "displayUrl": "t.me/copilotbukakke",
+    "meta": "Nikita Zabelin · 30 июл. 2025 г.",
+    "description": "Фрэд Эген такое говно...",
+    "imageLayout": "avatar",
+    "image": "assets/media/previews/copilotbukakke-avatar.jpg"
+  },
+  "https://t.me/mm44turboshitpostmachine/33717": {
+    "title": "FORTUNA 812",
+    "displayUrl": "t.me/mm44turboshitpostmachine",
+    "meta": "mm44 turbo shitpost machine · 28 авг. 2026 г.",
+    "description": "топ реперов от порнорэпа",
+    "imageLayout": "avatar",
+    "image": "assets/media/previews/mm44turboshitpostmachine-avatar.jpg"
+  },
+  "https://t.me/mainstreamusic/15479": {
+    "title": "Тёмный Принц",
+    "displayUrl": "t.me/mainstreamusic",
+    "meta": "Мейнстрим Мьюзик · 21 нояб. 2026 г.",
+    "description": "в прошлом году победил тёмный принц если что",
+    "imageLayout": "avatar",
+    "image": "assets/media/previews/mainstreamusic-avatar.jpg"
+  },
+  "https://youtu.be/qP0fizk1zrE?si=6IkS6tQk19oAG_qy": {
+    "title": "madk1d, тёмный принц, FORTUNA 812",
+    "meta": "YouTube · ВПИСКА",
+    "image": "assets/link-thumbnails/madk1d-vpiska.jpg"
   },
   "https://t.me/antihauntologyhauntologyclub/885": {
     "title": "anti-hauntology club",
@@ -358,7 +630,8 @@ const linkCards = {
     "meta": "Публикация · 15 нояб. 2026 г.",
     "description": "Видео · 0:18",
     "imageLayout": "square",
-    "image": "assets/media/previews/post-archivenormis-15088.jpg"
+    "image": "assets/media/previews/post-archivenormis-15088.jpg",
+    "video": "assets/media/previews/post-archivenormis-15088.mp4"
   },
   "https://www.instagram.com/p/DehP5BAp2lU/": {
     "title": "FITNESSS — F11 x PASSAGE",
@@ -390,6 +663,7 @@ const linkCards = {
   },
   "https://www.reddit.com/r/audioengineering/comments/11wte7t/100_gecs_mastering_question/": {
     "title": "100 Gecs mastering question",
+    "previewAddress": "https://www.reddit.com/r/audioengineering/comments/11wte7t/100_gecs_mastering_question",
     "meta": "Reddit · r/audioengineering",
     "description": "Автор измерил громкость одного трека с CD — около −4 LUFS. Почему при этом пиковый уровень достигает +1 дБ?",
     "imageLayout": "avatar",
@@ -400,8 +674,7 @@ const linkCards = {
     "displayUrl": "t.me/archivenormis",
     "meta": "Публикация · 10 июл. 2026 г.",
     "description": "Автору больше всего понравилось интро альбома Темного Принца. Он разбирает тексты и спорит с тем, что их называют футуристичными.",
-    "imageLayout": "avatar",
-    "image": "assets/media/previews/archivenormis-avatar.jpg"
+    ...archivenormisAvatar
   },
   "https://open.spotify.com/track/2D94XNl9XV05mxKfG9wFst": {
     "title": "Arca - Throb",
