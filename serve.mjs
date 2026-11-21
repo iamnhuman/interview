@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 
 const entry = fileURLToPath(new URL("./index.html", import.meta.url));
 const assets = await realpath(fileURLToPath(new URL("./assets/", import.meta.url)));
+const questionPages = fileURLToPath(new URL("./q/", import.meta.url));
 const host = "127.0.0.1";
 const port = Number(process.argv[2] || 4173);
 const mime = new Map([
@@ -43,13 +44,15 @@ createServer(async (request, response) => {
   try {
     const pathname = decodeURIComponent(new URL(request.url, "http://localhost").pathname);
     const isEntry = pathname === "/" || pathname === "/index.html";
-    if (!isEntry && !pathname.startsWith("/assets/")) {
+    const question = pathname.match(/^\/q\/(\d+)\/(?:index\.html)?$/)?.[1];
+    const page = isEntry ? entry : question ? join(questionPages, question, "index.html") : null;
+    if (!page && !pathname.startsWith("/assets/")) {
       response.writeHead(404).end();
       return;
     }
-    const file = await realpath(isEntry ? entry : join(assets, pathname.slice("/assets/".length)));
+    const file = await realpath(page ?? join(assets, pathname.slice("/assets/".length)));
     const type = mime.get(extname(file));
-    const publicPath = isEntry ? file === entry : file.startsWith(assets + sep);
+    const publicPath = page ? file === page : file.startsWith(assets + sep);
     if (!publicPath || !type) {
       response.writeHead(404).end();
       return;

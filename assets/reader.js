@@ -187,7 +187,7 @@ function initReadingPosition() {
     previewNumber.hidden = !section.number;
     if (section.copy) copyReadingText(previewText, section.copy);
     else previewText.textContent = section.label;
-    previewAddress.textContent = jumps[index].getAttribute("href");
+    previewAddress.textContent = section.copy ? jumps[index].href : jumps[index].getAttribute("href");
     previewSigil.src = section.sigil;
     preview.hidden = false;
     placePreview();
@@ -202,7 +202,8 @@ function initReadingPosition() {
   const jumps = sections.map((section, index) => {
     const link = document.createElement("a");
     link.className = "question-jump";
-    link.href = `#${section.id}`;
+    const fragment = `#${section.id}`;
+    link.href = section.copy ? `q/${section.id.slice("question-".length)}/` : fragment;
     link.setAttribute("aria-label", section.label);
     if (section.copy) {
       link.id = `jump-${section.id}`;
@@ -220,7 +221,13 @@ function initReadingPosition() {
     });
     link.addEventListener("focus", () => { setTabStop(index); showPreview(index); });
     link.addEventListener("blur", hidePreview);
-    link.addEventListener("click", hidePreview);
+    link.addEventListener("click", event => {
+      hidePreview();
+      if (!section.copy || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      event.preventDefault();
+      if (window.location.hash === fragment) document.getElementById(section.id).scrollIntoView();
+      else window.location.hash = fragment;
+    });
     link.addEventListener("keydown", (event) => {
       if (event.key === "Escape") { hidePreview(); return; }
       const next = { ArrowUp: index - 1, ArrowDown: index + 1, Home: 0, End: sections.length - 1 }[event.key];

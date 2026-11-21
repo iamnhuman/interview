@@ -18,16 +18,16 @@
   <meta name="theme-color" content="#000000">
   <link rel="icon" type="image/webp" href="assets/art/sigil-fractured-orbit.webp">
   <link rel="stylesheet" href="assets/fonts/fonts.css">
-  <link rel="stylesheet" href="assets/styles.css?v=5">
+  <link rel="stylesheet" href="assets/styles.css?v=6">
   <script src="assets/sound-data.js" defer></script>
   <script src="assets/question-sigils.js" defer></script>
   <script src="assets/media-controls.js" defer></script>
-  <script src="assets/reader.js?v=4" defer></script>
+  <script src="assets/reader.js?v=6" defer></script>
   <script src="assets/video-player.js" defer></script>
   <script src="assets/hero-cloth.js" defer></script>
   <script src="assets/vendor/three-r170.js?v=2" defer></script>
   <script src="assets/sigil-software.js" defer></script>
-  <script src="assets/sigil.js?v=5" defer></script>
+  <script src="assets/sigil.js?v=6" defer></script>
   <script src="assets/link-data.js" defer></script>
   <script src="assets/link-previews.js" defer></script>
 </head>
@@ -84,7 +84,7 @@
       <div class="cover-heading">
         <h1 id="title"><span class="cover-kicker">Как понять</span> <span class="cover-word">Неограйм</span></h1>
         <button class="heading-sigil" type="button" data-sigil-trigger aria-haspopup="dialog" aria-controls="sigil-viewer" aria-label="Открыть 3D-модель сигила">
-          <img src="assets/art/sigil-thorn-halo.webp" width="880" height="880" alt="" decoding="async">
+          <img src="assets/art/sigil-thorn-halo.webp" width="880" height="880" alt="" decoding="async" draggable="false">
         </button>
       </div>
       <div class="cover-composition">
@@ -309,6 +309,11 @@
             <p>Ну у меня цель скорее его собирать. Чтобы освещать, надо платить нормисам и вкладывать в рекламу) Я максимум в комментах могу поорать, когда настроение есть — может, это тоже небольшой вклад) Да и <a href="https://t.me/trollnormis/4041" target="_blank" rel="noopener noreferrer">Редькин</a> уже давно знает про мою любовь к нему и не реагирует. У меня по 10 акков с «тойотами» в бане у них во всех группах)</p>
           </div>
         </div>
+        <div class="turn answer">
+          <div class="turn-copy answer-copy">
+            <p>Раньше я <a href="https://t.me/trollnormis/140" target="_blank" rel="noopener noreferrer">жёстче их заёбывал</a>, а сейчас уже не так весело) Но всё это в игровой форме. Лично к этим людям не питаю особого негатива, только в формате игры вокруг поиска крутого контента.</p>
+          </div>
+        </div>
         <section class="toyota-profiles" id="toyota-handles" aria-label="Аккаунты Тойоты в Telegram">
           <ul class="toyota-profile-list" role="list">
             <li style="--profile-x: 23%; --profile-y: 7%">
@@ -413,11 +418,6 @@
             </li>
           </ul>
         </section>
-        <div class="turn answer">
-          <div class="turn-copy answer-copy">
-            <p>Раньше я <a href="https://t.me/trollnormis/140" target="_blank" rel="noopener noreferrer">жёстче их заёбывал</a>, а сейчас уже не так весело) Но всё это в игровой форме. Лично к этим людям не питаю особого негатива, только в формате игры вокруг поиска крутого контента.</p>
-          </div>
-        </div>
         <div class="turn question" id="question-11" tabindex="-1">
           <h2 class="turn-copy question-copy" id="question-11-title">А кого ты сейчас назвал бы своими самыми любимыми каналами/авторами и наоборот, в ком сильно разочаровался?</h2>
         </div>
@@ -1020,12 +1020,13 @@
       </figure>
     </div>
   </dialog>
+  <div class="sigil-hover" data-sigil-hover aria-hidden="true" hidden></div>
   <dialog class="lightbox sigil-viewer" id="sigil-viewer" aria-label="3D-модель сигила">
     <button class="lightbox-close reading-link" type="button" data-sigil-close autofocus>
       <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M14 8H2m5-5L2 8l5 5"/></svg>
       <span>Назад</span>
     </button>
-    <div class="sigil-viewer-stage" data-sigil-stage data-sigil-model="assets/art/hero-sigil.glb?v=2" data-sigil-frames="assets/art/hero-sigil-motion.webp?v=4" role="group" tabindex="0" aria-label="Сигил. Поворачивайте модель перетаскиванием или клавишами со стрелками.">
+    <div class="sigil-viewer-stage" data-sigil-stage data-sigil-model="assets/art/hero-sigil.glb?v=2" data-sigil-backup="assets/art/hero-sigil-data.js" role="group" tabindex="0" aria-label="Сигил. Поворачивайте модель перетаскиванием или клавишами со стрелками.">
       <img src="assets/art/sigil-thorn-halo.webp" width="880" height="880" alt="" loading="lazy" decoding="async">
       <canvas data-sigil-canvas aria-hidden="true"></canvas>
       <canvas data-sigil-fallback width="768" height="768" aria-hidden="true"></canvas>

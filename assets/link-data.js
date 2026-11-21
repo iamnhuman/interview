@@ -577,7 +577,7 @@ const linkCards = {
     "image": "assets/media/previews/post-makraaaa-2587.jpg"
   },
   "https://t.me/copilotbukakke/1561": {
-    "title": "Fred Again",
+    "title": "Zabelin про Fred Again",
     "displayUrl": "t.me/copilotbukakke",
     "meta": "Nikita Zabelin · 30 июл. 2025 г.",
     "description": "Фрэд Эген такое говно...",
