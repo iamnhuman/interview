@@ -454,10 +454,11 @@ const linkCards = {
     "description": "Официальная аудиоверсия трека.",
     "image": "assets/link-thumbnails/skrillex-scary-monsters.jpg"
   },
-  "https://t.me/wronggateway502": {
-    "title": "wrong/gateway .₅₀₂",
-    "description": "нᴇᴨᴩᴀʙиᴧьный (нᴇʙᴇᴩный) ɯᴧюɜ - ⫿⫿⫿⫿⫿⫿⫿⫿ дᴇйᴄᴛʙующий ᴋᴀᴋ ɯᴧюɜ иᴧи ⫿⫿⫿⫿⫿⫿⫿⫿⫿⫿⫿ ᴨᴏᴧучиᴧ нᴇдᴇйᴄᴛʙиᴛᴇᴧьный ᴏᴛʙᴇᴛ ᴏᴛ ʙыɯᴇᴄᴛᴏящᴇᴦᴏ ⫿⫿⫿⫿⫿⫿⫿⫿⫿⫿⫿⫿⫿. dm: @jumpk1d2ooo",
-    "image": "assets/link-thumbnails/8947b94b8170.jpg"
+  "https://t.me/uncultura1": {
+    "title": "uncultural forcing 🔇",
+    "description": ">muzyka >шитпост",
+    "imageLayout": "avatar",
+    "image": "assets/link-thumbnails/uncultura1.jpg"
   },
   "https://t.me/archivenormis/818/8256": {
     "title": "list of minimixes",

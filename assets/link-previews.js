@@ -338,7 +338,7 @@
     }
     hide();
   }, { preservePosition: true });
-  const links = document.querySelectorAll("a[href]:not([download], [data-photo])");
+  const links = document.querySelectorAll("a[href]:not([download], [data-photo], .wordmark)");
   for (const link of links) {
     const group = link.closest("[data-preview-image]");
     const record = sources.get(link)?.record || linkCards[link.getAttribute("href")] || (group && {
