@@ -77,6 +77,7 @@ html.has-sigil-scroll::-webkit-scrollbar, html.has-sigil-scroll body::-webkit-sc
 
 .sigil-scroll {
   --tick-space: 1.125rem;
+  --tick-width: .5rem;
   --tick-highlight-width: .85rem;
   --preview-left: calc(var(--wrap-edge) + var(--tick-space) + .25rem);
   position: fixed;
@@ -112,13 +113,14 @@ html.has-sigil-scroll::-webkit-scrollbar, html.has-sigil-scroll body::-webkit-sc
 /* Extend the links' hit area to the left while their marks sit on the masthead edge. */
 .question-jumps { position: absolute; inset: 0 auto 0 -1rem; width: calc(1rem + var(--tick-space)); }
 .question-jump { position: absolute; top: 0; left: 0; display: flex; align-items: center; width: 100%; padding-left: 1rem; transform: translateY(-50%); }
-.question-jump::before { content: ""; width: .5rem; height: 1px; background: var(--muted); }
+.question-jump::before { content: ""; width: var(--tick-width); height: 1px; background: var(--muted); }
 .question-jump:is(:hover, :focus-visible)::before,
 .scroll-track:focus-visible + .question-jumps .question-jump[aria-current="location"]::before { width: var(--tick-highlight-width); background: var(--ink); }
 .question-jump[aria-current="location"]::before { background: var(--metal); }
 .question-jump:has(.question-jump-arrow) { text-decoration: none; }
 .question-jump:has(.question-jump-arrow)::before { content: none; }
 .question-jump-arrow {
+  display: flex; flex: none; justify-content: center; inline-size: var(--tick-width);
   color: var(--muted);
   font: 500 min(.8125rem, var(--tick-interval, .8125rem))/1 var(--body);
   pointer-events: none;
@@ -528,18 +530,13 @@ a.source-site:focus-visible::before { outline: 1px solid var(--metal); outline-o
 }
 
 .toyota-profiles {
-  --profile-avatar-size: clamp(3rem, 18.5cqi, 5.65rem);
-  position: relative; isolation: isolate;
+  --profile-avatar-size: clamp(3.35rem, 22cqi, 6.25rem);
   margin: clamp(1.75rem, 5cqi, 2.75rem) auto;
   padding-block: .5rem;
 }
-.toyota-profile-frames {
-  position: absolute; inset: -2rem -.5rem; z-index: -1; pointer-events: none;
-  width: calc(100% + 1rem); height: calc(100% + 4rem);
-}
 .toyota-profile-list {
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: clamp(2.1rem, 9cqi, 2.65rem) .8rem;
+  column-gap: .8rem;
   margin: 0; padding: 0; list-style: none;
 }
 .toyota-profile-list > li { min-width: 0; }
@@ -561,13 +558,12 @@ a.source-site:focus-visible::before { outline: 1px solid var(--metal); outline-o
   /* Rotate around the center of the opening in the artwork. */
   transform-origin: top left;
   transform: rotate(var(--profile-frame-angle, 0deg)) translate(-48.8%, -49%);
-}
-.toyota-profile-avatar[data-profile-frame-visible]::after {
   animation: toyota-frame-turn calc(var(--profile-frame-period) / var(--profile-frame-rate, 1)) linear infinite;
 }
-[data-profile-frames-ready] .toyota-profile-avatar::after { content: none; }
+.toyota-profile-list > li:nth-child(even) .toyota-profile-avatar::after { animation-direction: reverse; }
 @keyframes toyota-frame-turn {
-  to { rotate: var(--profile-frame-turn); }
+  from { rotate: 0turn; }
+  to { rotate: 1turn; }
 }
 @media (prefers-reduced-motion: reduce) {
   .toyota-profile-avatar { --profile-frame-rate: .65; }
@@ -588,8 +584,13 @@ a.source-site:focus-visible::before { outline: 1px solid var(--metal); outline-o
 .toyota-profile:is(:hover, :focus-visible) .toyota-profile-handle::after { opacity: 1; }
 .toyota-profile:focus-visible { outline: 1px solid var(--metal); outline-offset: 2px; }
 @container interview (width < 36rem) {
-  .toyota-profile-list { padding-block: .85rem 1rem; }
-  .toyota-profile-list > li { translate: var(--profile-narrow-offset, 0); }
+  .toyota-profile-list {
+    --profile-step: calc(.8 * var(--profile-avatar-size) + 2.55rem);
+    grid-auto-rows: calc(2 * var(--profile-step)); align-items: start;
+    padding-block: .85rem var(--profile-step);
+  }
+  .toyota-profile-list > li:nth-child(even) { margin-block-start: var(--profile-step); }
+  .toyota-profile { height: auto; }
 }
 @container interview (max-width: 22rem) {
   .toyota-profile-name { white-space: normal; text-wrap: balance; }
@@ -1185,16 +1186,16 @@ a.source-site:focus-visible::before { outline: 1px solid var(--metal); outline-o
   .collection-archive figcaption { max-width: none; }
 }
 
-@media (max-width: 480px) {
-  .image-pair-stack .image-frame { grid-template-columns: minmax(0, 1fr); gap: .85rem; }
-}
 @media (max-width: 400px) {
   #ccru-shirt { display: none; }
 }
 
 @media (max-width: 37rem) {
+  .cover-main { grid-column: 1 / -1; }
+  .cover-main .photo-link { height: clamp(16rem, 68vw, 26rem); }
   .link-preview { width: min(20rem, calc(100% - 2rem)); }
   .image-pair .image-frame:has(.photo-frame-overlay) { column-gap: clamp(.8rem, 4cqi, 1.2rem); }
+  .image-pair-stack .image-frame { grid-template-columns: minmax(0, 1fr); }
   :root[data-question-numbers="shown"] .question-jump::before { content: none; }
   :root[data-question-numbers="shown"] .question-jump-number { left: 1rem; }
   :root[data-question-numbers="shown"] .sigil-scroll { --tick-space: 1.375rem; }

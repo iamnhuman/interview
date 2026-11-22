@@ -132,7 +132,7 @@ function initReadingPosition() {
     sigil: cover.querySelector(".heading-sigil img").getAttribute("src"),
   }, ...questions.map((question, index) => ({
     id: question.id, label: `Вопрос ${index + 1} из ${questions.length}`,
-    number: `${String(index + 1).padStart(2, "0")} / ${questions.length}`,
+    number: String(index + 1).padStart(2, "0"),
     copy: question.querySelector(".question-copy"),
     sigil: questionSigilSource(index),
   })), {
@@ -188,7 +188,7 @@ function initReadingPosition() {
     previewIndex = index;
     const section = sections[index];
     preview.classList.toggle("endpoint-preview", Boolean(section.marker));
-    previewNumber.textContent = section.number || "";
+    previewNumber.textContent = section.number ? `${section.number} / ${questions.length}` : "";
     previewNumber.hidden = !section.number;
     if (section.copy) copyReadingText(previewText, section.copy);
     else previewText.textContent = section.label;
@@ -216,7 +216,7 @@ function initReadingPosition() {
     }
     const marker = document.createElement("span");
     marker.className = section.marker ? "question-jump-arrow" : "question-jump-number";
-    marker.textContent = section.marker ?? String(index);
+    marker.textContent = section.marker ?? section.number;
     marker.setAttribute("aria-hidden", "true");
     link.append(marker);
     link.tabIndex = index === 0 ? 0 : -1;
