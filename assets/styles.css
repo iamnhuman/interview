@@ -1062,14 +1062,17 @@ a.source-site:focus-visible::before { outline: 1px solid var(--metal); outline-o
   grid-row: 2; font-size: .7rem; color: color-mix(in srgb, var(--muted) 90%, var(--ink));
 }
 [data-track-playlist] .track-choice .track-title strong { grid-row: 1; font-size: .8125rem; }
-:is([data-track-title-hovered], .track-choice:focus-visible) .track-name-scroll[data-title-overflow] {
+@media (any-pointer: coarse) {
+  .track-name-scroll[data-title-overflow] { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+}
+:is([data-track-title-hovered], [data-track-title-held], .track-choice:focus-visible) .track-name-scroll[data-title-overflow] {
   text-overflow: clip;
 }
-:is([data-track-title-hovered], .track-choice:focus-visible) .track-name-scroll[data-title-overflow] > span {
+:is([data-track-title-hovered], [data-track-title-held], .track-choice:focus-visible) .track-name-scroll[data-title-overflow] > span {
   display: inline-block; width: max-content;
   animation: track-name-scroll calc(var(--track-name-duration) * var(--track-scroll-duration-scale, 1)) linear infinite;
 }
-:is([data-track-title-hovered], .track-choice:focus-visible) .track-name-scroll[data-title-overflow] > span::after {
+:is([data-track-title-hovered], [data-track-title-held], .track-choice:focus-visible) .track-name-scroll[data-title-overflow] > span::after {
   display: inline-block; padding-inline: 1.2em;
   content: attr(data-track-name-copy);
   content: attr(data-track-name-copy) / "";

@@ -1051,6 +1051,46 @@ function createTrackSpectrum(plot, seek) {
   return { select, drawAt };
 }
 
+function initTrackTitleHold(block) {
+  let press;
+  function startScroll() {
+    clearTimeout(press.timer);
+    block.setAttribute("data-track-title-held", "");
+  }
+  function stopScroll() {
+    if (!press) return;
+    clearTimeout(press.timer);
+    press = null;
+    block.removeAttribute("data-track-title-held");
+  }
+  function changedTouch(event) {
+    return press && Array.from(event.changedTouches).find(touch => touch.identifier === press.identifier);
+  }
+  block.addEventListener("touchstart", event => {
+    stopScroll();
+    if (event.touches.length !== 1 || !event.target.closest?.(".track-name-scroll[data-title-overflow]")) return;
+    const { identifier, clientX, clientY } = event.touches[0];
+    press = { identifier, clientX, clientY, timer: window.setTimeout(startScroll, 400) };
+  }, { passive: true });
+  block.addEventListener("touchmove", event => {
+    const touch = changedTouch(event);
+    if (touch && Math.hypot(touch.clientX - press.clientX, touch.clientY - press.clientY) > 10) stopScroll();
+  }, { passive: true });
+  block.addEventListener("touchend", event => {
+    if (!changedTouch(event)) return;
+    if (block.hasAttribute("data-track-title-held") && event.cancelable) event.preventDefault();
+    stopScroll();
+  }, { passive: false });
+  block.addEventListener("touchcancel", event => {
+    if (changedTouch(event)) stopScroll();
+  }, { passive: true });
+  block.addEventListener("contextmenu", event => {
+    if (!press) return;
+    event.preventDefault();
+    startScroll();
+  });
+}
+
 function initTrackTitleScroll(titleBlocks) {
   const range = document.createRange();
   const titles = [...titleBlocks].flatMap(block => [...block.querySelectorAll(".track-artist, strong")]);
@@ -1078,9 +1118,10 @@ function initTrackTitleScroll(titleBlocks) {
   for (const block of titleBlocks) {
     const target = block.closest(".track-choice") || block;
     target.addEventListener("pointerenter", event => {
-      target.toggleAttribute("data-track-title-hovered", event.pointerType !== "touch");
+      target.toggleAttribute("data-track-title-hovered", event.pointerType !== "touch" && !event.sourceCapabilities?.firesTouchEvents);
     });
     target.addEventListener("pointerleave", () => target.removeAttribute("data-track-title-hovered"));
+    initTrackTitleHold(block);
   }
   document.fonts?.ready.then(() => titles.forEach(measure));
   return measure;

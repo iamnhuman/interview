@@ -28,6 +28,7 @@
   ]);
   const sources = new WeakMap();
   const touchLinks = new WeakMap();
+  const touchDelay = 450;
   let anchor = null;
   let pending = null;
   let activeSource = null;
@@ -238,6 +239,19 @@
     timer = window.setTimeout(hide, 220);
   }
 
+  function isTouchInput(event) {
+    return event.pointerType === "touch" || event.sourceCapabilities?.firesTouchEvents;
+  }
+
+  function touchForPress(event) {
+    if (!touchPress) return null;
+    return Array.from(event.changedTouches).find(touch => touch.identifier === touchPress.id);
+  }
+
+  function touchMoved(touch) {
+    return Math.hypot(touch.clientX - touchPress.x, touch.clientY - touchPress.y) > 10;
+  }
+
   function cancelTouchPress() {
     if (!touchPress) return;
     clearTimeout(touchPress.timer);
@@ -362,6 +376,19 @@
     pending = link;
     timer = window.setTimeout(() => show(link, record, y), delay);
   }
+
+  function showTouchPreview(link, y) {
+    const record = touchLinks.get(link);
+    if (!record || !link.isConnected) return;
+    suppressedClick = link;
+    if (touchPress?.link === link) clearTimeout(touchPress.timer);
+    if (anchor === link && card.hasAttribute("data-touch-preview")) return;
+    if (anchor) hide();
+    else clearTimeout(timer);
+    highlight(sources.get(link));
+    show(link, record, y, true);
+  }
+
   const citedLinks = buildSourceLists();
   initDisplaySwitch("bibliography", "shown", "hidden", (value, control) => {
     const shown = value === "shown";
@@ -383,23 +410,24 @@
     touchLinks.set(link, record);
     link.setAttribute("data-link-preview-touch", "");
     link.addEventListener("pointerenter", event => {
-      if (!hover.matches || event.pointerType === "touch") return;
+      if (!hover.matches || isTouchInput(event)) return;
       if (anchor === link && !video.hidden && !card.contains(event.relatedTarget) && video.currentTime > 0) {
         video.currentTime = 0;
       }
       request(link, record, event.clientY, 240);
     });
     link.addEventListener("pointerleave", event => {
-      if (event.pointerType === "touch") return;
+      if (isTouchInput(event) || card.hasAttribute("data-touch-preview")) return;
       if (pending !== link && anchor !== link) return;
       if (link.matches(":focus-visible")) return;
       if (record.titleUrl && anchor === link) queueHide();
       else hide();
     });
-    link.addEventListener("focus", () => {
-      if (!touchPress && link.matches(":focus-visible")) request(link, record, null, 0);
+    link.addEventListener("focus", event => {
+      if (!touchPress && !isTouchInput(event) && link.matches(":focus-visible")) request(link, record, null, 0);
     });
     link.addEventListener("blur", event => {
+      if (card.hasAttribute("data-touch-preview")) return;
       if ((pending === link || anchor === link) && !card.contains(event.relatedTarget)) hide();
     });
     link.addEventListener("click", hide);
@@ -414,7 +442,7 @@
   }
   card.addEventListener("pointerenter", () => clearTimeout(timer));
   card.addEventListener("pointerleave", event => {
-    if (event.pointerType === "touch") return;
+    if (isTouchInput(event) || card.hasAttribute("data-touch-preview")) return;
     if (anchor && !anchor.contains(event.relatedTarget) && !anchor.matches(":focus-visible")) queueHide();
   });
   picture.addEventListener("error", () => { picture.hidden = true; place(); });
@@ -423,42 +451,55 @@
     hide();
   });
   document.addEventListener("pointerdown", event => {
+    if (isTouchInput(event)) return;
     if (event.isPrimary) suppressedClick = null;
+    if (!card.contains(event.target)) hide();
+  });
+  document.addEventListener("touchstart", event => {
+    suppressedClick = null;
+    if (event.touches.length !== 1) { hide(); return; }
     if (card.contains(event.target)) return;
     hide();
-    if (event.pointerType !== "touch" || !event.isPrimary || event.button !== 0) return;
 
     const link = event.target.closest?.("[data-link-preview-touch]");
-    const record = touchLinks.get(link);
-    if (!record) return;
+    if (!touchLinks.has(link)) return;
+    const { identifier, clientX, clientY } = event.touches[0];
     const press = {
-      link, id: event.pointerId, x: event.clientX, y: event.clientY,
+      link, id: identifier, x: clientX, y: clientY, startedAt: event.timeStamp,
       timer: window.setTimeout(() => {
-        if (touchPress !== press || !link.isConnected) return;
-        suppressedClick = link;
-        highlight(sources.get(link));
-        show(link, record, press.y, true);
-      }, 450),
+        if (touchPress === press) showTouchPreview(link, clientY);
+      }, touchDelay),
     };
     touchPress = press;
     link.setAttribute("data-link-preview-pressing", "");
-  });
-  document.addEventListener("pointermove", event => {
-    if (touchPress?.id !== event.pointerId) return;
-    if (Math.hypot(event.clientX - touchPress.x, event.clientY - touchPress.y) > 10) hide();
   }, { passive: true });
-  for (const type of ["pointerup", "pointercancel"]) {
-    document.addEventListener(type, event => {
-      if (touchPress?.id === event.pointerId) cancelTouchPress();
-    });
-  }
+  document.addEventListener("touchmove", event => {
+    const touch = touchForPress(event);
+    if (touch && touchMoved(touch)) hide();
+  }, { passive: true });
+  document.addEventListener("touchend", event => {
+    const touch = touchForPress(event);
+    if (!touch) return;
+    const { link, y, startedAt } = touchPress;
+    if (suppressedClick === link || (event.timeStamp - startedAt >= touchDelay && !touchMoved(touch))) {
+      showTouchPreview(link, y);
+      if (event.cancelable) event.preventDefault();
+    }
+    cancelTouchPress();
+  }, { passive: false });
+  document.addEventListener("touchcancel", event => {
+    if (touchForPress(event)) cancelTouchPress();
+  }, { passive: true });
   document.addEventListener("contextmenu", event => {
     const link = event.target.closest?.("a[href]");
     if (!touchLinks.has(link) && !linkDestinations.has(link)) return;
-    if (event.pointerType === "touch" || touchPress?.link === link || suppressedClick === link) event.preventDefault();
+    if (!isTouchInput(event) && touchPress?.link !== link && suppressedClick !== link) return;
+    event.preventDefault();
+    const y = touchPress?.link === link ? touchPress.y : event.clientY;
+    showTouchPreview(link, y);
   });
   document.addEventListener("click", event => {
-    if ((event.detail !== 0 || event.pointerType === "touch") && suppressedClick?.contains(event.target)) {
+    if ((event.detail !== 0 || isTouchInput(event)) && suppressedClick?.contains(event.target)) {
       suppressedClick = null;
       event.preventDefault();
       event.stopImmediatePropagation();
