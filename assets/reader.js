@@ -386,7 +386,7 @@ function initReadingPosition() {
     if (!thumbTravel) return;
     const offset = clientY - rail.getBoundingClientRect().top - drag.offset;
     const position = Math.max(0, Math.min(1, offset / thumbTravel));
-    if (drag.touch) {
+    if (drag.previewQuestions) {
       const nearest = Math.round(position * (jumps.length - 1));
       if (nearest !== previewIndex) showPreview(nearest);
     }
@@ -397,14 +397,14 @@ function initReadingPosition() {
 
   function finishDrag(event) {
     if (!drag || (event && event.pointerId !== drag.id)) return;
-    const { id, touch } = drag;
+    const { id, previewQuestions } = drag;
     drag = null;
-    if (touch) hidePreview();
+    if (previewQuestions) hidePreview();
     root.classList.remove("is-sigil-dragging");
     if (rail.hasPointerCapture(id)) rail.releasePointerCapture(id);
   }
 
-  function startDrag(event, onThumb = false) {
+  function startDrag(event, { onThumb = false, previewQuestions = false } = {}) {
     event.preventDefault();
     hidePreview();
     measureIfNeeded();
@@ -414,7 +414,7 @@ function initReadingPosition() {
       const position = Math.max(0, positionOnTimeline(stops, window.scrollY));
       offset = event.clientY - rail.getBoundingClientRect().top - position * thumbTravel;
     }
-    drag = { id: event.pointerId, offset, touch: event.pointerType === "touch" };
+    drag = { id: event.pointerId, offset, previewQuestions };
     rail.focus({ preventScroll: true });
     rail.setPointerCapture(event.pointerId);
     root.classList.add("is-sigil-dragging");
@@ -423,14 +423,15 @@ function initReadingPosition() {
 
   jumpList.addEventListener("pointerdown", event => {
     if (!event.isPrimary || event.pointerType !== "touch" || drag) return;
-    jumpPress = { id: event.pointerId, y: event.clientY };
     const index = jumps.indexOf(event.target.closest(".question-jump"));
+    jumpPress = { id: event.pointerId, y: event.clientY, previewQuestions: index >= 0 };
     if (index >= 0) showPreview(index);
   });
   jumpList.addEventListener("pointermove", event => {
     if (jumpPress?.id !== event.pointerId || Math.abs(event.clientY - jumpPress.y) < 5) return;
+    const { previewQuestions } = jumpPress;
     jumpPress = null;
-    startDrag(event);
+    startDrag(event, { previewQuestions });
   });
   jumpList.addEventListener("contextmenu", event => {
     if (event.pointerType === "touch" || jumpPress) event.preventDefault();
@@ -445,7 +446,7 @@ function initReadingPosition() {
 
   rail.addEventListener("pointerdown", event => {
     if (event.button !== 0 || !event.isPrimary || drag || jumpPress) return;
-    startDrag(event, thumb.contains(event.target));
+    startDrag(event, { onThumb: thumb.contains(event.target) });
   });
   rail.addEventListener("pointermove", (event) => {
     if (drag?.id === event.pointerId) moveThumb(event.clientY);

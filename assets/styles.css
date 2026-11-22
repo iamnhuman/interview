@@ -141,10 +141,11 @@ html.has-sigil-scroll::-webkit-scrollbar, html.has-sigil-scroll body::-webkit-sc
   pointer-events: none;
 }
 :root[data-question-numbers="shown"] .question-jump-number { display: block; }
-.question-jump:is(:hover, :focus-visible, [aria-current="location"]) :is(.question-jump-number, .question-jump-arrow) { color: var(--ink); }
+.question-jump[aria-current="location"] :is(.question-jump-number, .question-jump-arrow) { color: var(--ink); }
 .question-symbol { width: 100%; height: 1.2rem; object-fit: contain; pointer-events: none; }
 .question-symbol.cover-symbol { height: 1.9rem; translate: 0 1px; }
 @media (width > 37rem) {
+  .question-jump:is(:hover, :focus-visible) :is(.question-jump-number, .question-jump-arrow) { color: var(--ink); }
   .question-symbol:not(.cover-symbol, .end-symbol) { translate: 0 -1px; }
 }
 .question-symbol.end-symbol { height: 100%; object-position: center calc(50% + 2px); }
@@ -354,6 +355,7 @@ html.has-sigil-scroll::-webkit-scrollbar, html.has-sigil-scroll body::-webkit-sc
   width: 110%;
   aspect-ratio: 1;
   margin: 0 0 -5% -5%;
+  -webkit-touch-callout: none;
 }
 @media (any-hover: hover) {
   .heading-sigil { overflow: visible; }
@@ -1215,6 +1217,12 @@ a.source-site:focus-visible::before { outline: 1px solid var(--metal); outline-o
   --sigil-hover-right-limit: calc(100vw - var(--sigil-hover-side));
   --sigil-hover-top-limit: var(--sigil-hover-edge);
   --sigil-hover-bottom-limit: 100dvh;
+}
+.sigil-hover[data-touch-preview] {
+  --sigil-hover-side: calc(var(--sigil-hover-size) / 2);
+  --sigil-hover-edge: var(--sigil-hover-side);
+  --sigil-hover-right-limit: calc(100vw - var(--sigil-hover-side));
+  --sigil-hover-top-limit: var(--sigil-hover-side);
 }
 .sigil-hover .sigil-viewer-stage {
   position: absolute; translate: -50% -50%; pointer-events: none;

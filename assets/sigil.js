@@ -189,6 +189,7 @@ function createSigilWave(facing, pinnedRadius = 0) {
   let hovering = false;
   let heroVisible = false, heroTime = 0;
   let pointer, hoverCursor;
+  let touchPress = null, suppressHeroClick = false;
   let softwareStamp = -Infinity;
 
   function prepareModel(model, isHero) {
@@ -482,6 +483,14 @@ function createSigilWave(facing, pinnedRadius = 0) {
     if (!viewer.open) showCover();
   }
 
+  function stopHeroPress() {
+    if (!touchPress) return;
+    const { timer, previewing } = touchPress;
+    window.clearTimeout(timer);
+    touchPress = null;
+    if (previewing) hidePreview();
+  }
+
   function activate(trigger) {
     if (activeTrigger === trigger) return;
     if (activeTrigger) delete activeTrigger.dataset.sigilPreviewing;
@@ -521,11 +530,12 @@ function createSigilWave(facing, pinnedRadius = 0) {
   }
 
   function canHover(event) {
-    return !viewer.open && (event.pointerType === "mouse" || event.pointerType === "pen");
+    return !touchPress && !viewer.open && (event.pointerType === "mouse" || event.pointerType === "pen");
   }
 
   function showPreview(trigger, event) {
     followCursor(event);
+    preview.toggleAttribute("data-touch-preview", event.pointerType === "touch");
     if (hovering && activeTrigger === trigger) return;
     activate(trigger);
     hovering = true;
@@ -539,9 +549,39 @@ function createSigilWave(facing, pinnedRadius = 0) {
   }
 
   function checkHover() {
+    stopHeroPress();
     if (!hovering) return;
     const { x, y } = hoverCursor;
     if (hoverTriggerAt(x, y) !== activeTrigger) hidePreview();
+  }
+
+  if (heroTrigger) {
+    heroTrigger.addEventListener("pointerdown", event => {
+      if (!event.isPrimary) return;
+      stopHeroPress();
+      suppressHeroClick = false;
+      if (event.pointerType !== "touch" || event.button !== 0 || viewer.open) return;
+      const press = { id: event.pointerId, x: event.clientX, y: event.clientY };
+      touchPress = press;
+      press.timer = window.setTimeout(() => {
+        if (touchPress !== press || document.hidden || viewer.open || signal.aborted) return;
+        press.previewing = true;
+        suppressHeroClick = true;
+        showPreview(heroTrigger, event);
+      }, 450);
+    }, { signal });
+    heroTrigger.addEventListener("pointermove", event => {
+      if (touchPress?.id !== event.pointerId) return;
+      if (Math.hypot(event.clientX - touchPress.x, event.clientY - touchPress.y) > 10) stopHeroPress();
+    }, { passive: true, signal });
+    for (const type of ["pointerup", "pointercancel", "lostpointercapture"]) {
+      heroTrigger.addEventListener(type, event => {
+        if (touchPress?.id === event.pointerId) stopHeroPress();
+      }, { signal });
+    }
+    heroTrigger.addEventListener("contextmenu", event => {
+      if (touchPress || event.pointerType === "touch") event.preventDefault();
+    }, { signal });
   }
 
   for (const trigger of triggers) {
@@ -549,11 +589,18 @@ function createSigilWave(facing, pinnedRadius = 0) {
       if (canHover(event) && hoverTriggerAt(event.clientX, event.clientY) === trigger) showPreview(trigger, event);
     }, { signal });
     trigger.addEventListener("pointerleave", event => {
+      if (touchPress || event.pointerType === "touch") return;
       if (activeTrigger === trigger && hoverTriggerAt(event.clientX, event.clientY) !== trigger) hidePreview();
     }, { signal });
-    trigger.addEventListener("click", () => {
+    trigger.addEventListener("click", event => {
+      if (trigger === heroTrigger && suppressHeroClick && (event.detail !== 0 || event.pointerType === "touch")) {
+        suppressHeroClick = false;
+        event.preventDefault();
+        return;
+      }
       if (viewer.open) return;
       viewer.showModal();
+      stopHeroPress();
       hidePreview();
       placeStage(viewer);
       activate(trigger);
@@ -572,8 +619,14 @@ function createSigilWave(facing, pinnedRadius = 0) {
     if (trigger) showPreview(trigger, event);
     else hidePreview();
   }, { passive: true, signal });
-  document.documentElement.addEventListener("pointerleave", hidePreview, { signal });
-  window.addEventListener("blur", hidePreview, { signal });
+  document.documentElement.addEventListener("pointerleave", event => {
+    if (touchPress?.id === event.pointerId) stopHeroPress();
+    else if (!touchPress) hidePreview();
+  }, { signal });
+  window.addEventListener("blur", () => {
+    stopHeroPress();
+    hidePreview();
+  }, { signal });
   window.addEventListener("scroll", checkHover, { passive: true, signal });
   window.addEventListener("resize", () => {
     measureHeroHover();
@@ -648,8 +701,17 @@ function createSigilWave(facing, pinnedRadius = 0) {
       if (isShowing() && !mounted) void start();
     });
   }, { signal });
-  document.addEventListener("visibilitychange", () => document.hidden ? stop() : schedule(), { signal });
-  window.addEventListener("pagehide", event => { if (event.persisted) stop(); else dispose(); }, { signal });
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      stopHeroPress();
+      stop();
+    } else schedule();
+  }, { signal });
+  window.addEventListener("pagehide", event => {
+    stopHeroPress();
+    if (event.persisted) stop();
+    else dispose();
+  }, { signal });
   window.addEventListener("pageshow", schedule, { signal });
   reducedMotion.addEventListener("change", schedule, { signal });
   if (heroTrigger) {
