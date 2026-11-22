@@ -46,6 +46,15 @@ function preserveReadingPosition(change) {
   }
 }
 
+function scrollExtent() {
+  const scroller = document.scrollingElement ?? document.documentElement;
+  return Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+}
+
+function isAtScrollEnd(scrollTop, extent) {
+  return extent > 0 && extent - scrollTop <= 1;
+}
+
 function initReadingResize() {
   const masthead = document.querySelector(".masthead");
   const touchViewport = matchMedia("(pointer: coarse)");
@@ -53,6 +62,10 @@ function initReadingResize() {
   let saved, lastScroll, frame = 0;
 
   function remember(top) {
+    if (isAtScrollEnd(window.scrollY, scrollExtent())) {
+      saved = { atEnd: true };
+      return;
+    }
     const anchor = window.scrollY > 0 && readingAnchor(top);
     saved = null;
     if (!anchor) return;
@@ -75,7 +88,9 @@ function initReadingResize() {
     height = window.innerHeight;
     if (!resized && window.scrollY === lastScroll) return;
     const top = masthead.getBoundingClientRect().bottom;
-    if (resized && saved) {
+    if (resized && saved?.atEnd) {
+      window.scrollTo({ top: scrollExtent(), behavior: "instant" });
+    } else if (resized && saved) {
       const { target, fraction, offset } = saved;
       const bounds = target.getBoundingClientRect();
       if (bounds.height) {
@@ -174,16 +189,18 @@ function initReadingPosition() {
   const masthead = document.querySelector(".masthead");
   const navigation = document.querySelector("[data-sigil-navigation]");
   const rail = document.querySelector("[data-sigil-scroll]");
+  const progressBar = rail.querySelector(".scroll-progress");
   const thumb = rail.querySelector("[data-scroll-thumb]");
   const questions = [...document.querySelectorAll(".turn.question, .dialogue-aside")];
   if (!questions.length) return;
   const cover = document.getElementById("start");
   const intro = document.getElementById("interview");
   const end = document.getElementById("end");
+  const returnArrow = end.querySelector(".return-link svg");
   const mobile = matchMedia("(max-width: 37rem)");
   const viewport = window.visualViewport;
   const sections = [{
-    id: intro.id, label: "Начало интервью", marker: "↓",
+    id: intro.id, label: "Начало интервью",
     sigil: cover.querySelector(".heading-sigil img").getAttribute("src"),
   }, ...questions.map((question, index) => ({
     id: question.id, label: `Вопрос ${index + 1} из ${questions.length}`,
@@ -191,7 +208,7 @@ function initReadingPosition() {
     copy: question.querySelector(".question-copy"),
     sigil: questionSigilSource(index),
   })), {
-    id: end.id, label: end.getAttribute("aria-label"), marker: "↑",
+    id: end.id, label: end.getAttribute("aria-label"),
     sigil: end.querySelector(".footer-sigil").getAttribute("src"),
   }];
   const jumpList = navigation.querySelector("[data-question-jumps]");
@@ -225,28 +242,38 @@ function initReadingPosition() {
   let jumpPress = null;
   let railTop, railHeight;
   let thumbHeight = 0, thumbTravel = 0;
+  let compactRail = false;
+  let progressHoverY;
 
   function setTabStop(index) {
-    for (let i = 0; i < jumps.length; i += 1) jumps[i].tabIndex = i === index ? 0 : -1;
+    for (let i = 0; i < jumps.length; i += 1) {
+      jumps[i].tabIndex = !compactRail && i === index ? 0 : -1;
+    }
   }
 
   function placePreview() {
     if (previewIndex < 0) return;
-    const rect = jumps[previewIndex].getBoundingClientRect();
     const bounds = navigation.getBoundingClientRect();
     const top = bounds.top + 4;
     const height = preview.offsetHeight;
-    const bottom = Math.max(top, (mobile.matches ? bounds.bottom : window.innerHeight) - height - 12);
-    const previewTop = Math.max(top, Math.min(bottom, rect.top + (rect.height - height) / 2));
-    const sigil = activeSigil.getBoundingClientRect();
+    const viewportBottom = compactRail || mobile.matches ? bounds.bottom : window.innerHeight;
+    const bottom = Math.max(top, viewportBottom - height - 12);
+    let center = progressHoverY;
+    if (!compactRail) {
+      const rect = jumps[previewIndex].getBoundingClientRect();
+      center = rect.top + rect.height / 2;
+    }
+    const previewTop = Math.max(top, Math.min(bottom, center - height / 2));
     preview.style.top = `${previewTop}px`;
+    const sigil = activeSigil.getBoundingClientRect();
     activeSigil.style.visibility = sigil.bottom > previewTop && sigil.top < previewTop + height ? "hidden" : "";
   }
 
   function showPreview(index) {
-    previewIndex = index;
+    if (compactRail && progressHoverY === undefined) return;
     const section = sections[index];
-    preview.classList.toggle("endpoint-preview", Boolean(section.marker));
+    previewIndex = index;
+    preview.classList.toggle("endpoint-preview", !section.number);
     previewNumber.textContent = section.number ? `${section.number} / ${questions.length}` : "";
     previewNumber.hidden = !section.number;
     if (section.copy) copyReadingText(previewText, section.copy);
@@ -259,6 +286,7 @@ function initReadingPosition() {
 
   function hidePreview() {
     previewIndex = -1;
+    progressHoverY = undefined;
     preview.hidden = true;
     activeSigil.style.visibility = "";
   }
@@ -274,8 +302,13 @@ function initReadingPosition() {
       link.setAttribute("aria-labelledby", `${link.id} ${section.copy.id}`);
     }
     const marker = document.createElement("span");
-    marker.className = section.marker ? "question-jump-arrow" : "question-jump-number";
-    marker.textContent = section.marker ?? section.number;
+    if (section.number) {
+      marker.className = "question-jump-number";
+      marker.textContent = section.number;
+    } else {
+      marker.className = "question-jump-arrow";
+      marker.append(returnArrow.cloneNode(true));
+    }
     marker.setAttribute("aria-hidden", "true");
     link.append(marker);
     link.tabIndex = index === 0 ? 0 : -1;
@@ -299,7 +332,8 @@ function initReadingPosition() {
     });
     link.addEventListener("keydown", (event) => {
       if (event.key === "Escape") { hidePreview(); return; }
-      const next = { ArrowUp: index - 1, ArrowDown: index + 1, Home: 0, End: sections.length - 1 }[event.key];
+      const last = jumps.length - 1;
+      const next = { ArrowUp: index - 1, ArrowDown: index + 1, Home: 0, End: last }[event.key];
       if (typeof next !== "number") return;
       event.preventDefault();
       jumps[Math.max(0, Math.min(jumps.length - 1, next))].focus({ preventScroll: true });
@@ -308,14 +342,9 @@ function initReadingPosition() {
     return link;
   });
 
-  function scrollExtent() {
-    return Math.max(0, root.scrollHeight - root.clientHeight);
-  }
-
-  function fitMobileRail() {
-    if (!mobile.matches) return;
+  function fitRail() {
     const viewportTop = viewport?.offsetTop ?? 0;
-    const viewportBottom = viewportTop + (viewport?.height ?? window.innerHeight);
+    const viewportBottom = viewportTop + (viewport?.height ?? root.clientHeight);
     const top = Math.min(viewportBottom, Math.max(viewportTop, masthead.getBoundingClientRect().bottom));
     const height = viewportBottom - top;
     if (top === railTop && height === railHeight) return;
@@ -327,7 +356,32 @@ function initReadingPosition() {
   }
 
   function measure() {
+    const bounds = rail.getBoundingClientRect();
+    thumbHeight = thumb.getBoundingClientRect().height;
+    thumbTravel = Math.max(0, bounds.height - thumbHeight);
+    const interval = thumbTravel / (jumps.length - 1);
+    const numberHeight = parseFloat(getComputedStyle(jumps[1].firstElementChild).fontSize);
+    const numbersFit = interval >= numberHeight;
+    root.toggleAttribute("data-rail-numbers-fit", numbersFit);
+    const compact = !numbersFit;
+    if (compact !== compactRail) {
+      const focusedIndex = jumps.indexOf(document.activeElement);
+      compactRail = compact;
+      navigation.toggleAttribute("data-rail-compact", compactRail);
+      hidePreview();
+      if (compactRail) {
+        jumpPress = null;
+        if (focusedIndex >= 0) rail.focus({ preventScroll: true });
+      }
+      setTabStop(focusedIndex < 0 ? Math.max(0, activeIndex) : focusedIndex);
+    }
+    const previousExtent = scrollExtent();
+    const atEnd = isAtScrollEnd(window.scrollY, previousExtent);
+    const endCenter = bounds.top + thumbTravel + thumbHeight / 2;
+    end.style.setProperty("--rail-end-inset", bounds.height ? `${Math.max(0, root.clientHeight - endCenter)}px` : "");
+
     const extent = scrollExtent();
+    if (atEnd && extent > previousExtent) window.scrollTo({ top: extent, behavior: "instant" });
     const offset = parseFloat(getComputedStyle(intro).scrollMarginTop) || 0;
     const scrollTop = window.scrollY;
     stops = [intro, ...questions].map(section => {
@@ -335,10 +389,6 @@ function initReadingPosition() {
       return Math.max(0, Math.min(extent, top));
     });
     stops.push(extent);
-    thumbHeight = thumb.getBoundingClientRect().height;
-    thumbTravel = Math.max(0, rail.getBoundingClientRect().height - thumbHeight);
-    const interval = thumbTravel / (jumps.length - 1);
-    navigation.style.setProperty("--tick-interval", `${interval}px`);
     for (let i = 0; i < jumps.length; i += 1) {
       jumps[i].style.top = `${thumbHeight / 2 + interval * i}px`;
       jumps[i].style.height = `${Math.max(1, interval)}px`;
@@ -347,8 +397,16 @@ function initReadingPosition() {
   }
 
   function measureIfNeeded() {
-    fitMobileRail();
+    fitRail();
     if (dirty || stops[stops.length - 1] !== scrollExtent()) measure();
+  }
+
+  function positionForScroll(scrollTop) {
+    const extent = stops.at(-1);
+    if (isAtScrollEnd(scrollTop, extent)) return 1;
+    return compactRail
+      ? Math.min(1, Math.max(0, scrollTop / (extent || 1)))
+      : Math.max(0, positionOnTimeline(stops, scrollTop));
   }
 
   function update() {
@@ -356,11 +414,12 @@ function initReadingPosition() {
     if (navigation.hidden) return;
     measureIfNeeded();
     const scrollTop = window.scrollY;
-    let current = 0;
+    let current = isAtScrollEnd(scrollTop, stops.at(-1)) ? sections.length - 1 : 0;
     // Fragment navigation can land a fraction of a pixel before the stop.
     while (scrollTop > 0 && current + 1 < sections.length && stops[current + 1] - scrollTop < 1) current++;
-    const position = Math.max(0, positionOnTimeline(stops, scrollTop));
+    const position = positionForScroll(scrollTop);
     thumb.style.transform = `translateY(${position * thumbTravel}px)`;
+    if (compactRail) progressBar.style.setProperty("--rail-progress", `${position * 100}%`);
     rail.setAttribute("aria-valuenow", String(Math.round(position * 100)));
     if (current !== activeIndex) {
       if (activeIndex >= 0) jumps[activeIndex].removeAttribute("aria-current");
@@ -386,12 +445,13 @@ function initReadingPosition() {
     if (!thumbTravel) return;
     const offset = clientY - rail.getBoundingClientRect().top - drag.offset;
     const position = Math.max(0, Math.min(1, offset / thumbTravel));
-    if (drag.previewQuestions) {
+    if (!compactRail && drag.previewQuestions) {
       const nearest = Math.round(position * (jumps.length - 1));
       if (nearest !== previewIndex) showPreview(nearest);
     }
-    if (position === 0 && window.scrollY <= stops[0]) return;
-    window.scrollTo({ top: scrollTopOnTimeline(stops, position), behavior: "instant" });
+    if (!compactRail && position === 0 && window.scrollY <= stops[0]) return;
+    const top = compactRail ? position * stops.at(-1) : scrollTopOnTimeline(stops, position);
+    window.scrollTo({ top, behavior: "instant" });
     schedule();
   }
 
@@ -411,7 +471,7 @@ function initReadingPosition() {
     let offset = thumbHeight / 2;
     if (onThumb) {
       // Anchor the drag to the current reading position.
-      const position = Math.max(0, positionOnTimeline(stops, window.scrollY));
+      const position = positionForScroll(window.scrollY);
       offset = event.clientY - rail.getBoundingClientRect().top - position * thumbTravel;
     }
     drag = { id: event.pointerId, offset, previewQuestions };
@@ -443,6 +503,34 @@ function initReadingPosition() {
       hidePreview();
     });
   }
+
+  function previewProgress(event) {
+    const { clientY, pointerType, buttons } = event;
+    if (drag || buttons || (pointerType !== "mouse" && pointerType !== "pen") || clientY === progressHoverY) return;
+    const moved = event.type === "pointermove" && progressHoverY !== undefined;
+
+    measureIfNeeded();
+    const { top, height } = progressBar.getBoundingClientRect();
+    if (!height) return;
+    progressHoverY = clientY;
+    const position = Math.max(0, Math.min(1, (clientY - top) / height));
+    const scrollTop = position * stops.at(-1);
+    const nextIndex = stops.findIndex(stop => stop >= scrollTop);
+    const next = stops[nextIndex], previous = stops[nextIndex - 1] ?? 0;
+    const earlier = scrollTop - previous <= next - scrollTop;
+    const index = earlier ? Math.max(0, nextIndex - 1) : nextIndex;
+    if (index === previewIndex) placePreview();
+    else showPreview(index);
+
+    const target = earlier ? previous : next;
+    if (!moved || Math.abs(window.scrollY - target) < 1) return;
+    window.scrollTo({ top: target, behavior: "instant" });
+    schedule();
+  }
+
+  progressBar.addEventListener("pointerenter", previewProgress);
+  progressBar.addEventListener("pointermove", previewProgress, { passive: true });
+  progressBar.addEventListener("pointerleave", () => { if (compactRail) hidePreview(); });
 
   rail.addEventListener("pointerdown", event => {
     if (event.button !== 0 || !event.isPrimary || drag || jumpPress) return;
@@ -494,7 +582,7 @@ function initReadingPosition() {
     railSwitch.addEventListener("click", () => {
       if (!mobile.matches) return;
       if (dirty || stops[stops.length - 1] !== scrollExtent()) measure();
-      const position = positionOnTimeline(stops, window.scrollY);
+      const position = isAtScrollEnd(window.scrollY, stops.at(-1)) ? 1 : positionOnTimeline(stops, window.scrollY);
       mobileRailVisible = !mobileRailVisible;
       applyRailVisibility();
       measure();
@@ -626,8 +714,22 @@ function initHeaderPlayback(media) {
     if (inlineControls) visibility.observe(inlineControls);
     updateVisibility();
   }
+
+  const viewport = window.visualViewport;
+  if (viewport) {
+    let inset = 0;
+    function updateHeaderInset() {
+      const top = viewport.scale === 1 ? Math.max(0, viewport.offsetTop) : 0;
+      if (top === inset) return;
+      inset = top;
+      header.style.setProperty("--header-viewport-top", `${top}px`);
+    }
+    viewport.addEventListener("resize", updateHeaderInset);
+    viewport.addEventListener("scroll", updateHeaderInset, { passive: true });
+    updateHeaderInset();
+  }
   measureHeader();
-  new ResizeObserver(measureHeader).observe(header);
+  new ResizeObserver(measureHeader).observe(header, { box: "border-box" });
 
   toggle.addEventListener("click", () => {
     if (!active) return;

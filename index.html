@@ -18,7 +18,7 @@
   <meta name="theme-color" content="#000000">
   <link rel="icon" type="image/webp" href="assets/art/sigil-fractured-orbit.webp">
   <link rel="stylesheet" href="assets/fonts/fonts.css">
-  <link rel="stylesheet" href="assets/styles.css?v=127">
+  <link rel="stylesheet" href="assets/styles.css?v=154">
   <noscript><style>
     [data-cover-frame-model] { opacity: 1; visibility: visible; }
     [data-cover-frame-model]::after { visibility: visible; }
@@ -27,12 +27,12 @@
   <script src="assets/sound-data.js" defer></script>
   <script src="assets/question-sigils.js?v=6" defer></script>
   <script src="assets/media-controls.js?v=3" defer></script>
-  <script src="assets/reader.js?v=38" defer></script>
+  <script src="assets/reader.js?v=51" defer></script>
   <script src="assets/video-player.js?v=4" defer></script>
   <script src="assets/hero-cloth.js?v=2" defer></script>
   <script src="assets/vendor/three-r170.js?v=3" defer></script>
   <script src="assets/sigil-software.js?v=4" defer></script>
-  <script src="assets/sigil.js?v=24" defer></script>
+  <script src="assets/sigil.js?v=25" defer></script>
   <script src="assets/profile-frames.js?v=2" defer></script>
   <script src="assets/cover-frame-fallback.js?v=7" defer></script>
   <script src="assets/cover-frame.js?v=18" defer></script>
@@ -81,6 +81,7 @@
   <aside class="sigil-scroll" id="interview-navigation" data-sigil-navigation aria-label="Перемещение по интервью" hidden>
     <div class="scroll-track" data-sigil-scroll role="scrollbar" tabindex="0" aria-label="Прокрутка страницы"
       aria-controls="page-content" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+      <span class="scroll-progress" aria-hidden="true"></span>
       <span class="scroll-thumb" data-scroll-thumb aria-hidden="true"></span>
     </div>
     <nav class="question-jumps" aria-label="Начало, вопросы и конец интервью" data-question-jumps></nav>
@@ -1047,8 +1048,10 @@
           <img class="footer-sigil" src="assets/art/sigil-silver-wings.webp" width="1086" height="362" alt="" loading="lazy" decoding="async" draggable="false">
         </button>
         <a class="reading-link return-link" href="#top">
-          <span>К началу</span>
-          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 14V2m-5 5 5-5 5 5"/></svg>
+          <span class="return-link-content">
+            <span>К началу</span>
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 14V2m-5 5 5-5 5 5"/></svg>
+          </span>
         </a>
       </footer>
     </div>

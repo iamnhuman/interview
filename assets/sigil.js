@@ -154,9 +154,7 @@ function createSigilWave(facing, pinnedRadius = 0) {
   const hoverStart = document.querySelector("[data-sigil-hover-start]");
   const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
   const masthead = document.querySelector(".masthead");
-  const navigation = document.querySelector("[data-sigil-navigation]");
   const footerTrigger = document.querySelector('[data-sigil-preview="footer"]');
-  const outro = document.getElementById("interview-outro");
   const stage = viewer.querySelector("[data-sigil-stage]");
   const close = viewer.querySelector("[data-sigil-close]");
   const status = viewer.querySelector("[data-sigil-status]");
@@ -520,13 +518,7 @@ function createSigilWave(facing, pinnedRadius = 0) {
         && x >= hoverStart.getBoundingClientRect().right) return heroTrigger;
     }
 
-    if (footerTrigger) {
-      const { left, right, top } = footerTrigger.getBoundingClientRect();
-      const sidePadding = 24;
-      const hoverTop = outro ? outro.getBoundingClientRect().bottom + 50 : top - 50;
-      if (x >= left - sidePadding && x < right + sidePadding && y < footerTrigger.parentElement.getBoundingClientRect().bottom
-        && y >= hoverTop && !navigation?.contains(document.elementFromPoint(x, y))) return footerTrigger;
-    }
+    if (footerTrigger?.contains(document.elementFromPoint(x, y))) return footerTrigger;
   }
 
   function canHover(event) {
