@@ -8,14 +8,14 @@ const animateCoverFrameFallback = (() => {
   const frames = new WeakMap();
   const slice = .32;
 
-  function axis(length, cap, size, pins) {
+  function axis(length, cap, size, pins, segments) {
     const marks = new Set([0, cap, length - cap, length]);
     for (const pin of pins) if (pin > 0 && pin < length) marks.add(pin);
     for (let step = 1; step < 3; step++) {
       marks.add(cap * step / 3);
       marks.add(length - cap * step / 3);
     }
-    for (let step = 1; step < 6; step++) marks.add(cap + (length - 2 * cap) * step / 6);
+    for (let step = 1; step < segments; step++) marks.add(cap + (length - 2 * cap) * step / segments);
     return [...marks].sort((a, b) => a - b).map(position => {
       let fraction;
       if (position <= cap) fraction = position / cap * slice;
@@ -25,7 +25,7 @@ const animateCoverFrameFallback = (() => {
     });
   }
 
-  function fit(photo, canvas, image) {
+  function fit(photo, canvas, image, fitStageWave) {
     const frame = getComputedStyle(photo, "::after"), style = getComputedStyle(canvas);
     const cap = parseFloat(frame.borderTopWidth), padding = parseFloat(frame.getPropertyValue("--cover-frame-padding"));
     const canvasWidth = parseFloat(style.width), canvasHeight = parseFloat(style.height);
@@ -34,8 +34,10 @@ const animateCoverFrameFallback = (() => {
     const left = -parseFloat(style.left) - padding, top = -parseFloat(style.top) - padding;
     const right = left + photo.clientWidth, bottom = top + photo.clientHeight;
     const pin = Math.max(4, .085 * cap);
-    const columns = axis(width, cap, image.naturalWidth, [left - pin, right + pin]);
-    const rows = axis(height, cap, image.naturalHeight, [top - pin, bottom + pin]);
+    const wave = photo.dataset.mediaFrame === "cover-stage" ? fitStageWave?.(photo, width, height, cap, -left, -top, padding) : null;
+    const segments = wave ? 12 : 6;
+    const columns = axis(width, cap, image.naturalWidth, [left - pin, right + pin], segments);
+    const rows = axis(height, cap, image.naturalHeight, [top - pin, bottom + pin], segments);
     const points = rows.map(row => columns.map(column => {
       const x = column.position, y = row.position;
       // Leave a fixed strip of metal over the photograph, including between mesh vertices.
@@ -58,7 +60,7 @@ const animateCoverFrameFallback = (() => {
     const ratio = Math.min(window.devicePixelRatio || 1, 1.5, 1300 / Math.max(canvasWidth, canvasHeight));
     canvas.width = Math.ceil(canvasWidth * ratio);
     canvas.height = Math.ceil(canvasHeight * ratio);
-    return { faces, points: points.flat(), ratio };
+    return { faces, points: points.flat(), ratio, wave };
   }
 
   function paintTriangle(context, image, ratio, a, b, c) {
@@ -80,7 +82,7 @@ const animateCoverFrameFallback = (() => {
     context.restore();
   }
 
-  function attach(photo) {
+  function attach(photo, fitStageWave) {
     const reduced = matchMedia("(prefers-reduced-motion: reduce)");
     let canvas, context, image, url, shape;
     let hovered = false, frame = 0, previous = 0, time = 0, strength = 0;
@@ -95,7 +97,7 @@ const animateCoverFrameFallback = (() => {
       if (!available()) { previous = strength = 0; return; }
       const elapsed = previous ? stamp - previous : 1000 / 30;
       if (elapsed < 31) { schedule(); return; }
-      shape ??= fit(photo, canvas, image);
+      shape ??= fit(photo, canvas, image, fitStageWave);
       if (!shape) return;
       const dt = Math.min(.06, elapsed / 1000), calm = reduced.matches;
       const delta = (hovered ? (calm ? .8 : 1) : 0) - strength;
@@ -107,6 +109,7 @@ const animateCoverFrameFallback = (() => {
         point.px = point.x + amount * (9 * Math.sin(a) + 4 * Math.sin(b));
         point.py = point.y + amount * (9 * Math.cos(b) + 4 * Math.cos(a));
       }
+      shape.wave?.(shape.points, time, strength);
       context.clearRect(0, 0, canvas.width, canvas.height);
       for (const [a, b, c] of shape.faces) paintTriangle(context, image, shape.ratio, a, b, c);
       photo.toggleAttribute("data-cover-frame-software", true);
@@ -114,9 +117,9 @@ const animateCoverFrameFallback = (() => {
       if (previous) schedule();
     }
 
-    function start() {
+    function start(over) {
       const next = sources[photo.dataset.mediaFrame];
-      if (!next || !available()) return;
+      if (!next || !photo.hasAttribute("data-cover-frame-fallback")) return;
       if (!canvas) {
         canvas = document.createElement("canvas");
         context = canvas.getContext("2d");
@@ -129,7 +132,7 @@ const animateCoverFrameFallback = (() => {
           if (hovered || photo.hasAttribute("data-cover-frame-software")) schedule();
         }).observe(canvas);
       }
-      hovered = true;
+      hovered = over;
       if (next !== url) {
         url = next;
         shape = undefined;
@@ -142,16 +145,18 @@ const animateCoverFrameFallback = (() => {
     }
 
     function follow(event) {
-      if (event.pointerType === "mouse" || event.pointerType === "pen") start();
+      if (event.pointerType === "mouse" || event.pointerType === "pen") start(true);
     }
     photo.addEventListener("pointerenter", follow);
     photo.addEventListener("pointermove", follow, { passive: true });
     photo.addEventListener("pointerleave", () => { hovered = false; if (strength) schedule(); });
+    if (photo.dataset.mediaFrame === "cover-stage") document.addEventListener("visibilitychange", schedule);
     return start;
   }
 
-  return photo => {
-    if (!frames.has(photo)) frames.set(photo, attach(photo));
-    if (matchMedia("(any-hover: hover)").matches && photo.matches(":hover")) frames.get(photo)();
+  return (photo, fitStageWave) => {
+    if (!frames.has(photo)) frames.set(photo, attach(photo, fitStageWave));
+    const hovered = matchMedia("(any-hover: hover)").matches && photo.matches(":hover");
+    if (photo.dataset.mediaFrame === "cover-stage" || hovered) frames.get(photo)(hovered);
   };
 })();

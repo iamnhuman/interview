@@ -18,25 +18,26 @@
   <meta name="theme-color" content="#000000">
   <link rel="icon" type="image/webp" href="assets/art/sigil-fractured-orbit.webp">
   <link rel="stylesheet" href="assets/fonts/fonts.css">
-  <link rel="stylesheet" href="assets/styles.css?v=81">
+  <link rel="stylesheet" href="assets/styles.css?v=116">
   <noscript><style>
     [data-cover-frame-model] { opacity: 1; visibility: visible; }
     [data-cover-frame-model]::after { visibility: visible; }
   </style></noscript>
   <link rel="preload" href="assets/art/cover-frame.glb?v=2" as="fetch" crossorigin>
   <script src="assets/sound-data.js" defer></script>
-  <script src="assets/question-sigils.js?v=3" defer></script>
+  <script src="assets/question-sigils.js?v=6" defer></script>
   <script src="assets/media-controls.js?v=3" defer></script>
-  <script src="assets/reader.js?v=24" defer></script>
+  <script src="assets/reader.js?v=37" defer></script>
   <script src="assets/video-player.js?v=4" defer></script>
   <script src="assets/hero-cloth.js?v=2" defer></script>
   <script src="assets/vendor/three-r170.js?v=3" defer></script>
-  <script src="assets/sigil-software.js?v=2" defer></script>
-  <script src="assets/sigil.js?v=16" defer></script>
-  <script src="assets/cover-frame-fallback.js?v=5" defer></script>
-  <script src="assets/cover-frame.js?v=16" defer></script>
-  <script src="assets/link-data.js?v=35" defer></script>
-  <script src="assets/link-previews.js?v=4" defer></script>
+  <script src="assets/sigil-software.js?v=4" defer></script>
+  <script src="assets/sigil.js?v=23" defer></script>
+  <script src="assets/profile-frames.js?v=2" defer></script>
+  <script src="assets/cover-frame-fallback.js?v=7" defer></script>
+  <script src="assets/cover-frame.js?v=18" defer></script>
+  <script src="assets/link-data.js?v=38" defer></script>
+  <script src="assets/link-previews.js?v=11" defer></script>
 </head>
 <body id="top">
   <a class="skip-link" href="#interview">К началу интервью</a>
@@ -44,7 +45,7 @@
     <div class="masthead-inner wrap">
       <div class="masthead-brand">
         <a class="wordmark" href="https://t.me/wronggateway502" target="_blank" rel="noopener noreferrer">
-          wrong/gateway <span>.₅₀₂</span>
+          wrong/gateway<span>.502</span>
         </a>
         <p class="masthead-title">Интервью с Тойотой</p>
       </div>
@@ -64,14 +65,14 @@
         <button type="button" data-sigil-scroll-switch hidden aria-label="Шкала вопросов" aria-pressed="true" aria-controls="interview-navigation" title="Скрыть шкалу вопросов">
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3.5" y="5" width="17" height="14" rx="1.5"/><path class="rail-ticks" d="M7 8.5h3.5M7 12h3.5M7 15.5h3.5"/></svg>
         </button>
-        <button type="button" data-question-numbers-switch hidden aria-label="Номера на шкале вопросов" aria-pressed="false" aria-controls="interview-navigation" title="Показать номера на шкале">
-          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3.5" y="3.5" width="17" height="17" rx="1.5"/><path class="rail-number-mark" d="m10.5 7-2 10m6.5-10-2 10M7.5 10h9m-10 4h9"/></svg>
-        </button>
         <button type="button" data-bibliography-switch hidden aria-label="Библиография" aria-pressed="false" title="Показать библиографию">
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M2.5 5.2c3.4-.9 6.5-.5 9.5 1.2 3-1.7 6.1-2.1 9.5-1.2v13c-3.4-.9-6.5-.5-9.5 1.2-3-1.7-6.1-2.1-9.5-1.2z"/><path class="book-fold" d="M12 6.5v12.6"/></svg>
         </button>
         <button type="button" data-artist-style-switch hidden aria-label="Кавычки в названиях" aria-pressed="false" title="Показать кавычки">
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9.5 5c-4.2 1.6-7 5.2-7 9.6a4 4 0 1 0 4.1-4c.6-1.6 1.8-3 3.7-4.3z M20.5 5c-4.2 1.6-7 5.2-7 9.6a4 4 0 1 0 4.1-4c.6-1.6 1.8-3 3.7-4.3z"/></svg>
+        </button>
+        <button type="button" data-question-numbers-switch hidden aria-label="Номера на шкале вопросов" aria-pressed="false" aria-controls="interview-navigation" title="Показать номера на шкале">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3.5" y="3.5" width="17" height="17" rx="1.5"/><path class="rail-number-mark" d="m10.5 7-2 10m6.5-10-2 10M7.5 10h9m-10 4h9"/></svg>
         </button>
         <button type="button" data-theme-switch hidden aria-label="Светлая тема" aria-pressed="false" title="Включить светлую тему">
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
@@ -145,12 +146,15 @@
             <p>Также всегда испытывал необъяснимое влечение к тому мему из интернета, где обыгрывается лого <span class="artist-name"><span class="artist-quote">«</span>Adidas<span class="artist-quote">»</span></span>. Логотипы в какой-то момент превратились в сигилы XXI века, и заигрывание с этой темой всегда привлекало. Это часто встречалось в андерграунде того времени. На <span class="artist-name"><span class="artist-quote">«</span>Pinterest<span class="artist-quote">»</span></span> или <span class="artist-name"><span class="artist-quote">«</span>Behance<span class="artist-quote">»</span></span> регулярно можно было увидеть, как кто-то обыгрывает известные логотипы.</p>
           </div>
         </div>
+        <figure class="image-asset image-pair image-pair-square image-pair-stack" id="adidas-bootlegs-mobile" hidden>
+          <div class="image-frame"></div>
+        </figure>
         <div class="turn answer">
           <div class="turn-copy answer-copy">
             <p>А потом я так же стал угорать с <span class="artist-name"><span class="artist-quote">«</span>Тойоты<span class="artist-quote">»</span></span> и случайно узнал про проект <span class="artist-name"><span class="artist-quote">«</span><a href="https://fict.info/" target="_blank" rel="noopener noreferrer">Церковь Тойоты</a><span class="artist-quote">»</span></span>. Тогда <span class="artist-name"><span class="artist-quote">«</span><a href="https://t.me/hypernormis/3/4413" target="_blank" rel="noopener noreferrer">011668</a><span class="artist-quote">»</span></span>, создатель всего этого движа, коллабил с <span class="artist-name"><span class="artist-quote">«</span><a href="https://t.me/thequietplace/9417" target="_blank" rel="noopener noreferrer">S280F</a><span class="artist-quote">»</span></span>, и это казалось самым свежим звуком. Потом я узнал, что готовится <a href="https://fict.bandcamp.com/album/toyotathon" target="_blank" rel="noopener noreferrer">компиляция</a> <span class="artist-name"><span class="artist-quote">«</span>Церкви Тойоты<span class="artist-quote">»</span></span> почти на 100 треков, и с тех пор стал себя ассоциировать со всем этим движем. На тот момент складывалось ощущение, что благодаря таким проектам у этой музыки ещё есть шансы) Т. е. так получилось, что многое из того, что делает <span class="artist-name"><span class="artist-quote">«</span>011668<span class="artist-quote">»</span></span>, резонировало с тем, как я вижу экспериментальную деятельность в интернете, поэтому я продолжил развивать своё ответвление <span class="artist-name"><span class="artist-quote">«</span>Тойоты<span class="artist-quote">»</span></span> в рунете, только более темную версию. Если зайти к <span class="artist-name"><span class="artist-quote">«</span>011668<span class="artist-quote">»</span></span> на <a href="https://www.instagram.com/0ll668/" target="_blank" rel="noopener noreferrer">страницу</a> в <span class="artist-name"><span class="artist-quote">«</span>Instagram<span class="artist-quote">»</span></span>, может показаться, что там рандомный поток чуши и бессмысленного мерча, но если углубиться, то можно обнаружить отсылки к <a href="https://t.me/slopnormis/2737/3590" target="_blank" rel="noopener noreferrer">Nick Land</a>, <span class="artist-name"><span class="artist-quote">«</span><a href="https://hijinx.world/interactive/2026-ccru-graph/" target="_blank" rel="noopener noreferrer">CCRU</a><span class="artist-quote">»</span></span> или <span class="artist-name"><span class="artist-quote">«</span><a href="https://t.me/slopnormis/2737/3642" target="_blank" rel="noopener noreferrer">Palantir</a><span class="artist-quote">»</span></span>, заигрывание с различными философскими темами. А если у тебя богатое воображение, то можно приметить и ещё что-то. Выглядит как то, чем должно быть настоящее искусство в современном интернете, — скрещивание медиумов и сатира над тем, что сейчас актуально.</p>
           </div>
         </div>
-        <figure class="image-asset image-pair image-pair-square image-pair-stack" data-sources-before>
+        <figure class="image-asset image-pair image-pair-square image-pair-stack" id="adidas-bootlegs-pair" data-sources-before>
           <div class="image-frame">
             <a class="photo-link" id="adidas-bootlegs" href="assets/media/adidas-bootlegs.webp" data-photo aria-label="Открыть изображение. Мем с бутлегами логотипа Adidas">
               <img src="assets/media/adidas-bootlegs.webp" width="720" height="715" loading="lazy" decoding="async" alt="Мем с бутлегами логотипа Adidas">
@@ -344,103 +348,123 @@
             <p>Раньше я <a href="https://t.me/trollnormis/140" target="_blank" rel="noopener noreferrer">жёстче их заёбывал</a>, а сейчас уже не так весело) Но всё это в игровой форме. Лично к этим людям не питаю особого негатива, только в формате игры вокруг поиска крутого контента.</p>
           </div>
         </div>
-        <section class="toyota-profiles" id="toyota-handles" aria-label="Аккаунты Тойоты в Telegram">
+        <section class="toyota-profiles" id="toyota-handles" data-profile-frame-model="assets/frames/toyota-avatar-frame.glb" aria-label="Аккаунты Тойоты в Telegram">
           <ul class="toyota-profile-list" role="list">
-            <li style="--profile-x: 23%; --profile-y: 7%; --profile-frame-angle: 8deg; --profile-frame-period: 52s">
+            <li data-profile-mobile-position="7" style="--profile-x: 23%; --profile-y: 7%; --profile-frame-angle: 8deg">
               <a class="toyota-profile" href="https://t.me/toyotulus" target="_blank" rel="noopener noreferrer">
                 <span class="toyota-profile-avatar">
-                  <img src="assets/media/previews/toyotulus-avatar.jpg?v=6536067b" width="320" height="320" loading="lazy" decoding="async" alt="">
-                  <video data-profile-video="assets/media/previews/toyotulus-avatar.mp4?v=6536067b" data-profile-animation="assets/media/previews/toyotulus-avatar.webp?v=6536067b" muted loop playsinline preload="none" aria-hidden="true"></video>
+                  <span class="toyota-profile-media">
+                    <img src="assets/media/previews/toyotulus-avatar.jpg?v=6536067b" width="320" height="320" loading="lazy" decoding="async" alt="">
+                    <video data-profile-video="assets/media/previews/toyotulus-avatar.mp4?v=6536067b" data-profile-animation="assets/media/previews/toyotulus-avatar.webp?v=6536067b" muted loop playsinline preload="none" aria-hidden="true"></video>
+                  </span>
                 </span>
                 <span class="toyota-profile-name">Тойотулус</span>
                 <span class="toyota-profile-handle">@toyotulus</span>
               </a>
             </li>
-            <li style="--profile-x: 53%; --profile-y: 1%; --profile-frame-angle: 96deg; --profile-frame-period: 56.3s">
+            <li data-profile-mobile-position="5" style="--profile-x: 53%; --profile-y: 1%; --profile-frame-angle: 96deg">
               <a class="toyota-profile" href="https://t.me/toyotus" target="_blank" rel="noopener noreferrer">
                 <span class="toyota-profile-avatar">
-                  <img src="assets/media/previews/toyotus-avatar.jpg" width="320" height="320" loading="lazy" decoding="async" alt="">
-                  <video data-profile-video="assets/media/previews/toyotus-avatar.mp4" data-profile-animation="assets/media/previews/toyotus-avatar.webp" muted loop playsinline preload="none" aria-hidden="true"></video>
+                  <span class="toyota-profile-media">
+                    <img src="assets/media/previews/toyotus-avatar.jpg" width="320" height="320" loading="lazy" decoding="async" alt="">
+                    <video data-profile-video="assets/media/previews/toyotus-avatar.mp4" data-profile-animation="assets/media/previews/toyotus-avatar.webp" muted loop playsinline preload="none" aria-hidden="true"></video>
+                  </span>
                 </span>
                 <span class="toyota-profile-name">Тойотус</span>
                 <span class="toyota-profile-handle">@toyotus</span>
               </a>
             </li>
-            <li style="--profile-x: 83%; --profile-y: 10%; --profile-frame-angle: 275deg; --profile-frame-period: 60.6s">
+            <li data-profile-mobile-position="4" style="--profile-x: 83%; --profile-y: 10%; --profile-frame-angle: 275deg">
               <a class="toyota-profile" href="https://t.me/toyotathony" target="_blank" rel="noopener noreferrer">
                 <span class="toyota-profile-avatar">
-                  <img src="assets/media/previews/toyotathony-avatar.jpg?v=1bcee092" width="320" height="320" loading="lazy" decoding="async" alt="">
-                  <video data-profile-video="assets/media/previews/toyotathony-avatar.mp4?v=1bcee092" data-profile-animation="assets/media/previews/toyotathony-avatar.webp?v=1bcee092" muted loop playsinline preload="none" aria-hidden="true"></video>
+                  <span class="toyota-profile-media">
+                    <img src="assets/media/previews/toyotathony-avatar.jpg?v=1bcee092" width="320" height="320" loading="lazy" decoding="async" alt="">
+                    <video data-profile-video="assets/media/previews/toyotathony-avatar.mp4?v=1bcee092" data-profile-animation="assets/media/previews/toyotathony-avatar.webp?v=1bcee092" muted loop playsinline preload="none" aria-hidden="true"></video>
+                  </span>
                 </span>
                 <span class="toyota-profile-name">Тойотатоний</span>
                 <span class="toyota-profile-handle">@toyotathony</span>
               </a>
             </li>
-            <li style="--profile-x: 11%; --profile-y: 37%; --profile-frame-angle: 52deg; --profile-frame-period: 64.9s">
+            <li style="--profile-x: 11%; --profile-y: 37%; --profile-frame-angle: 52deg">
               <a class="toyota-profile" href="https://t.me/toyotademon" target="_blank" rel="noopener noreferrer">
                 <span class="toyota-profile-avatar">
-                  <img src="assets/media/previews/toyotademon-avatar.jpg?v=90697eaa" width="320" height="320" loading="lazy" decoding="async" alt="">
-                  <video data-profile-video="assets/media/previews/toyotademon-avatar.mp4?v=90697eaa" data-profile-animation="assets/media/previews/toyotademon-avatar.webp?v=90697eaa" muted loop playsinline preload="none" aria-hidden="true"></video>
+                  <span class="toyota-profile-media">
+                    <img src="assets/media/previews/toyotademon-avatar.jpg?v=90697eaa" width="320" height="320" loading="lazy" decoding="async" alt="">
+                    <video data-profile-video="assets/media/previews/toyotademon-avatar.mp4?v=90697eaa" data-profile-animation="assets/media/previews/toyotademon-avatar.webp?v=90697eaa" muted loop playsinline preload="none" aria-hidden="true"></video>
+                  </span>
                 </span>
                 <span class="toyota-profile-name">Демон Из Тойоты</span>
                 <span class="toyota-profile-handle">@toyotademon</span>
               </a>
             </li>
-            <li class="toyota-profile-center" style="--profile-x: 37.5%; --profile-y: 36.5%; --profile-frame-angle: 210deg; --profile-frame-period: 69.2s">
+            <li class="toyota-profile-center" data-profile-mobile-position="1" style="--profile-x: 37.5%; --profile-y: 36.5%; --profile-frame-angle: 210deg">
               <a class="toyota-profile" href="https://t.me/metanormis" target="_blank" rel="noopener noreferrer">
                 <span class="toyota-profile-avatar">
-                  <img src="assets/media/previews/metanormis-avatar.jpg" width="320" height="320" loading="lazy" decoding="async" alt="">
-                  <video data-profile-video="assets/media/previews/metanormis-avatar.mp4" data-profile-animation="assets/media/previews/metanormis-avatar.webp" muted loop playsinline preload="none" aria-hidden="true"></video>
+                  <span class="toyota-profile-media">
+                    <img src="assets/media/previews/metanormis-avatar.jpg" width="320" height="320" loading="lazy" decoding="async" alt="">
+                    <video data-profile-video="assets/media/previews/metanormis-avatar.mp4" data-profile-animation="assets/media/previews/metanormis-avatar.webp" muted loop playsinline preload="none" aria-hidden="true"></video>
+                  </span>
                 </span>
                 <span class="toyota-profile-name">ThePerson</span>
                 <span class="toyota-profile-handle">@metanormis</span>
               </a>
             </li>
-            <li class="toyota-profile-center" style="--profile-x: 64.5%; --profile-y: 34%; --profile-frame-angle: 345deg; --profile-frame-period: 73.5s">
+            <li class="toyota-profile-center" data-profile-mobile-position="2" style="--profile-x: 64.5%; --profile-y: 34%; --profile-frame-angle: 345deg">
               <a class="toyota-profile" href="https://t.me/neogrimer" target="_blank" rel="noopener noreferrer">
                 <span class="toyota-profile-avatar">
-                  <img src="assets/media/previews/neogrimer-avatar.jpg" width="320" height="320" loading="lazy" decoding="async" alt="">
-                  <video data-profile-video="assets/media/previews/neogrimer-avatar.mp4" data-profile-animation="assets/media/previews/neogrimer-avatar.webp" muted loop playsinline preload="none" aria-hidden="true"></video>
+                  <span class="toyota-profile-media">
+                    <img src="assets/media/previews/neogrimer-avatar.jpg" width="320" height="320" loading="lazy" decoding="async" alt="">
+                    <video data-profile-video="assets/media/previews/neogrimer-avatar.mp4" data-profile-animation="assets/media/previews/neogrimer-avatar.webp" muted loop playsinline preload="none" aria-hidden="true"></video>
+                  </span>
                 </span>
                 <span class="toyota-profile-name">Сын Люцифера</span>
                 <span class="toyota-profile-handle">@neogrimer</span>
               </a>
             </li>
-            <li style="--profile-x: 89%; --profile-y: 41.5%; --profile-frame-angle: 105deg; --profile-frame-period: 77.8s">
+            <li data-profile-mobile-position="9" style="--profile-x: 89%; --profile-y: 41.5%; --profile-frame-angle: 105deg">
               <a class="toyota-profile" href="https://t.me/toyotex" target="_blank" rel="noopener noreferrer">
                 <span class="toyota-profile-avatar">
-                  <img src="assets/media/previews/toyotex-avatar.jpg" width="320" height="320" loading="lazy" decoding="async" alt="">
-                  <video data-profile-video="assets/media/previews/toyotex-avatar.mp4" data-profile-animation="assets/media/previews/toyotex-avatar.webp" muted loop playsinline preload="none" aria-hidden="true"></video>
+                  <span class="toyota-profile-media">
+                    <img src="assets/media/previews/toyotex-avatar.jpg" width="320" height="320" loading="lazy" decoding="async" alt="">
+                    <video data-profile-video="assets/media/previews/toyotex-avatar.mp4" data-profile-animation="assets/media/previews/toyotex-avatar.webp" muted loop playsinline preload="none" aria-hidden="true"></video>
+                  </span>
                 </span>
                 <span class="toyota-profile-name">Тойотекс</span>
                 <span class="toyota-profile-handle">@toyotex</span>
               </a>
             </li>
-            <li style="--profile-x: 23%; --profile-y: 70%; --profile-frame-angle: 242deg; --profile-frame-period: 82.1s">
+            <li style="--profile-x: 23%; --profile-y: 70%; --profile-frame-angle: 242deg">
               <a class="toyota-profile" href="https://t.me/toyotanoid" target="_blank" rel="noopener noreferrer">
                 <span class="toyota-profile-avatar">
-                  <img src="assets/media/previews/toyotanoid-avatar.jpg?v=d7676705" width="320" height="320" loading="lazy" decoding="async" alt="">
-                  <video data-profile-video="assets/media/previews/toyotanoid-avatar.mp4?v=d7676705" data-profile-animation="assets/media/previews/toyotanoid-avatar.webp?v=d7676705" muted loop playsinline preload="none" aria-hidden="true"></video>
+                  <span class="toyota-profile-media">
+                    <img src="assets/media/previews/toyotanoid-avatar.jpg?v=d7676705" width="320" height="320" loading="lazy" decoding="async" alt="">
+                    <video data-profile-video="assets/media/previews/toyotanoid-avatar.mp4?v=d7676705" data-profile-animation="assets/media/previews/toyotanoid-avatar.webp?v=d7676705" muted loop playsinline preload="none" aria-hidden="true"></video>
+                  </span>
                 </span>
                 <span class="toyota-profile-name">Тойотанойд</span>
                 <span class="toyota-profile-handle">@toyotanoid</span>
               </a>
             </li>
-            <li style="--profile-x: 51%; --profile-y: 74%; --profile-frame-angle: 165deg; --profile-frame-period: 86.4s">
+            <li data-profile-mobile-position="3" style="--profile-x: 51%; --profile-y: 74%; --profile-frame-angle: 165deg">
               <a class="toyota-profile" href="https://t.me/toyotaness" target="_blank" rel="noopener noreferrer">
                 <span class="toyota-profile-avatar">
-                  <img src="assets/media/previews/toyotaness-avatar.jpg" width="320" height="320" loading="lazy" decoding="async" alt="">
-                  <video data-profile-video="assets/media/previews/toyotaness-avatar.mp4" data-profile-animation="assets/media/previews/toyotaness-avatar.webp" muted loop playsinline preload="none" aria-hidden="true"></video>
+                  <span class="toyota-profile-media">
+                    <img src="assets/media/previews/toyotaness-avatar.jpg" width="320" height="320" loading="lazy" decoding="async" alt="">
+                    <video data-profile-video="assets/media/previews/toyotaness-avatar.mp4" data-profile-animation="assets/media/previews/toyotaness-avatar.webp" muted loop playsinline preload="none" aria-hidden="true"></video>
+                  </span>
                 </span>
                 <span class="toyota-profile-name">Тойотность</span>
                 <span class="toyota-profile-handle">@toyotaness</span>
               </a>
             </li>
-            <li style="--profile-x: 79.5%; --profile-y: 69%; --profile-frame-angle: 301deg; --profile-frame-period: 90.7s">
+            <li style="--profile-x: 79.5%; --profile-y: 69%; --profile-frame-angle: 301deg">
               <a class="toyota-profile" href="https://t.me/toyotatum" target="_blank" rel="noopener noreferrer">
                 <span class="toyota-profile-avatar">
-                  <img src="assets/media/previews/toyotatum-avatar.jpg?v=d2f010f7" width="320" height="320" loading="lazy" decoding="async" alt="">
-                  <video data-profile-video="assets/media/previews/toyotatum-avatar.mp4?v=d2f010f7" data-profile-animation="assets/media/previews/toyotatum-avatar.webp?v=d2f010f7" muted loop playsinline preload="none" aria-hidden="true"></video>
+                  <span class="toyota-profile-media">
+                    <img src="assets/media/previews/toyotatum-avatar.jpg?v=d2f010f7" width="320" height="320" loading="lazy" decoding="async" alt="">
+                    <video data-profile-video="assets/media/previews/toyotatum-avatar.mp4?v=d2f010f7" data-profile-animation="assets/media/previews/toyotatum-avatar.webp?v=d2f010f7" muted loop playsinline preload="none" aria-hidden="true"></video>
+                  </span>
                 </span>
                 <span class="toyota-profile-name">Тойотатум</span>
                 <span class="toyota-profile-handle">@toyotatum</span>
@@ -669,7 +693,7 @@
         <div class="turn answer">
           <div class="turn-copy answer-copy">
             <p>Нужно, чтобы она с нуля громко генерила, иначе получается мусор при увеличении громкости. Конечно, если в команде <span class="artist-name"><span class="artist-quote">«</span>Suno<span class="artist-quote">»</span></span> никто не понимает прикол <span class="artist-name"><span class="artist-quote">«</span><a href="https://www.reddit.com/r/audioengineering/comments/11wte7t/100_gecs_mastering_question/" target="_blank" rel="noopener noreferrer">100 gecs</a><span class="artist-quote">»</span></span> или <span class="artist-name"><span class="artist-quote">«</span><a href="https://t.me/archivenormis/3791/12385" target="_blank" rel="noopener noreferrer">Темного Принца</a><span class="artist-quote">»</span></span>, то они ни фига не сделают модель, которая будет конкурировать с кожаными.</p>
-            <p>Вот максимум, что на данном этапе можно мастерингом сделать:</p>
+            <p data-sources-before>Вот максимум, что на данном этапе можно мастерингом сделать:</p>
           </div>
         </div>
         <figure class="audio-cue" id="sade-versions" data-audio-player data-compare-versions aria-label="S.A.D.E. - Toyotas Never Die, But You Will — две версии">
@@ -909,7 +933,7 @@
                 <canvas class="cover-frame-canvas"></canvas>
               </span>
             </div>
-            <figcaption>масштаб удаленных треков можно увидеть на этом скрине</figcaption>
+            <figcaption>Сколько треков со временем пропадает из <span class="artist-name"><span class="artist-quote">«</span>ВК<span class="artist-quote">»</span></span></figcaption>
           </figure>
           <div class="turn answer">
             <div class="turn-copy answer-copy">
@@ -1075,11 +1099,11 @@
       <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M14 8H2m5-5L2 8l5 5"/></svg>
       <span>Назад</span>
     </button>
-    <div class="sigil-viewer-stage" data-sigil-stage role="group" tabindex="0" aria-label="Сигил. Поворачивайте модель перетаскиванием или клавишами со стрелками.">
+    <span class="sigil-viewer-stage" data-sigil-stage role="group" tabindex="0" aria-label="Сигил. Поворачивайте модель перетаскиванием или клавишами со стрелками.">
       <img src="assets/art/sigil-thorn-halo.webp" width="880" height="880" alt="" loading="lazy" decoding="async">
       <canvas data-sigil-canvas aria-hidden="true"></canvas>
       <canvas data-sigil-fallback width="768" height="768" aria-hidden="true"></canvas>
-    </div>
+    </span>
     <p class="sigil-viewer-status" data-sigil-status role="status" hidden></p>
   </dialog>
 </body>

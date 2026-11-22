@@ -103,26 +103,53 @@ function createSoftwareSigil(canvas, turntable) {
     const position = geometry.getAttribute("position");
     const normal = geometry.getAttribute("normal");
     const matrix = inverse.clone().multiply(mesh.matrixWorld);
+    const linear = matrix.clone().setPosition(0, 0, 0);
+    const normalMatrix = linear.clone().invert().transpose();
     const albedo = softwareMeshAlbedo(geometry, material);
     const vertices = new Float32Array(position.count * 6);
     const projected = new Float32Array(position.count * 4);
     const indices = geometry.index?.array ?? Uint32Array.from({ length: position.count }, (_, index) => index);
     for (let index = 0; index < position.count; index++) {
       point.fromBufferAttribute(position, index).applyMatrix4(matrix).toArray(vertices, index * 6);
-      direction.fromBufferAttribute(normal, index).transformDirection(matrix).toArray(vertices, index * 6 + 3);
+      direction.fromBufferAttribute(normal, index).applyMatrix4(normalMatrix).toArray(vertices, index * 6 + 3);
     }
-    meshes.push({ vertices, albedo, projected, indices });
+    const morphs = geometry.morphAttributes.position?.map((positions, target) => {
+      const normals = geometry.morphAttributes.normal?.[target];
+      const deltas = new Float32Array(vertices.length);
+      for (let index = 0, offset = 0; index < position.count; index++, offset += 6) {
+        point.fromBufferAttribute(positions, index).applyMatrix4(linear).toArray(deltas, offset);
+        if (normals) direction.fromBufferAttribute(normals, index).applyMatrix4(normalMatrix).toArray(deltas, offset + 3);
+      }
+      return deltas;
+    });
+    meshes.push({ vertices, albedo, projected, indices, morphs, weights: mesh.morphTargetInfluences });
   });
 
-  function draw(matrix, width) {
+  function draw(matrix, width, cameraDistance) {
     const size = Math.min(640, Math.max(240, Math.round(width)));
     const center = size / 2;
     const focal = center / Math.tan(Math.PI * 16 / 180);
-    for (const { vertices, albedo, projected } of meshes) {
+    for (const { vertices, albedo, projected, morphs, weights } of meshes) {
+      const bending = morphs && weights?.some(Boolean);
       for (let index = 0, offset = 0, out = 0; index < albedo.length; index++, offset += 6, out += 4) {
-        const x = vertices[offset], y = vertices[offset + 1], z = vertices[offset + 2];
-        const nx = vertices[offset + 3], ny = vertices[offset + 4], nz = vertices[offset + 5];
-        const distance = 1 / (4.15 - (x * matrix[2] + y * matrix[6] + z * matrix[10]));
+        let x = vertices[offset], y = vertices[offset + 1], z = vertices[offset + 2];
+        let nx = vertices[offset + 3], ny = vertices[offset + 4], nz = vertices[offset + 5];
+        if (bending) {
+          for (let target = 0; target < morphs.length; target++) {
+            const delta = morphs[target], weight = weights[target];
+            x += delta[offset] * weight;
+            y += delta[offset + 1] * weight;
+            z += delta[offset + 2] * weight;
+            nx += delta[offset + 3] * weight;
+            ny += delta[offset + 4] * weight;
+            nz += delta[offset + 5] * weight;
+          }
+        }
+        const length = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1;
+        nx /= length;
+        ny /= length;
+        nz /= length;
+        const distance = 1 / (cameraDistance - (x * matrix[2] + y * matrix[6] + z * matrix[10]));
         projected[out] = center + (x * matrix[0] + y * matrix[4] + z * matrix[8]) * focal * distance;
         projected[out + 1] = center - (x * matrix[1] + y * matrix[5] + z * matrix[9]) * focal * distance;
         projected[out + 2] = distance;

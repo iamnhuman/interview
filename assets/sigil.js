@@ -84,6 +84,66 @@ async function loadSigilGLB(url, backup, signal) {
   return loader.parseAsync(data, "");
 }
 
+function createSigilWave(facing, pinnedRadius = 0) {
+  facing.updateMatrixWorld(true);
+  const weights = [];
+  const vertex = new THREE.Vector3();
+  const normal = new THREE.Vector3();
+  const delta = new THREE.Vector3();
+  facing.traverse(mesh => {
+    if (!mesh.isMesh) return;
+    const { geometry, matrixWorld } = mesh;
+    const positions = geometry.getAttribute("position");
+    const normals = geometry.getAttribute("normal");
+    const toSigil = matrixWorld.clone().setPosition(0, 0, 0);
+    const toLocal = toSigil.clone().invert();
+    const normalMatrix = toLocal.clone().transpose();
+    const normalToLocal = toSigil.clone().transpose();
+    const positionWaves = [new Float32Array(positions.count * 3), new Float32Array(positions.count * 3)];
+    const normalWaves = [new Float32Array(positions.count * 3), new Float32Array(positions.count * 3)];
+
+    for (let index = 0; index < positions.count; index++) {
+      const { x, y } = vertex.fromBufferAttribute(positions, index).applyMatrix4(matrixWorld);
+      const radius = Math.hypot(x, y);
+      const inverseRadius = 1 / Math.max(.12, radius);
+      const radialX = x * inverseRadius, radialY = y * inverseRadius;
+      const phase = 3 * Math.atan2(y, x) + 1.8 * radius;
+      const cosine = Math.cos(phase), sine = Math.sin(phase);
+      const edge = pinnedRadius ? Math.min(1, Math.max(0, (radius - pinnedRadius) / .24)) : 1;
+      const flex = Math.min(1, .35 + .72 * radius) * edge * edge * (3 - 2 * edge);
+      const radial = .066 * flex, tangent = .034 * flex, depth = .12 * flex;
+      const slopeX = 1.8 * radialX - 3 * radialY * inverseRadius;
+      const slopeY = 1.8 * radialY + 3 * radialX * inverseRadius;
+      const normalZ = normal.fromBufferAttribute(normals, index).applyMatrix4(normalMatrix).z;
+
+      // Two morph targets carry the same wave a quarter-cycle apart.
+      for (let target = 0; target < 2; target++) {
+        const wave = target === 0 ? cosine : sine;
+        const crest = target === 0 ? sine : -cosine;
+        delta.set(radialX * radial * wave - radialY * tangent * crest,
+          radialY * radial * wave + radialX * tangent * crest, depth * crest);
+        delta.applyMatrix4(toLocal).toArray(positionWaves[target], index * 3);
+        const slope = depth * wave * normalZ;
+        delta.set(-slope * slopeX, -slope * slopeY, 0);
+        delta.applyMatrix4(normalToLocal).toArray(normalWaves[target], index * 3);
+      }
+    }
+
+    geometry.morphAttributes.position = positionWaves.map(array => new THREE.Float32BufferAttribute(array, 3));
+    geometry.morphAttributes.normal = normalWaves.map(array => new THREE.Float32BufferAttribute(array, 3));
+    geometry.morphTargetsRelative = true;
+    mesh.updateMorphTargets();
+    weights.push(mesh.morphTargetInfluences);
+  });
+
+  return (cosine, sine) => {
+    for (const influence of weights) {
+      influence[0] = cosine;
+      influence[1] = sine;
+    }
+  };
+}
+
 (() => {
   const triggers = document.querySelectorAll("[data-sigil-trigger]");
   const preview = document.querySelector("[data-sigil-hover]");
@@ -92,7 +152,9 @@ async function loadSigilGLB(url, backup, signal) {
 
   const heroTrigger = document.querySelector(".heading-sigil");
   const hoverStart = document.querySelector("[data-sigil-hover-start]");
+  const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
   const masthead = document.querySelector(".masthead");
+  const navigation = document.querySelector("[data-sigil-navigation]");
   const footerTrigger = document.querySelector('[data-sigil-preview="footer"]');
   const outro = document.getElementById("interview-outro");
   const stage = viewer.querySelector("[data-sigil-stage]");
@@ -125,10 +187,11 @@ async function loadSigilGLB(url, backup, signal) {
   let frame = 0;
   let previous = 0;
   let hovering = false;
+  let heroVisible = false, heroTime = 0;
   let pointer, hoverCursor;
   let softwareStamp = -Infinity;
 
-  function prepareModel(model) {
+  function prepareModel(model, isHero) {
     const materialMetalness = new Map();
     const center = new THREE.Box3().setFromObject(model).getCenter(new THREE.Vector3());
     const vertex = new THREE.Vector3();
@@ -149,7 +212,8 @@ async function loadSigilGLB(url, backup, signal) {
     facing.scale.setScalar(1 / Math.sqrt(radiusSquared));
     model.position.sub(center);
     facing.add(model);
-    return { facing, materialMetalness };
+    const wave = isHero ? createSigilWave(facing) : null;
+    return { facing, materialMetalness, wave };
   }
 
   function applyMaterialLighting() {
@@ -186,8 +250,12 @@ async function loadSigilGLB(url, backup, signal) {
     softwareStamp = -Infinity;
   }
 
+  function isOnCover() {
+    return heroTrigger && stage.parentElement === heroTrigger;
+  }
+
   function isShowing() {
-    return hovering || viewer.open;
+    return hovering || viewer.open || (heroVisible && isOnCover());
   }
 
   function schedule() {
@@ -228,13 +296,13 @@ async function loadSigilGLB(url, backup, signal) {
     }
   }
 
-  function drawSoftware(stamp, spinning) {
+  function drawSoftware(stamp, animating) {
     if (!mounted || softwareUnavailable) return false;
-    if (spinning && stage.dataset.live === "software" && stamp - softwareStamp < 32) return true;
+    if (animating && stage.dataset.live === "software" && stamp - softwareStamp < 32) return true;
     try {
       software ??= createSoftwareSigil(fallbackCanvas, turntable);
       turntable.updateMatrix();
-      software.draw(turntable.matrix.elements, stage.clientWidth);
+      software.draw(turntable.matrix.elements, stage.clientWidth, camera.position.z);
       softwareStamp = stamp;
       showFrame("software");
       return true;
@@ -249,30 +317,40 @@ async function loadSigilGLB(url, backup, signal) {
   function draw(stamp) {
     frame = 0;
     if (!isShowing() || document.hidden || signal.aborted) return;
-    const spinning = !pointer;
-    if (spinning) {
-      const dt = previous ? Math.min(.05, (stamp - previous) / 1000) : 1 / 60;
-      turntable.rotateOnWorldAxis(yawAxis, (hovering ? 3.2 : .82) * dt);
+    const onCover = isOnCover();
+    const animating = onCover || !pointer;
+    if (onCover && previous && stamp - previous < 32) { schedule(); return; }
+    const dt = previous ? Math.min(.05, (stamp - previous) / 1000) : 1 / 60;
+    if (onCover) {
+      const calm = reducedMotion.matches;
+      const strength = calm ? .8 : 1;
+      heroTime += dt * (calm ? .56 : 1);
+      const phase = 2.2 * heroTime;
+      mounted.wave(strength * Math.cos(phase), strength * Math.sin(phase));
+      turntable.rotation.set(0, 0, .08);
+    } else {
+      mounted.wave?.(0, 0);
+      if (animating) turntable.rotateOnWorldAxis(yawAxis, (hovering ? 3.2 : .82) * dt);
     }
-    previous = spinning ? stamp : 0;
-    if (!drawModel()) drawSoftware(stamp, spinning);
-    if (spinning) schedule();
+    previous = animating ? stamp : 0;
+    if (!drawModel()) drawSoftware(stamp, animating);
+    if (animating) schedule();
   }
 
   function resize() {
     if (!isShowing() || !mounted) return;
+    const { clientWidth: width, clientHeight: height } = canvas;
+    if (!width || !height) return;
+    camera.aspect = width / height;
+    camera.position.z = (isOnCover() ? 3.3 : 4.15) / Math.min(1, camera.aspect);
+    camera.updateProjectionMatrix();
     if (!renderer && !contextLost && !webGLUnavailable) {
       initRenderer();
       if (canRenderWebGL()) lightModel();
     }
     if (!canRenderWebGL()) { schedule(); return; }
-    const { clientWidth: width, clientHeight: height } = canvas;
-    if (!width || !height) return;
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2, 1600 / Math.max(width, height)));
     renderer.setSize(width, height, false);
-    camera.aspect = width / height;
-    camera.position.z = 4.15 / Math.min(1, camera.aspect);
-    camera.updateProjectionMatrix();
     schedule();
   }
 
@@ -284,6 +362,7 @@ async function loadSigilGLB(url, backup, signal) {
     delete stage.dataset.live;
     if (activeTrigger) delete activeTrigger.dataset.sigilPreviewing;
     size.disconnect();
+    coverVisibility.disconnect();
     for (const pending of models.values()) {
       void pending.then(({ facing }) => disposeSigilGeometry(facing), () => {});
     }
@@ -318,7 +397,7 @@ async function loadSigilGLB(url, backup, signal) {
     const { sigilModel, sigilBackup } = trigger.dataset;
     const pending = models.get(trigger) ?? loadSigilGLB(sigilModel, sigilBackup, signal).then(({ scene: model }) => {
       try {
-        return prepareModel(model);
+        return prepareModel(model, trigger === heroTrigger);
       } catch (error) {
         disposeSigilGeometry(model);
         throw error;
@@ -363,19 +442,49 @@ async function loadSigilGLB(url, backup, signal) {
     document.fonts?.ready.then(measureHeroHover);
   }
 
+  const coverVisibility = new IntersectionObserver(([entry]) => {
+    heroVisible = entry.isIntersecting;
+    if (!isOnCover()) return;
+    if (heroVisible) {
+      resize();
+      void start();
+    } else stop();
+  });
+
+  function placeStage(host) {
+    if (stage.parentElement === host) return;
+    stop();
+    delete stage.dataset.live;
+    if (host === viewer) {
+      viewer.insertBefore(stage, status);
+      stage.tabIndex = 0;
+      stage.removeAttribute("aria-hidden");
+    } else {
+      host.append(stage);
+      stage.removeAttribute("tabindex");
+      stage.setAttribute("aria-hidden", "true");
+    }
+  }
+
+  function showCover() {
+    if (!heroTrigger) { placeStage(viewer); return; }
+    activate(heroTrigger);
+    placeStage(heroTrigger);
+    resize();
+    void start();
+  }
+
   function hidePreview() {
     if (!hovering) return;
     hovering = false;
     preview.hidden = true;
-    viewer.insertBefore(stage, status);
-    stage.tabIndex = 0;
     delete activeTrigger.dataset.sigilPreviewing;
-    stop();
+    if (!viewer.open) showCover();
   }
 
   function activate(trigger) {
     if (activeTrigger === trigger) return;
-    hidePreview();
+    if (activeTrigger) delete activeTrigger.dataset.sigilPreviewing;
     mounted?.facing.removeFromParent();
     mounted = undefined;
     software = undefined;
@@ -407,11 +516,11 @@ async function loadSigilGLB(url, backup, signal) {
       const sidePadding = 24;
       const hoverTop = outro ? outro.getBoundingClientRect().bottom + 50 : top - 50;
       if (x >= left - sidePadding && x < right + sidePadding && y < footerTrigger.parentElement.getBoundingClientRect().bottom
-        && y >= hoverTop) return footerTrigger;
+        && y >= hoverTop && !navigation?.contains(document.elementFromPoint(x, y))) return footerTrigger;
     }
   }
 
-  function canPreview(event) {
+  function canHover(event) {
     return !viewer.open && (event.pointerType === "mouse" || event.pointerType === "pen");
   }
 
@@ -422,8 +531,7 @@ async function loadSigilGLB(url, backup, signal) {
     hovering = true;
     preview.toggleAttribute("data-compact", trigger.dataset.sigilPreview === "footer");
     preview.hidden = false;
-    stage.tabIndex = -1;
-    preview.append(stage);
+    placeStage(preview);
     turntable?.rotation.set(.09, 0, -.14);
     resize();
     void start();
@@ -438,16 +546,17 @@ async function loadSigilGLB(url, backup, signal) {
 
   for (const trigger of triggers) {
     trigger.addEventListener("pointerenter", event => {
-      if (canPreview(event) && hoverTriggerAt(event.clientX, event.clientY) === trigger) showPreview(trigger, event);
+      if (canHover(event) && hoverTriggerAt(event.clientX, event.clientY) === trigger) showPreview(trigger, event);
     }, { signal });
     trigger.addEventListener("pointerleave", event => {
       if (activeTrigger === trigger && hoverTriggerAt(event.clientX, event.clientY) !== trigger) hidePreview();
     }, { signal });
     trigger.addEventListener("click", () => {
       if (viewer.open) return;
-      hidePreview();
-      activate(trigger);
       viewer.showModal();
+      hidePreview();
+      placeStage(viewer);
+      activate(trigger);
       close.focus({ preventScroll: true });
       turntable?.rotation.set(.09, 0, -.14);
       status.textContent = "Загрузка модели…";
@@ -458,7 +567,7 @@ async function loadSigilGLB(url, backup, signal) {
     }, { signal });
   }
   window.addEventListener("pointermove", event => {
-    if (!canPreview(event)) return;
+    if (!canHover(event)) return;
     const trigger = hoverTriggerAt(event.clientX, event.clientY);
     if (trigger) showPreview(trigger, event);
     else hidePreview();
@@ -517,6 +626,7 @@ async function loadSigilGLB(url, backup, signal) {
     delete stage.dataset.dragging;
     stop();
     activeTrigger?.focus({ preventScroll: true });
+    showCover();
   }, { signal });
   canvas.addEventListener("webglcontextlost", event => {
     event.preventDefault();
@@ -541,4 +651,9 @@ async function loadSigilGLB(url, backup, signal) {
   document.addEventListener("visibilitychange", () => document.hidden ? stop() : schedule(), { signal });
   window.addEventListener("pagehide", event => { if (event.persisted) stop(); else dispose(); }, { signal });
   window.addEventListener("pageshow", schedule, { signal });
+  reducedMotion.addEventListener("change", schedule, { signal });
+  if (heroTrigger) {
+    showCover();
+    coverVisibility.observe(heroTrigger);
+  }
 })();

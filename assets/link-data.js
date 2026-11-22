@@ -9,9 +9,9 @@ const trollnormisAvatar = {
 
 const archivenormisAvatar = {
   imageLayout: "avatar",
-  image: "assets/media/previews/archivenormis-avatar.jpg",
-  video: "assets/media/previews/archivenormis-avatar.mp4",
-  animatedImage: "assets/media/previews/archivenormis-avatar.webp"
+  image: "assets/media/previews/archivenormis-channel-avatar.jpg?v=2",
+  video: "assets/media/previews/archivenormis-channel-avatar.mp4?v=2",
+  animatedImage: "assets/media/previews/archivenormis-channel-avatar.webp?v=2"
 };
 
 const aginormisAvatar = {
@@ -91,10 +91,7 @@ const linkCards = {
     "title": "archivenormis",
     "meta": "«Telegram»",
     "description": "Архив от кино до репостов комментариев из музыкальных каналов.",
-    "imageLayout": "avatar",
-    "image": "assets/media/previews/archivenormis-channel-avatar.jpg",
-    "video": "assets/media/previews/archivenormis-channel-avatar.mp4",
-    "animatedImage": "assets/media/previews/archivenormis-channel-avatar.webp"
+    ...archivenormisAvatar
   },
   "https://t.me/archivenormis/5429/12636": {
     "title": "Arca live",

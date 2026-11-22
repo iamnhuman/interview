@@ -3,6 +3,7 @@
 (() => {
   const sourceSize = 1024;
   const slice = .32;
+  const stageWave = { amplitude: 8, frequency: 12, rate: 2.2 };
 
   // Align the media with the inner edges of the front-facing GLB models.
   const frameArt = {
@@ -13,6 +14,7 @@
     },
     "cover-stage": {
       bounds: [20, 17, 984, 979],
+      railCenter: [136, 160, 873, 873],
       opening: [
         [564, 155], [609, 156], [654, 164], [696.3, 163.1], [699, 163], [724, 175], [727, 181],
         [772, 179], [781, 192], [797, 185], [807, 185], [819, 189], [832, 201], [833, 220],
@@ -66,6 +68,93 @@
     if (value < slice) return value / slice * cap;
     if (value > 1 - slice) return length - (1 - value) / slice * cap;
     return cap + (value - slice) / (1 - 2 * slice) * (length - 2 * cap);
+  }
+
+  function stageSideOffset(u, v, phase, amount, offset) {
+    const x = 2 * u, y = 2 * v;
+    const across = 1 - x * x, down = 1 - y * y;
+    offset[0] = amount * x * down * down * Math.sin(stageWave.frequency * v + x + phase);
+    offset[1] = amount * y * across * across * Math.sin(stageWave.frequency * u - y - phase);
+  }
+
+  function fitStageStrands(width, height, cap) {
+    const [x1, y1, x2, y2] = frameArt["cover-stage"].railCenter;
+    const left = frameCoordinate(x1, width, cap), right = frameCoordinate(x2, width, cap);
+    const top = frameCoordinate(y1, height, cap), bottom = frameCoordinate(y2, height, cap);
+    const centerX = width / 2, centerY = height / 2;
+
+    return (x, y, result) => {
+      // Widen the strands across their centerlines, tapering into the corners.
+      const across = Math.max(0, 1 - ((x - centerX) / (centerX - cap)) ** 2);
+      const down = Math.max(0, 1 - ((y - centerY) / (centerY - cap)) ** 2);
+      const extraX = .3 * down * down, extraY = .3 * across * across;
+      result[0] = x + extraX * (x - (x < centerX ? left : right));
+      result[1] = y + extraY * (y - (y < centerY ? top : bottom));
+      result[2] = 1 + extraX;
+      result[3] = 1 + extraY;
+    };
+  }
+
+  function fitFrameOpening(photo, opening, width, height, cap, left, top, fitStrands) {
+    const fitted = opening.map(([x, y]) => [frameCoordinate(x, width, cap), frameCoordinate(y, height, cap)]);
+    const halfWidth = photo.clientWidth / 2, halfHeight = photo.clientHeight / 2;
+    const maxMove = fitStrands ? stageWave.amplitude * cap / 108 : 0;
+    const outline = [];
+    const offset = new Float64Array(2);
+    const strand = new Float64Array(4);
+    let zoom = 1;
+
+    for (let i = 0; i < fitted.length; i++) {
+      const [x, y] = fitted[i], [nextX, nextY] = fitted[(i + 1) % fitted.length];
+      const dx = nextX - x, dy = nextY - y;
+      const steps = fitStrands ? Math.max(1, Math.ceil(30 * Math.max(Math.abs(dx) / width, Math.abs(dy) / height))) : 1;
+      for (let step = 0; step < steps; step++) {
+        let fx = x + dx * step / steps, fy = y + dy * step / steps;
+        if (fitStrands) {
+          fitStrands(fx, fy, strand);
+          fx = strand[0];
+          fy = strand[1];
+        }
+        const px = left + fx, py = top + fy;
+        const u = fx / width - .5, v = .5 - fy / height;
+        const roomX = maxMove * Math.abs(2 * u) * (1 - 4 * v * v) ** 2;
+        const roomY = maxMove * Math.abs(2 * v) * (1 - 4 * u * u) ** 2;
+        zoom = Math.max(zoom, (Math.abs(px - halfWidth) + 1 + roomX) / halfWidth,
+          (Math.abs(py - halfHeight) + 1 + roomY) / halfHeight);
+        outline.push({ px, py, u, v });
+      }
+    }
+
+    // The photo's opening follows the same wave as the metal at its inner lip.
+    function paint(phase, amount) {
+      const polygon = outline.map(({ px, py, u, v }) => {
+        stageSideOffset(u, v, phase, amount, offset);
+        return `${(px + offset[0]).toFixed(2)}px ${(py - offset[1]).toFixed(2)}px`;
+      });
+      photo.style.setProperty("--frame-photo-clip", `polygon(${polygon.join(", ")})`);
+    }
+    photo.style.setProperty("--frame-photo-scale", String(zoom));
+    paint(0, 0);
+    return fitStrands ? paint : null;
+  }
+
+  function fitStageFallbackWave(photo, width, height, cap, left, top, padding) {
+    const fitStrands = fitStageStrands(width, height, cap);
+    const paintOpening = fitFrameOpening(photo, frameArt["cover-stage"].opening, width, height, cap, left, top, fitStrands);
+    const offset = new Float64Array(2);
+    const strand = new Float64Array(4);
+    return (points, time, strength) => {
+      const phase = stageWave.rate * time;
+      const amount = stageWave.amplitude * cap / 108 * strength;
+      for (const point of points) {
+        const x = point.x - padding, y = point.y - padding;
+        fitStrands(x, y, strand);
+        stageSideOffset(strand[0] / width - .5, .5 - strand[1] / height, phase, amount, offset);
+        point.px += strand[0] - x + offset[0];
+        point.py += strand[1] - y - offset[1];
+      }
+      paintOpening(phase, amount);
+    };
   }
 
   function createFrameTwist(geometry, width, height, cap, railCenter) {
@@ -126,7 +215,7 @@
     photo.removeAttribute("data-cover-frame-live");
     photo.removeAttribute("data-cover-frame-cpu");
     photo.toggleAttribute("data-cover-frame-fallback", true);
-    if (typeof animateCoverFrameFallback === "function") animateCoverFrameFallback(photo);
+    if (typeof animateCoverFrameFallback === "function") animateCoverFrameFallback(photo, fitStageFallbackWave);
   }
 
   function createSoftwareFrame(canvas, { geometry, material }, uniforms, wovenFrame) {
@@ -138,6 +227,7 @@
     const projected = new Float32Array(flex.length * 4);
     const indices = geometry.index?.array ?? Uint32Array.from({ length: flex.length }, (_, index) => index);
     const meshes = [{ projected, indices }];
+    const sideOffset = new Float64Array(2);
 
     return function draw(width, height) {
       const longSide = Math.max(width, height);
@@ -149,6 +239,8 @@
       const { x: pointerX, y: pointerY } = uniforms.framePointer.value;
       const time = uniforms.frameTime.value;
       const motion = uniforms.frameMotion.value;
+      const sideMotion = uniforms.frameSideMotion.value;
+      const sidePhase = uniforms.frameSidePhase.value;
       const phaseOffsetA = -2.1 * time;
       const phaseOffsetB = 1.34 * time + .43 * Math.sin(time * .71);
 
@@ -156,8 +248,8 @@
       for (let index = 0, offset = 0, out = 0; index < flex.length; index++, offset += 3, out += 4) {
         let x = positions[offset], y = positions[offset + 1], z = positions[offset + 2];
         let nx = normals[offset], ny = normals[offset + 1], nz = normals[offset + 2];
+        const u = x / frameWidth, v = y / frameHeight;
         if (motion && flex[index]) {
-          const u = x / frameWidth, v = y / frameHeight;
           const focus = .58 + .42 / (1 + 12 * ((u - pointerX) ** 2 + (v - pointerY) ** 2));
           const amount = flex[index] * motion * focus;
           const a = 16 * u + 5 * v + phaseOffsetA;
@@ -173,6 +265,11 @@
           nx /= length;
           ny /= length;
           nz /= length;
+        }
+        if (sideMotion) {
+          stageSideOffset(u, v, sidePhase, sideMotion, sideOffset);
+          x += sideOffset[0];
+          y += sideOffset[1];
         }
         projected[out] = (x + width / 2) * scaleX;
         projected[out + 1] = (height / 2 - y) * scaleY;
@@ -196,15 +293,18 @@
     const { signal } = events;
     const reduced = matchMedia("(prefers-reduced-motion: reduce)");
     const openingRect = artwork.openingRect;
+    const ripples = artwork === frameArt["cover-stage"];
     const pointer = new THREE.Vector2();
     const uniforms = {
       frameTime: { value: 0 },
       frameMotion: { value: 0 },
+      frameSideMotion: { value: 0 },
+      frameSidePhase: { value: 0 },
       frameSize: { value: new THREE.Vector2(1, 1) },
       framePointer: { value: new THREE.Vector2() },
     };
     let renderer, scene, camera, mesh, points, normals, metalness, reflections;
-    let softwareCanvas, drawSoftware, weave;
+    let softwareCanvas, drawSoftware, weave, paintOpening;
     let unavailable = false, contextLost = false, gpuFailed = false, gpuNeedsFit = true, gpuNeedsLight = true;
     let fitted = false, visible = true, hovered = false, canvasWidth = 0, canvasHeight = 0, started = false;
     let frame = 0, previous = 0, strength = 0, capScale = 1;
@@ -283,6 +383,8 @@
           attribute float frameFlex;
           uniform float frameTime;
           uniform float frameMotion;
+          uniform float frameSideMotion;
+          uniform float frameSidePhase;
           uniform vec2 frameSize;
           uniform vec2 framePointer;
         `).replace("#include <beginnormal_vertex>", `
@@ -303,6 +405,13 @@
         `).replace("#include <begin_vertex>", `
           #include <begin_vertex>
           transformed += frameBend;
+          if (frameSideMotion > 0.0) {
+            vec2 edge = 2.0 * frameUV;
+            vec2 taper = 1.0 - edge * edge;
+            vec2 phase = ${stageWave.frequency.toFixed(1)} * frameUV.yx + vec2(edge.x, -edge.y)
+              + vec2(frameSidePhase, -frameSidePhase);
+            transformed.xy += frameSideMotion * edge * taper.yx * taper.yx * sin(phase);
+          }
         `);
       };
       mesh = new THREE.Mesh(geometry, material);
@@ -335,13 +444,17 @@
       const centerX = (width - 2 * cap) / (1 - 2 * slice);
       const centerY = (height - 2 * cap) / (1 - 2 * slice);
       const lower = sourceSize * slice, upper = sourceSize - lower;
+      const fitStrands = ripples ? fitStageStrands(width, height, cap) : null;
+      const strand = new Float64Array([0, 0, 1, 1]);
       for (let index = 0; index < position.count; index++) {
         const offset = index * 3;
         const x = points[offset], y = points[offset + 1];
-        position.setXYZ(index, frameCoordinate(x, width, cap) - width / 2,
-          height / 2 - frameCoordinate(y, height, cap), points[offset + 2] * edgeScale);
-        const nx = normals[offset] / (x < lower || x > upper ? edgeScale : centerX);
-        const ny = normals[offset + 1] / (y < lower || y > upper ? edgeScale : centerY);
+        strand[0] = frameCoordinate(x, width, cap);
+        strand[1] = frameCoordinate(y, height, cap);
+        fitStrands?.(strand[0], strand[1], strand);
+        position.setXYZ(index, strand[0] - width / 2, height / 2 - strand[1], points[offset + 2] * edgeScale);
+        const nx = normals[offset] / ((x < lower || x > upper ? edgeScale : centerX) * strand[2]);
+        const ny = normals[offset + 1] / ((y < lower || y > upper ? edgeScale : centerY) * strand[3]);
         const nz = normals[offset + 2] / edgeScale;
         const length = Math.hypot(nx, ny, nz) || 1;
         normal.setXYZ(index, nx / length, ny / length, nz / length);
@@ -354,16 +467,7 @@
         weave = createFrameTwist(mesh.geometry, width, height, cap, artwork.railCenter);
       } else {
         const left = parseFloat(canvasStyle.left) + padding, top = parseFloat(canvasStyle.top) + padding;
-        const halfWidth = photo.clientWidth / 2, halfHeight = photo.clientHeight / 2;
-        let zoom = 1;
-        const outline = artwork.opening.map(([x, y]) => {
-          const px = left + frameCoordinate(x, width, cap);
-          const py = top + frameCoordinate(y, height, cap);
-          zoom = Math.max(zoom, (Math.abs(px - halfWidth) + 1) / halfWidth, (Math.abs(py - halfHeight) + 1) / halfHeight);
-          return `${px.toFixed(2)}px ${py.toFixed(2)}px`;
-        });
-        photo.style.setProperty("--frame-photo-clip", `polygon(${outline.join(", ")})`);
-        photo.style.setProperty("--frame-photo-scale", String(zoom));
+        paintOpening = fitFrameOpening(photo, artwork.opening, width, height, cap, left, top, fitStrands);
       }
 
       // Orthographic projection keeps the model and the photo outline aligned as the metal bends in depth.
@@ -487,6 +591,8 @@
       uniforms.frameMotion.value = weave ? 0 : strength * capScale;
       uniforms.framePointer.value.lerp(pointer, 1 - Math.exp(-12 * dt));
       if (strength) uniforms.frameTime.value += dt * (calm ? .56 : 1) * motionRate;
+      uniforms.frameSideMotion.value = ripples ? stageWave.amplitude * strength * capScale : 0;
+      uniforms.frameSidePhase.value = stageWave.rate * uniforms.frameTime.value;
       weave?.(uniforms.frameTime.value, strength);
 
       if (!useSoftware) {
@@ -521,6 +627,7 @@
           }
           drawSoftware(canvasWidth, canvasHeight);
         }
+        paintOpening?.(uniforms.frameSidePhase.value, uniforms.frameSideMotion.value);
         photo.removeAttribute("data-cover-frame-fallback");
         photo.removeAttribute("data-cover-frame-software");
         photo.toggleAttribute("data-cover-frame-cpu", useSoftware);

@@ -29,12 +29,24 @@ const questionSigilSource = (() => {
     const opposite = (silhouette + [0, 3, 7, 0][structure] + Math.floor(row / cores.length)) % wings.length;
     const tilt = structure === 3 ? -6 : 0;
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -2 96 36" fill-rule="evenodd">
-      <defs><linearGradient id="silver" x1="0" y1="0" x2="0.2" y2="1">
-        <stop offset="0" stop-color="#89939c"/><stop offset=".24" stop-color="#f8fbff"/>
-        <stop offset=".46" stop-color="#9da8b2"/><stop offset=".58" stop-color="#eef3f7"/>
-        <stop offset=".77" stop-color="#69747f"/><stop offset="1" stop-color="#c9d2db"/>
-      </linearGradient></defs>
-      <g fill="url(#silver)" stroke="#bfc9d1" stroke-width=".22" stroke-linejoin="round">
+      <defs>
+        <linearGradient id="silver" x1="8%" y1="0%" x2="38%" y2="100%">
+          <stop offset="0" stop-color="#8e8e8e"/>
+          <stop offset=".24" stop-color="#e2e2e2"/>
+          <stop offset=".44" stop-color="#fcfcfc"/>
+          <stop offset=".50" stop-color="#ececec"/>
+          <stop offset=".54" stop-color="#737373"/>
+          <stop offset=".70" stop-color="#989898"/>
+          <stop offset=".89" stop-color="#cacaca"/>
+          <stop offset="1" stop-color="#939393"/>
+        </linearGradient>
+        <linearGradient id="edge" x1="0%" y1="0%" x2="22%" y2="100%">
+          <stop offset="0" stop-color="#f3f3f3"/>
+          <stop offset=".53" stop-color="#d1d1d1"/>
+          <stop offset="1" stop-color="#8e8e8e"/>
+        </linearGradient>
+      </defs>
+      <g fill="url(#silver)" stroke="url(#edge)" stroke-width=".7" stroke-linejoin="round">
         <g transform="rotate(${tilt} 48 16)"><path d="${wings[silhouette]}"/>
           <path transform="translate(96 0) scale(-1 1)" d="${wings[opposite]}"/></g>
         <path d="${index === 0 ? openingCore : cores[structure]}"/>

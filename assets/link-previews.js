@@ -3,6 +3,7 @@
 (() => {
   const card = document.getElementById("link-preview");
   const navigation = document.querySelector("[data-sigil-navigation]");
+  const masthead = document.querySelector(".masthead");
   const arrow = card.querySelector(".link-preview-arrow");
   const title = card.querySelector("strong");
   const description = card.querySelector("p");
@@ -12,6 +13,7 @@
   const video = card.querySelector("video");
   const markSymbols = document.getElementById("source-marks")?.content;
   const hover = matchMedia("(any-hover: hover)");
+  const mobile = matchMedia("(max-width: 37rem)");
   const shortDomains = new Map([["open.spotify.com", "spotify.com"]]);
   const sourceMarks = new Map([
     ["bandcamp.com", "bandcamp"], ["fandom.com", "fandom"], ["github.io", "github"],
@@ -82,7 +84,9 @@
     }
     const mark = createSourceMark(link);
     if (mark) domain.append(mark);
-    domain.append(record.displayUrl || site);
+    const siteLabel = document.createElement("span");
+    siteLabel.textContent = record.displayUrl || site;
+    domain.append(siteLabel);
     row.append(label, domain);
     const item = document.createElement("li");
     item.append(row);
@@ -131,9 +135,10 @@
       }
       if (!section) continue;
       section.end = block.closest("figure") || block;
-      if (block.matches("figure")) {
-        if (block.matches("[data-audio-player], [data-video-gallery], [data-sources-before]")) section.listBefore ??= block;
-      } else {
+      if (block.matches("[data-sources-before], figure[data-audio-player], figure[data-video-gallery]")) {
+        section.listBefore ??= block;
+      }
+      if (!block.matches("figure")) {
         section.links.push(...block.querySelectorAll("a[href]:not([download], [data-photo])"));
       }
     }
@@ -170,16 +175,30 @@
     if (!anchor || card.hidden) return;
     const linkRect = anchor.getClientRects()[line] || anchor.getBoundingClientRect();
     const row = sources.get(anchor)?.row;
-    const rect = row?.contains(anchor) ? row.getBoundingClientRect() : linkRect;
-    const width = document.documentElement.clientWidth, height = window.innerHeight;
-    if (rect.bottom <= 0 || rect.top >= height || !rect.width) { hide(); return; }
-    const cardWidth = card.offsetWidth;
-    const centered = linkRect.left + (linkRect.width - cardWidth) / 2;
+    const rowRect = row?.contains(anchor) ? row.getBoundingClientRect() : null;
+    const rect = rowRect ?? linkRect;
+    const viewport = mobile.matches ? window.visualViewport : null;
+    const viewportTop = viewport?.offsetTop ?? 0;
+    const viewportBottom = viewportTop + (viewport?.height ?? window.innerHeight);
+    if (rect.bottom <= viewportTop || rect.top >= viewportBottom || !rect.width) { hide(); return; }
+    const singleColumn = row && getComputedStyle(row).getPropertyValue("--source-columns").trim() === "1";
+    const sourceWidth = singleColumn && (rowRect?.width || row.getBoundingClientRect().width || row.closest(".interview")?.clientWidth);
+    card.style.setProperty("--link-preview-source-width", sourceWidth ? `${sourceWidth}px` : "");
+    const column = mobile.matches ? anchor.closest(".interview")?.getBoundingClientRect() : null;
+    card.style.maxWidth = column ? `${column.width}px` : "";
+    const { width: cardWidth, height: cardHeight } = card.getBoundingClientRect();
+    const centered = rect.left + (rect.width - cardWidth) / 2;
     const railEnd = navigation && !navigation.hidden ? navigation.getBoundingClientRect().right : 0;
-    const rightLimit = Math.max(8, width - cardWidth - 8);
-    const x = Math.min(rightLimit, Math.max(centered, railEnd + 8));
-    const above = rect.top - card.offsetHeight - 7;
-    const y = above >= 8 ? above : Math.max(8, Math.min(rect.bottom + 7, height - card.offsetHeight - 8));
+    const leftLimit = column?.left ?? (rowRect ? Math.min(rowRect.left, railEnd + 8) : railEnd + 8);
+    const rightLimit = column ? column.right - cardWidth : document.documentElement.clientWidth - cardWidth - 8;
+    const x = Math.max(leftLimit, Math.min(centered, rightLimit));
+    const topLimit = Math.max(viewportTop, masthead?.getBoundingClientRect().bottom ?? 0) + 8;
+    const bottomLimit = viewportBottom - 8;
+    const above = rect.top - 7, below = rect.bottom + 7;
+    const roomAbove = above - topLimit, roomBelow = bottomLimit - below;
+    const openBelow = roomBelow > roomAbove && (mobile.matches || cardHeight > roomAbove);
+    const preferredTop = openBelow ? below : above - cardHeight;
+    const y = Math.max(topLimit, Math.min(preferredTop, bottomLimit - cardHeight));
     card.style.left = `${x}px`;
     card.style.top = `${y}px`;
   }
@@ -232,6 +251,7 @@
     video.poster = record.image;
     video.muted = true;
     if (video.getAttribute("src") !== record.video) video.src = record.video;
+    else if (video.currentTime > 0) video.currentTime = 0;
     video.hidden = false;
     function showFallback() {
       if (anchor !== link || video.hidden) return;
@@ -329,7 +349,11 @@
     touchLinks.set(link, record);
     link.setAttribute("data-link-preview-touch", "");
     link.addEventListener("pointerenter", event => {
-      if (hover.matches && event.pointerType !== "touch") request(link, record, event.clientY, 240);
+      if (!hover.matches || event.pointerType === "touch") return;
+      if (anchor === link && !video.hidden && !card.contains(event.relatedTarget) && video.currentTime > 0) {
+        video.currentTime = 0;
+      }
+      request(link, record, event.clientY, 240);
     });
     link.addEventListener("pointerleave", event => {
       if (event.pointerType === "touch") return;
@@ -399,5 +423,6 @@
   document.addEventListener("visibilitychange", () => { if (document.hidden) hide(); });
   window.addEventListener("scroll", hide, { passive: true });
   window.addEventListener("resize", place);
+  window.visualViewport?.addEventListener("resize", place);
   new ResizeObserver(place).observe(card);
 })();

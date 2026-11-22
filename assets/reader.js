@@ -1,7 +1,6 @@
 "use strict";
 
-function readingAnchor() {
-  const top = document.querySelector(".masthead").getBoundingClientRect().bottom;
+function readingAnchor(top = document.querySelector(".masthead").getBoundingClientRect().bottom) {
   for (const block of document.querySelectorAll("#page-content :is(.cover, h2, h3, p, figure, .footer)")) {
     const bounds = block.getBoundingClientRect();
     if (bounds.bottom <= top) continue;
@@ -47,6 +46,59 @@ function preserveReadingPosition(change) {
   }
 }
 
+function initReadingResize() {
+  const masthead = document.querySelector(".masthead");
+  const touchViewport = matchMedia("(pointer: coarse)");
+  let width = window.innerWidth, height = window.innerHeight;
+  let saved, lastScroll, frame = 0;
+
+  function remember(top) {
+    const anchor = window.scrollY > 0 && readingAnchor(top);
+    saved = null;
+    if (!anchor) return;
+    const photo = anchor.matches?.("figure") && [...anchor.querySelectorAll("[data-photo]")].find(link => {
+      const bounds = link.getBoundingClientRect();
+      return bounds.top <= top && bounds.bottom > top;
+    });
+    const target = photo || anchor;
+    const bounds = target.getBoundingClientRect();
+    if (!bounds.height) return;
+    const fraction = target instanceof Element ? Math.max(0, (top - bounds.top) / bounds.height) : 0;
+    saved = { target, fraction, offset: bounds.top + fraction * bounds.height - top };
+  }
+
+  function update() {
+    frame = 0;
+    // Touch browser toolbars can change the height during ordinary scrolling.
+    const resized = window.innerWidth !== width || (!touchViewport.matches && window.innerHeight !== height);
+    width = window.innerWidth;
+    height = window.innerHeight;
+    if (!resized && window.scrollY === lastScroll) return;
+    const top = masthead.getBoundingClientRect().bottom;
+    if (resized && saved) {
+      const { target, fraction, offset } = saved;
+      const bounds = target.getBoundingClientRect();
+      if (bounds.height) {
+        const delta = bounds.top + fraction * bounds.height - top - offset;
+        if (Math.abs(delta) > .5) window.scrollBy({ top: delta, behavior: "instant" });
+        lastScroll = window.scrollY;
+        return;
+      }
+    }
+    remember(top);
+    lastScroll = window.scrollY;
+  }
+
+  function schedule() {
+    if (!frame) frame = window.requestAnimationFrame(update);
+  }
+
+  window.addEventListener("resize", schedule);
+  window.addEventListener("scroll", schedule, { passive: true });
+  window.addEventListener("pageshow", () => { saved = null; lastScroll = undefined; schedule(); });
+  schedule();
+}
+
 function initDisplaySwitch(name, pressedValue, unpressedValue, onChange, { preservePosition = false } = {}) {
   const root = document.documentElement;
   const attribute = `data-${name}`;
@@ -82,7 +134,7 @@ function initDisplaySettings() {
   });
   initDisplaySwitch("question-numbers", "shown", "hidden", (value, control) => {
     control.title = value === "shown" ? "Скрыть номера на шкале" : "Показать номера на шкале";
-  }, { preservePosition: true });
+  });
 }
 
 // Keep artist typography in excerpts while leaving links and other interactive markup in the article.
@@ -119,6 +171,7 @@ function scrollTopOnTimeline(stops, position) {
 
 function initReadingPosition() {
   const root = document.documentElement;
+  const masthead = document.querySelector(".masthead");
   const navigation = document.querySelector("[data-sigil-navigation]");
   const rail = document.querySelector("[data-sigil-scroll]");
   const thumb = rail.querySelector("[data-scroll-thumb]");
@@ -127,6 +180,8 @@ function initReadingPosition() {
   const cover = document.getElementById("start");
   const intro = document.getElementById("interview");
   const end = document.getElementById("end");
+  const mobile = matchMedia("(max-width: 37rem)");
+  const viewport = window.visualViewport;
   const sections = [{
     id: intro.id, label: "Начало интервью", marker: "↓",
     sigil: cover.querySelector(".heading-sigil img").getAttribute("src"),
@@ -152,14 +207,14 @@ function initReadingPosition() {
   const previewNumber = document.createElement("span");
   previewNumber.className = "question-preview-number";
   const previewText = document.createElement("p");
-  const previewAddress = document.createElement("span");
-  previewAddress.className = "question-preview-url";
+  const previewTag = document.createElement("span");
+  previewTag.className = "question-preview-tag";
   const previewSigil = document.createElement("img");
   previewSigil.className = "question-preview-sigil";
   previewSigil.width = 96;
   previewSigil.height = 36;
   previewSigil.alt = "";
-  preview.append(previewNumber, previewText, previewSigil, previewAddress);
+  preview.append(previewNumber, previewText, previewSigil, previewTag);
   navigation.append(preview);
   let previewIndex = -1;
   let activeIndex = -1;
@@ -167,6 +222,9 @@ function initReadingPosition() {
   let dirty = true;
   let frame = 0;
   let drag = null;
+  let jumpPress = null;
+  let railTop, railHeight;
+  let thumbHeight = 0, thumbTravel = 0;
 
   function setTabStop(index) {
     for (let i = 0; i < jumps.length; i += 1) jumps[i].tabIndex = i === index ? 0 : -1;
@@ -175,9 +233,10 @@ function initReadingPosition() {
   function placePreview() {
     if (previewIndex < 0) return;
     const rect = jumps[previewIndex].getBoundingClientRect();
-    const top = navigation.getBoundingClientRect().top + 4;
+    const bounds = navigation.getBoundingClientRect();
+    const top = bounds.top + 4;
     const height = preview.offsetHeight;
-    const bottom = Math.max(top, window.innerHeight - height - 12);
+    const bottom = Math.max(top, (mobile.matches ? bounds.bottom : window.innerHeight) - height - 12);
     const previewTop = Math.max(top, Math.min(bottom, rect.top + (rect.height - height) / 2));
     const sigil = activeSigil.getBoundingClientRect();
     preview.style.top = `${previewTop}px`;
@@ -192,7 +251,7 @@ function initReadingPosition() {
     previewNumber.hidden = !section.number;
     if (section.copy) copyReadingText(previewText, section.copy);
     else previewText.textContent = section.label;
-    previewAddress.textContent = section.copy ? jumps[index].href : jumps[index].getAttribute("href");
+    previewTag.textContent = `#${section.id}`;
     previewSigil.src = section.sigil;
     preview.hidden = false;
     placePreview();
@@ -220,12 +279,17 @@ function initReadingPosition() {
     marker.setAttribute("aria-hidden", "true");
     link.append(marker);
     link.tabIndex = index === 0 ? 0 : -1;
-    link.addEventListener("pointerenter", () => showPreview(index));
-    link.addEventListener("pointerleave", () => {
-      if (previewIndex === index && document.activeElement !== link) hidePreview();
+    link.addEventListener("pointerenter", event => {
+      if (event.pointerType !== "touch" && !drag) showPreview(index);
     });
-    link.addEventListener("focus", () => { setTabStop(index); showPreview(index); });
-    link.addEventListener("blur", hidePreview);
+    link.addEventListener("pointerleave", () => {
+      if (!drag && !jumpPress && previewIndex === index && document.activeElement !== link) hidePreview();
+    });
+    link.addEventListener("focus", () => {
+      setTabStop(index);
+      if (!drag) showPreview(index);
+    });
+    link.addEventListener("blur", () => { if (!drag && !jumpPress) hidePreview(); });
     link.addEventListener("click", event => {
       hidePreview();
       if (!section.copy || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
@@ -245,7 +309,21 @@ function initReadingPosition() {
   });
 
   function scrollExtent() {
-    return Math.max(0, root.scrollHeight - window.innerHeight);
+    return Math.max(0, root.scrollHeight - root.clientHeight);
+  }
+
+  function fitMobileRail() {
+    if (!mobile.matches) return;
+    const viewportTop = viewport?.offsetTop ?? 0;
+    const viewportBottom = viewportTop + (viewport?.height ?? window.innerHeight);
+    const top = Math.min(viewportBottom, Math.max(viewportTop, masthead.getBoundingClientRect().bottom));
+    const height = viewportBottom - top;
+    if (top === railTop && height === railHeight) return;
+    railTop = top;
+    railHeight = height;
+    navigation.style.setProperty("--rail-top", `${top}px`);
+    navigation.style.setProperty("--rail-height", `${height}px`);
+    dirty = true;
   }
 
   function measure() {
@@ -257,9 +335,9 @@ function initReadingPosition() {
       return Math.max(0, Math.min(extent, top));
     });
     stops.push(extent);
-    const thumbHeight = thumb.offsetHeight;
-    const travel = Math.max(0, rail.clientHeight - thumbHeight);
-    const interval = travel / (stops.length - 1);
+    thumbHeight = thumb.getBoundingClientRect().height;
+    thumbTravel = Math.max(0, rail.getBoundingClientRect().height - thumbHeight);
+    const interval = thumbTravel / (jumps.length - 1);
     navigation.style.setProperty("--tick-interval", `${interval}px`);
     for (let i = 0; i < jumps.length; i += 1) {
       jumps[i].style.top = `${thumbHeight / 2 + interval * i}px`;
@@ -268,17 +346,21 @@ function initReadingPosition() {
     dirty = false;
   }
 
+  function measureIfNeeded() {
+    fitMobileRail();
+    if (dirty || stops[stops.length - 1] !== scrollExtent()) measure();
+  }
+
   function update() {
     frame = 0;
     if (navigation.hidden) return;
-    if (dirty || stops[stops.length - 1] !== scrollExtent()) measure();
+    measureIfNeeded();
     const scrollTop = window.scrollY;
     let current = 0;
     // Fragment navigation can land a fraction of a pixel before the stop.
     while (scrollTop > 0 && current + 1 < sections.length && stops[current + 1] - scrollTop < 1) current++;
-    const position = positionOnTimeline(stops, Math.max(scrollTop, stops[current]));
-    const travel = Math.max(0, rail.clientHeight - thumb.offsetHeight);
-    thumb.style.transform = `translateY(${position * travel}px)`;
+    const position = Math.max(0, positionOnTimeline(stops, scrollTop));
+    thumb.style.transform = `translateY(${position * thumbTravel}px)`;
     rail.setAttribute("aria-valuenow", String(Math.round(position * 100)));
     if (current !== activeIndex) {
       if (activeIndex >= 0) jumps[activeIndex].removeAttribute("aria-current");
@@ -300,10 +382,14 @@ function initReadingPosition() {
   function invalidate() { dirty = true; schedule(); }
 
   function moveThumb(clientY) {
-    if (dirty) measure();
-    const travel = Math.max(1, rail.clientHeight - thumb.offsetHeight);
+    measureIfNeeded();
+    if (!thumbTravel) return;
     const offset = clientY - rail.getBoundingClientRect().top - drag.offset;
-    const position = Math.max(0, Math.min(1, offset / travel));
+    const position = Math.max(0, Math.min(1, offset / thumbTravel));
+    if (drag.touch) {
+      const nearest = Math.round(position * (jumps.length - 1));
+      if (nearest !== previewIndex) showPreview(nearest);
+    }
     if (position === 0 && window.scrollY <= stops[0]) return;
     window.scrollTo({ top: scrollTopOnTimeline(stops, position), behavior: "instant" });
     schedule();
@@ -311,22 +397,55 @@ function initReadingPosition() {
 
   function finishDrag(event) {
     if (!drag || (event && event.pointerId !== drag.id)) return;
-    const { id } = drag;
+    const { id, touch } = drag;
     drag = null;
+    if (touch) hidePreview();
     root.classList.remove("is-sigil-dragging");
     if (rail.hasPointerCapture(id)) rail.releasePointerCapture(id);
   }
 
-  rail.addEventListener("pointerdown", (event) => {
-    if (event.button !== 0 || !event.isPrimary) return;
+  function startDrag(event, onThumb = false) {
     event.preventDefault();
     hidePreview();
-    const onThumb = thumb.contains(event.target);
-    drag = { id: event.pointerId, offset: onThumb ? event.clientY - thumb.getBoundingClientRect().top : thumb.offsetHeight / 2 };
+    measureIfNeeded();
+    let offset = thumbHeight / 2;
+    if (onThumb) {
+      // Anchor the drag to the current reading position.
+      const position = Math.max(0, positionOnTimeline(stops, window.scrollY));
+      offset = event.clientY - rail.getBoundingClientRect().top - position * thumbTravel;
+    }
+    drag = { id: event.pointerId, offset, touch: event.pointerType === "touch" };
     rail.focus({ preventScroll: true });
     rail.setPointerCapture(event.pointerId);
     root.classList.add("is-sigil-dragging");
-    moveThumb(event.clientY);
+    if (!onThumb) moveThumb(event.clientY);
+  }
+
+  jumpList.addEventListener("pointerdown", event => {
+    if (!event.isPrimary || event.pointerType !== "touch" || drag) return;
+    jumpPress = { id: event.pointerId, y: event.clientY };
+    const index = jumps.indexOf(event.target.closest(".question-jump"));
+    if (index >= 0) showPreview(index);
+  });
+  jumpList.addEventListener("pointermove", event => {
+    if (jumpPress?.id !== event.pointerId || Math.abs(event.clientY - jumpPress.y) < 5) return;
+    jumpPress = null;
+    startDrag(event);
+  });
+  jumpList.addEventListener("contextmenu", event => {
+    if (event.pointerType === "touch" || jumpPress) event.preventDefault();
+  });
+  for (const type of ["pointerup", "pointercancel", "lostpointercapture"]) {
+    jumpList.addEventListener(type, event => {
+      if (jumpPress?.id !== event.pointerId) return;
+      jumpPress = null;
+      hidePreview();
+    });
+  }
+
+  rail.addEventListener("pointerdown", event => {
+    if (event.button !== 0 || !event.isPrimary || drag || jumpPress) return;
+    startDrag(event, thumb.contains(event.target));
   });
   rail.addEventListener("pointermove", (event) => {
     if (drag?.id === event.pointerId) moveThumb(event.clientY);
@@ -346,13 +465,13 @@ function initReadingPosition() {
 
   const resize = new ResizeObserver(invalidate);
   resize.observe(document.body);
+  resize.observe(masthead);
   resize.observe(rail);
   navigation.hidden = false;
   root.classList.add("has-sigil-scroll");
 
   const railSwitch = document.querySelector("[data-sigil-scroll-switch]");
   if (railSwitch) {
-    const mobile = matchMedia("(max-width: 37rem)");
     let mobileRailVisible = true;
 
     function applyRailVisibility() {
@@ -361,6 +480,7 @@ function initReadingPosition() {
       railSwitch.setAttribute("aria-pressed", String(visible));
       railSwitch.title = visible ? "Скрыть шкалу вопросов" : "Показать шкалу вопросов";
       if (!visible) {
+        jumpPress = null;
         if (navigation.contains(document.activeElement)) railSwitch.focus({ preventScroll: true });
         hidePreview();
         finishDrag();
@@ -386,6 +506,8 @@ function initReadingPosition() {
 
   window.addEventListener("scroll", schedule, { passive: true });
   window.addEventListener("resize", invalidate);
+  viewport?.addEventListener("resize", schedule);
+  viewport?.addEventListener("scroll", schedule);
   window.addEventListener("load", invalidate);
   document.fonts?.ready.then(invalidate);
   update();
@@ -553,8 +675,9 @@ function createSpectrumRenderer(canvas, levels, bands, total) {
   const ctx = canvas.getContext("2d", { alpha: false });
   if (!ctx) return null;
   const frames = levels.length / bands;
-  let width = 0, height = 0, scale = 0, rows, columns, overview, ordinates, ink, paper;
-  let lastSeconds = NaN, lastPlaying;
+  const waveDepth = .24;
+  let width = 0, height = 0, scale = 0, rows, columns, overview, ink, paper, liftScale;
+  let lastSeconds = NaN, lastMotion, lastHover, lastHoverPosition;
 
   function amplitude(framePosition, band) {
     const pos = Math.max(0, Math.min(frames - 1, framePosition));
@@ -579,29 +702,6 @@ function createSpectrumRenderer(canvas, levels, bands, total) {
     rows = Math.min(bands, Math.max(12, Math.round(h / 8)));
     columns = Math.min(320, Math.max(80, Math.round(w / 5)));
     overview = new Float32Array(rows * (columns + 1));
-    ordinates = new Float32Array(overview.length);
-    for (let row = 0; row < rows; row++) {
-      const band = Math.round(row * (bands - 1) / (rows - 1));
-      for (let x = 0; x <= columns; x++) {
-        overview[row * (columns + 1) + x] = amplitude(x / columns * (frames - 1), band) ** 2;
-      }
-    }
-    lastPlaying = undefined;
-  }
-
-  function draw(seconds, playing) {
-    if (!width || !height || (lastPlaying === playing && (!playing || Math.abs(seconds - lastSeconds) < 1 / 36))) return;
-    lastSeconds = seconds; lastPlaying = playing;
-    ctx.fillStyle = paper; ctx.fillRect(0, 0, width, height);
-    const dx = width / columns;
-    const head = width * seconds / total, radius = Math.min(130, width * .2);
-    const framesPerSecond = (frames - 1) / total;
-    let stroke = ink;
-    if (playing) {
-      stroke = ctx.createLinearGradient(head - radius, 0, head + radius, 0);
-      stroke.addColorStop(0, "#a3a3a3"); stroke.addColorStop(.5, "#fafafa"); stroke.addColorStop(1, "#777777");
-    }
-
     let top = Infinity, bottom = -Infinity;
     for (let row = 0; row < rows; row++) {
       const band = Math.round(row * (bands - 1) / (rows - 1));
@@ -609,24 +709,14 @@ function createSpectrumRenderer(canvas, levels, bands, total) {
       const start = row * (columns + 1);
       const end = start + columns;
       for (let x = 0; x <= columns; x++) {
-        const i = start + x;
-        let energy = overview[i];
-        const distance = (x * dx - head) / radius;
-        if (playing && Math.abs(distance) < 1) {
-          // Each band lifts with the recorded transient passing the playhead.
-          const sample = (seconds - Math.abs(distance) * .85) * framesPerSecond;
-          const level = amplitude(sample, band);
-          const attack = Math.max(0, level - amplitude(sample - 2, band));
-          energy += (1 - distance * distance) ** 2 * (.48 * level * level + .95 * attack);
-        }
-        ordinates[i] = base - energy * .24;
+        overview[start + x] = base - amplitude(x / columns * (frames - 1), band) ** 2 * waveDepth;
       }
-      top = Math.min(top, ordinates[start], ordinates[end]);
-      bottom = Math.max(bottom, ordinates[start], ordinates[end]);
+      top = Math.min(top, overview[start], overview[end]);
+      bottom = Math.max(bottom, overview[start], overview[end]);
       // The quadratic curves round the sample peaks. Measure their visible extrema.
       for (let i = start + 1; i < end; i++) {
-        const center = ordinates[i];
-        const left = ordinates[i - 1] - center, right = ordinates[i + 1] - center;
+        const center = overview[i];
+        const left = overview[i - 1] - center, right = overview[i + 1] - center;
         if (left * right < 0) continue;
         const turn = left && right ? center + .5 * left * right / (left + right) : center;
         top = Math.min(top, turn);
@@ -634,21 +724,68 @@ function createSpectrumRenderer(canvas, levels, bands, total) {
       }
     }
 
-    // Fit the recorded ridges between equal margins, including transient peaks.
+    // Fit the stationary spectrum once so transients cannot move the other waves.
     const inset = height * .1;
     const yScale = (height - 2 * inset) / (bottom - top);
+    for (let i = 0; i < overview.length; i++) overview[i] = inset + (overview[i] - top) * yScale;
+    liftScale = waveDepth * yScale;
+    lastMotion = undefined;
+  }
+
+  function draw(seconds, motion, hoverPosition = 0, hover = 0) {
+    const playbackUnchanged = lastMotion === motion && (!motion || Math.abs(seconds - lastSeconds) < 1 / 36);
+    const hoverUnchanged = lastHover === hover && (!hover || lastHoverPosition === hoverPosition);
+    if (!width || !height || (playbackUnchanged && hoverUnchanged)) return;
+    lastSeconds = seconds; lastMotion = motion;
+    lastHover = hover; lastHoverPosition = hoverPosition;
+    ctx.fillStyle = paper; ctx.fillRect(0, 0, width, height);
+    const dx = width / columns;
+    const head = width * seconds / total, radius = Math.min(130, width * .2);
+    const framesPerSecond = (frames - 1) / total;
+    const motionInset = height * .025;
+    const pointer = width * hoverPosition, pointerRadius = Math.min(96, width * .18);
+    const pointerStrength = Math.min(22, height * .16) * hover;
+    let highlight;
+    if (motion === 1) {
+      highlight = ctx.createLinearGradient(head - radius, 0, head + radius, 0);
+      highlight.addColorStop(0, "rgba(250,250,250,0)");
+      highlight.addColorStop(.5, "rgba(250,250,250,.7)");
+      highlight.addColorStop(1, "rgba(250,250,250,0)");
+    }
+
     for (let row = 0; row < rows; row++) {
+      const band = Math.round(row * (bands - 1) / (rows - 1));
       const start = row * (columns + 1);
-      let lastY = inset + (ordinates[start] - top) * yScale;
+      let lastY;
       ctx.beginPath();
-      ctx.moveTo(0, lastY);
-      for (let x = 1; x <= columns; x++) {
-        const y = inset + (ordinates[start + x] - top) * yScale;
-        ctx.quadraticCurveTo((x - 1) * dx, lastY, (x - .5) * dx, (lastY + y) / 2);
-        lastY = y;
+      for (let x = 0; x <= columns; x++) {
+        const y = overview[start + x];
+        const column = x * dx;
+        const distance = (column - head) / radius;
+        let displacement = 0;
+        if (motion && Math.abs(distance) < 1) {
+          // Keep the motion around the playhead and follow both rises and falls in the band.
+          const sample = (seconds - Math.abs(distance) * .85) * framesPerSecond;
+          const level = amplitude(sample, band);
+          const change = level - amplitude(sample - 2, band);
+          const ripple = Math.sin(seconds * 10 - distance * 6 + row * .55);
+          const pulse = level * (.35 + 1.1 * level) * ripple + 2.15 * change;
+          displacement = liftScale * motion * (1 - distance * distance) ** 2 * pulse;
+        }
+        const fromPointer = (column - pointer) / pointerRadius;
+        if (pointerStrength && Math.abs(fromPointer) < 1) {
+          const level = amplitude(hoverPosition * (frames - 1) + fromPointer * 3, band);
+          const ripple = Math.cos(3.2 * fromPointer + row * .6);
+          displacement += pointerStrength * (1 - fromPointer * fromPointer) ** 2 * (.52 + .48 * level) * ripple;
+        }
+        const bentY = Math.max(motionInset, Math.min(height - motionInset, y - displacement));
+        if (x === 0) ctx.moveTo(0, bentY);
+        else ctx.quadraticCurveTo((x - 1) * dx, lastY, (x - .5) * dx, (lastY + bentY) / 2);
+        lastY = bentY;
       }
       ctx.lineTo(width, lastY);
-      ctx.strokeStyle = stroke; ctx.lineWidth = row === rows - 1 ? 1.45 : 1.1; ctx.stroke();
+      ctx.strokeStyle = ink; ctx.lineWidth = row === rows - 1 ? 1.45 : 1.1; ctx.stroke();
+      if (highlight) { ctx.strokeStyle = highlight; ctx.stroke(); }
       ctx.lineTo(width, height); ctx.lineTo(0, height); ctx.closePath();
       ctx.fillStyle = "rgba(16,16,16,.81)"; ctx.fill();
     }
@@ -656,7 +793,7 @@ function createSpectrumRenderer(canvas, levels, bands, total) {
   return { resize, draw };
 }
 
-function bindSpectrumSeek(plot, seek) {
+function bindSpectrumSeek(plot, seek, onHover) {
   let gesture = null;
   function point(event, commit) {
     const rect = plot.getBoundingClientRect();
@@ -665,6 +802,7 @@ function bindSpectrumSeek(plot, seek) {
     const seconds = Number(seek.max) * fraction;
     plot.setAttribute("data-preview", timeLabel(seconds));
     plot.style.setProperty("--probe", fraction * 100 + "%");
+    if (!commit) onHover(fraction);
     if (commit) {
       gesture.lastX = event.clientX;
       if (Number(seek.value) === seconds) return;
@@ -708,16 +846,49 @@ function bindSpectrumSeek(plot, seek) {
 }
 
 function createTrackSpectrum(plot, seek) {
-  bindSpectrumSeek(plot, seek);
   const canvas = plot.querySelector("[data-track-spectrum]");
   const picture = plot.querySelector("[data-spectrum-map]");
   const reduced = matchMedia("(prefers-reduced-motion: reduce)");
   let audio, track, renderer, events;
-  let frame = 0, visible = false, live = false;
-  function isPlaying() { return live && !reduced.matches && !audio.paused && !audio.ended && !audio.seeking && !audio.error; }
+  let frame = 0, visible = false;
+  let hoverPosition = 0, hoverTarget = 0, hoverTime = -Infinity;
+  let hoverLevel = 0, hoverImpulse = 0, hoverFrameTime = 0;
+
+  function hoverStrength(now) {
+    return hoverImpulse * Math.max(0, 1 - (now - hoverTime) / 220) ** 2;
+  }
+
+  bindSpectrumSeek(plot, seek, position => {
+    const now = performance.now();
+    const previous = hoverStrength(now);
+    if (!hoverLevel && !previous) {
+      hoverPosition = position;
+      hoverFrameTime = now;
+      hoverImpulse = .3;
+    } else {
+      const distance = Math.abs(position - hoverTarget) * plot.clientWidth;
+      hoverImpulse = Math.max(previous, .3 + .7 * Math.min(1, distance / 12));
+    }
+    hoverTarget = position;
+    hoverTime = now;
+    if (!frame && renderer && visible && !document.hidden) frame = window.requestAnimationFrame(tick);
+  });
+  function isPlaying() {
+    return audio && !audio.paused && !audio.ended && !audio.seeking && !audio.error && audio.readyState >= 2;
+  }
   function drawAt(progress, playing = isPlaying()) {
     plot.toggleAttribute("data-playhead-visible", progress > 0 && progress < 1);
-    if (renderer && visible && !document.hidden) renderer.draw(progress * track.duration, playing);
+    if (!renderer || !visible || document.hidden) return;
+    const strength = reduced.matches ? .3 : 1;
+    const now = performance.now();
+    const elapsed = Math.min(50, now - hoverFrameTime);
+    const targetStrength = hoverStrength(now);
+    hoverFrameTime = now;
+    hoverPosition += (hoverTarget - hoverPosition) * (1 - Math.exp(-elapsed / 55));
+    hoverLevel += (targetStrength - hoverLevel) * (1 - Math.exp(-elapsed / 75));
+    if (!targetStrength && hoverLevel < .002) hoverLevel = 0;
+    renderer.draw(progress * track.duration, playing ? strength : 0, hoverPosition, strength * hoverLevel);
+    if ((playing || hoverLevel || targetStrength) && !frame) frame = window.requestAnimationFrame(tick);
   }
   function tick() {
     frame = 0;
@@ -727,7 +898,6 @@ function createTrackSpectrum(plot, seek) {
     const ratio = Math.min(1, Math.max(0, time / length));
     plot.style.setProperty("--played", ratio * 100 + "%");
     drawAt(ratio, playing);
-    if (playing) frame = window.requestAnimationFrame(tick);
   }
   function sync() {
     window.cancelAnimationFrame(frame);
@@ -735,6 +905,7 @@ function createTrackSpectrum(plot, seek) {
   }
   function resize() {
     if (renderer && visible && !document.hidden) renderer.resize(plot.clientWidth, plot.clientHeight);
+    if (!visible || document.hidden) { hoverTime = -Infinity; hoverLevel = 0; }
     sync();
   }
 
@@ -745,7 +916,8 @@ function createTrackSpectrum(plot, seek) {
   function select(next, data) {
     events?.abort();
     audio = next; track = data;
-    live = !audio.paused && audio.readyState >= 2;
+    hoverTime = -Infinity;
+    hoverLevel = 0;
     renderer = createSpectrumRenderer(canvas, unpackSpectrum(track), spectrumBandCount, track.duration);
     plot.toggleAttribute("data-spectrum-ready", Boolean(renderer));
     picture.src = track.image;
@@ -753,13 +925,9 @@ function createTrackSpectrum(plot, seek) {
     if (!renderer) return;
     events = new AbortController();
     const opts = { signal: events.signal };
-    audio.addEventListener("playing", () => { live = true; sync(); }, opts);
-    for (const event of ["canplay", "seeked"]) audio.addEventListener(event, () => {
-      live = !audio.paused && audio.readyState >= 2;
-      sync();
-    }, opts);
-    audio.addEventListener("seeking", sync, opts);
-    for (const event of ["pause", "waiting", "ended", "error", "emptied"]) audio.addEventListener(event, () => { live = false; sync(); }, opts);
+    for (const event of ["play", "playing", "canplay", "seeking", "seeked", "pause", "waiting", "ended", "error", "emptied"]) {
+      audio.addEventListener(event, sync, opts);
+    }
   }
   return { select, drawAt };
 }
@@ -929,6 +1097,21 @@ function photoSourceRect(photo, width, height) {
   };
 }
 
+function initAdidasPhotoPosition() {
+  const photo = document.getElementById("adidas-bootlegs");
+  const mobileFigure = document.getElementById("adidas-bootlegs-mobile");
+  const pairFrame = photo.parentElement;
+  const mobileFrame = mobileFigure.querySelector(".image-frame");
+  const mobile = matchMedia("(max-width: 37rem)");
+  function place() {
+    const frame = mobile.matches ? mobileFrame : pairFrame;
+    if (photo.parentElement !== frame) frame.prepend(photo);
+    mobileFigure.hidden = !mobile.matches;
+  }
+  place();
+  mobile.addEventListener("change", place);
+}
+
 function initPhotoViewer() {
   const dialog = document.getElementById("photo-viewer");
   if (typeof dialog.showModal !== "function") return;
@@ -981,13 +1164,30 @@ function initToyotaProfiles() {
   const profiles = document.getElementById("toyota-handles");
   if (!profiles) return;
 
+  const list = profiles.querySelector(".toyota-profile-list");
+  const desktopOrder = Array.from(list.children);
+  const mobileOrder = desktopOrder.filter(item => !item.dataset.profileMobilePosition);
+  const mobilePositions = desktopOrder.filter(item => item.dataset.profileMobilePosition);
+  mobilePositions.sort((a, b) => a.dataset.profileMobilePosition - b.dataset.profileMobilePosition);
+  for (const item of mobilePositions) mobileOrder.splice(item.dataset.profileMobilePosition - 1, 0, item);
+  function orderProfiles() {
+    const portrait = getComputedStyle(list).getPropertyValue("--profile-portrait").trim() === "1";
+    const order = portrait ? mobileOrder : desktopOrder;
+    for (const [index, item] of order.entries()) {
+      if (list.children[index] !== item) list.insertBefore(item, list.children[index]);
+    }
+  }
+  orderProfiles();
+  new ResizeObserver(orderProfiles).observe(profiles);
+
   const avatarUpdates = Array.from(profiles.querySelectorAll("[data-profile-video]"), video => {
-    const avatar = video.parentElement;
+    const avatar = video.closest(".toyota-profile-avatar");
     const link = avatar.parentElement;
     const picture = video.previousElementSibling;
     const still = picture.getAttribute("src");
     const animation = video.dataset.profileAnimation;
     let hovered = false, focused = false, active = false, useAnimation = false;
+    let touchPress = null, suppressClick = false;
     let revision = 0;
 
     function showAnimation() {
@@ -998,7 +1198,7 @@ function initToyotaProfiles() {
     }
 
     function update() {
-      const requested = !document.hidden && (hovered || focused);
+      const requested = !document.hidden && (hovered || focused || touchPress?.playing === true);
       if (requested === active) return;
       active = requested;
       const current = ++revision;
@@ -1038,15 +1238,59 @@ function initToyotaProfiles() {
     link.addEventListener("pointerleave", () => { hovered = false; update(); });
     link.addEventListener("focus", () => { focused = link.matches(":focus-visible"); update(); });
     link.addEventListener("blur", () => { focused = false; update(); });
+    function stopPress() {
+      if (!touchPress) return;
+      clearTimeout(touchPress.timer);
+      touchPress = null;
+      delete link.dataset.profileHolding;
+      update();
+    }
+    link.addEventListener("pointerdown", event => {
+      if (!event.isPrimary) return;
+      suppressClick = false;
+      stopPress();
+      if (event.pointerType !== "touch" || event.button !== 0 || !avatar.contains(event.target)) return;
+      const press = { id: event.pointerId, x: event.clientX, y: event.clientY };
+      touchPress = press;
+      press.timer = window.setTimeout(() => {
+        if (touchPress !== press || document.hidden) return;
+        press.playing = true;
+        suppressClick = true;
+        link.dataset.profileHolding = "";
+        update();
+      }, 450);
+    });
+    link.addEventListener("pointermove", event => {
+      if (touchPress?.id !== event.pointerId) return;
+      if (Math.hypot(event.clientX - touchPress.x, event.clientY - touchPress.y) > 10) stopPress();
+    }, { passive: true });
+    for (const type of ["pointerup", "pointercancel", "lostpointercapture"]) {
+      link.addEventListener(type, event => {
+        if (touchPress?.id === event.pointerId) stopPress();
+      });
+    }
+    link.addEventListener("contextmenu", event => {
+      if (touchPress || (event.pointerType === "touch" && avatar.contains(event.target))) event.preventDefault();
+    });
+    link.addEventListener("click", event => {
+      if (!suppressClick || event.detail === 0) return;
+      suppressClick = false;
+      event.preventDefault();
+    });
     video.addEventListener("error", showAnimation);
-    return update;
+    return () => {
+      if (document.hidden && touchPress) stopPress();
+      else update();
+    };
   });
   document.addEventListener("visibilitychange", () => avatarUpdates.forEach(update => update()));
 }
 
 initDisplaySettings();
+initAdidasPhotoPosition();
 initToyotaProfiles();
 for (const player of document.querySelectorAll("[data-audio-player]")) enhanceAudio(player);
 initHeaderPlayback(document.querySelectorAll(".interview audio, .interview video:not([data-profile-video])"));
+initReadingResize();
 initReadingPosition();
 initPhotoViewer();
