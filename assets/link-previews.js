@@ -210,14 +210,18 @@
     const singleColumn = row && getComputedStyle(row).getPropertyValue("--source-columns").trim() === "1";
     const sourceWidth = singleColumn && (rowRect?.width || row.getBoundingClientRect().width || row.closest(".interview")?.clientWidth);
     card.style.setProperty("--link-preview-source-width", sourceWidth ? `${sourceWidth}px` : "");
-    const column = mobile.matches ? anchor.closest(".interview")?.getBoundingClientRect() : null;
+    const article = anchor.closest(".interview");
+    const column = mobile.matches ? article?.getBoundingClientRect() : null;
     card.style.maxWidth = column ? `${column.width}px` : "";
     const { width: cardWidth, height: cardHeight } = card.getBoundingClientRect();
     const centered = rect.left + (rect.width - cardWidth) / 2;
     const railEnd = navigation && !navigation.hidden ? navigation.getBoundingClientRect().right : 0;
     const leftLimit = column?.left ?? (rowRect ? Math.min(rowRect.left, railEnd + 8) : railEnd + 8);
     const rightLimit = column ? column.right - cardWidth : document.documentElement.clientWidth - cardWidth - 8;
-    const x = Math.max(leftLimit, Math.min(centered, rightLimit));
+    const textLeft = !column && !rowRect && centered < leftLimit ? article?.getBoundingClientRect().left : undefined;
+    const x = textLeft === undefined
+      ? Math.max(leftLimit, Math.min(centered, rightLimit))
+      : Math.max(0, Math.min(textLeft, rightLimit));
     const topLimit = Math.max(viewportTop, masthead?.getBoundingClientRect().bottom ?? 0) + 8;
     const bottomLimit = viewportBottom - 8;
     const above = rect.top - 7, below = rect.bottom + 7;

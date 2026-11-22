@@ -152,7 +152,7 @@ html.has-sigil-scroll::-webkit-scrollbar, html.has-sigil-scroll body::-webkit-sc
 .sigil-scroll[data-rail-compact] { left: calc(var(--wrap-start) - 2px); }
 .sigil-scroll[data-rail-compact] .scroll-track { inset-inline-start: 0; }
 .sigil-scroll[data-rail-compact] .scroll-progress { display: block; }
-.sigil-scroll[data-rail-compact] .scroll-thumb { inset-inline-start: calc(var(--tick-space) - 4px); }
+.sigil-scroll[data-rail-compact] .scroll-thumb { inset-inline-start: var(--tick-space); }
 .scroll-track:focus-visible .scroll-progress { background-color: var(--muted); }
 .scroll-track:focus-visible .scroll-progress::before { background: var(--ink); }
 .sigil-scroll[data-rail-compact] .question-jumps { display: none; }
@@ -614,7 +614,7 @@ a.source-site:focus-visible::before { outline: 1px solid var(--metal); outline-o
 
 .toyota-profiles {
   margin: clamp(1.75rem, 5cqi, 2.75rem) auto;
-  padding-block: .5rem;
+  padding-block: .5rem 0;
 }
 .toyota-profile-list {
   margin: 0; padding: 0; list-style: none;
@@ -1060,20 +1060,20 @@ a.source-site:focus-visible::before { outline: 1px solid var(--metal); outline-o
   grid-row: 2; font-size: .7rem; color: color-mix(in srgb, var(--muted) 90%, var(--ink));
 }
 [data-track-playlist] .track-choice .track-title strong { grid-row: 1; font-size: .8125rem; }
-[data-track-playlist] :is(.track-choice, .track-bar > .track-title):is(:hover, :focus-visible) .track-name-scroll[data-title-overflow] {
+:is([data-track-title-hovered], .track-choice:focus-visible) .track-name-scroll[data-title-overflow] {
   text-overflow: clip;
 }
-[data-track-playlist] :is(.track-choice, .track-bar > .track-title):is(:hover, :focus-visible) .track-name-scroll[data-title-overflow] > span {
+:is([data-track-title-hovered], .track-choice:focus-visible) .track-name-scroll[data-title-overflow] > span {
   display: inline-block; width: max-content;
-  animation: playlist-track-name-scroll calc(var(--track-name-duration) * var(--playlist-scroll-duration-scale, 1)) linear infinite;
+  animation: track-name-scroll calc(var(--track-name-duration) * var(--track-scroll-duration-scale, 1)) linear infinite;
 }
-[data-track-playlist] :is(.track-choice, .track-bar > .track-title):is(:hover, :focus-visible) .track-name-scroll[data-title-overflow] > span::after {
+:is([data-track-title-hovered], .track-choice:focus-visible) .track-name-scroll[data-title-overflow] > span::after {
   display: inline-block; padding-inline: 1.2em;
   content: attr(data-track-name-copy);
   content: attr(data-track-name-copy) / "";
 }
 @media (prefers-reduced-motion: reduce) {
-  [data-track-playlist] { --playlist-scroll-duration-scale: 1.25; }
+  .audio-cue { --track-scroll-duration-scale: 1.25; }
 }
 @container media-player (min-width: 38rem) {
   [data-track-playlist] > .track-list:has(.track-choice) { --track-columns: 4; }
@@ -1182,8 +1182,7 @@ a.source-site:focus-visible::before { outline: 1px solid var(--metal); outline-o
     grid-template-columns: minmax(0, 1fr) max-content auto auto;
   }
   .track-bar.media-controls > .track-title { translate: 0 3px; }
-  .track-bar.media-controls > .track-title > strong { translate: 0 -1px; }
-  #track-fitnesss-title > strong { translate: 0 -2px; }
+  .track-bar.media-controls > .track-title > strong { translate: 0 var(--track-title-translate-y, -1px); }
   .track-bar.media-controls:not(.playlist-bar) > .track-title > .track-artist { font-size: .75rem; }
 }
 @container media-player (min-width: 20rem) {
@@ -1200,6 +1199,7 @@ a.source-site:focus-visible::before { outline: 1px solid var(--metal); outline-o
   .video-bar .clock { margin-inline-end: 0; }
   .video-bar .seek { margin-inline: 0; }
   [data-compare-versions] .playlist-bar.media-controls {
+    --track-title-translate-y: -1px;
     grid-template: "list list list" auto "title title title" auto "clock volume download" auto / minmax(0, 1fr) auto auto;
   }
 }
@@ -1334,7 +1334,10 @@ a.source-site:focus-visible::before { outline: 1px solid var(--metal); outline-o
   .cover-summary { grid-area: 2 / 1 / 3 / 7; gap: .9rem; padding: 1.5rem 0 0; }
   .cover-deck { font-size: 1.3rem; }
   .cover-main { grid-area: 1 / 1 / 2 / 6; }
-  .cover-main .photo-link { height: auto; aspect-ratio: 16 / 10; }
+  .cover-main .photo-link {
+    --cover-frame-inner-scale: 4.75;
+    height: auto; aspect-ratio: 16 / 10;
+  }
   .cover-detail { grid-area: 1 / 5 / 2 / 7; margin: 0 .65rem 2.7rem -.8rem; }
   .reading-layout { margin-top: 2rem; }
   .lead { padding-top: 1.25rem; margin-bottom: 2rem; }
@@ -1372,10 +1375,8 @@ a.source-site:focus-visible::before { outline: 1px solid var(--metal); outline-o
     padding-inline: calc(var(--wrap-start) + 5px) calc(var(--wrap-edge) + 5px);
     overflow-x: clip;
   }
-  .cover-main .photo-link {
-    --frame-cap: clamp(27px, 7vw, 36px);
-    --cover-frame-inner-scale: 1.8;
-  }
+  .cover-main .photo-link { --frame-cap: clamp(27px, 7vw, 36px); }
+  .clip-choice:is([aria-controls="video-salibi-01"], [aria-controls="video-salibi-02"]) .clip-thumb { scale: 1.2; }
   .link-preview {
     --link-preview-default-width: min(20rem, calc(100% - 2rem));
     padding: .75rem 1.625rem .75rem .75rem;
@@ -1447,6 +1448,7 @@ a.source-site:focus-visible::before { outline: 1px solid var(--metal); outline-o
   .cover-deck { font-size: 1.25rem; }
 }
 @media (max-width: 22.5rem) {
+  .audio-cue { --track-title-translate-y: -2px; }
   .footer { row-gap: .5rem; }
   .return-link { grid-row: 2; }
 }
@@ -1459,16 +1461,9 @@ a.source-site:focus-visible::before { outline: 1px solid var(--metal); outline-o
   .cloth-canvas { transition: opacity .14s ease-out; }
   .cover-word { animation: cover-type-in .85s cubic-bezier(.2, .7, .2, 1) both; }
   .play-toggle { transition: transform .16s ease-out, color .16s, border-color .16s; }
-  .audio-cue:not([data-track-playlist], [data-compare-versions]) .track-name-scroll[data-title-overflow] {
-    animation: track-name-scroll var(--track-name-duration) ease-in-out infinite alternate;
-  }
 }
 
 @keyframes track-name-scroll {
-  0%, 9% { text-indent: 0; }
-  80%, 100% { text-indent: var(--track-name-shift); }
-}
-@keyframes playlist-track-name-scroll {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
 }

@@ -78,7 +78,8 @@
   }
 
   function fitFrameStrands(photo, width, height, cap, artwork) {
-    const spread = artwork === frameArt["cover-stage"] ? .3 : 0;
+    const coverStage = artwork === frameArt["cover-stage"];
+    const spread = coverStage ? .3 : 0;
     const innerScale = parseFloat(getComputedStyle(photo).getPropertyValue("--cover-frame-inner-scale")) || 0;
     if (!spread && !innerScale) return null;
     const [x1, y1, x2, y2] = artwork.railCenter;
@@ -97,7 +98,8 @@
       // The extra width starts at the outer lip and extends toward the photo.
       const innerX = Math.max(0, dx * inwardX + outerLipOffset);
       const innerY = Math.max(0, dy * inwardY + outerLipOffset);
-      const stretchX = innerScale * down * down, stretchY = innerScale * across * across;
+      const stretchX = innerScale * (coverStage ? Math.min(1, 2 * down) : down * down);
+      const stretchY = innerScale * (coverStage ? Math.min(1, 2 * across) : across * across);
       result[0] = x + extraX * dx + stretchX * innerX * inwardX;
       result[1] = y + extraY * dy + stretchY * innerY * inwardY;
       result[2] = 1 + extraX + (innerX ? stretchX : 0);

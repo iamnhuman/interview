@@ -1051,21 +1051,17 @@ function createTrackSpectrum(plot, seek) {
   return { select, drawAt };
 }
 
-function initTrackTitleScroll(titles, trackPlaylist) {
-  const range = trackPlaylist ? document.createRange() : null;
+function initTrackTitleScroll(titleBlocks) {
+  const range = document.createRange();
+  const titles = [...titleBlocks].flatMap(block => [...block.querySelectorAll(".track-artist, strong")]);
   function measure(title) {
     const text = title.firstElementChild;
-    if (range) {
-      const label = text.textContent;
-      if (text.getAttribute("data-track-name-copy") !== label) text.setAttribute("data-track-name-copy", label);
-      range.selectNodeContents(text);
-    }
-    const width = (range ?? text).getBoundingClientRect().width;
-    const distance = Math.max(0, Math.ceil(width - title.clientWidth));
-    const duration = trackPlaylist ? Math.max(.75, width / 84) : Math.max(4, distance / 32 + 2);
-    title.style.setProperty("--track-name-shift", `${-distance}px`);
-    title.style.setProperty("--track-name-duration", `${duration}s`);
-    title.toggleAttribute("data-title-overflow", distance > 1);
+    const label = text.textContent;
+    if (text.getAttribute("data-track-name-copy") !== label) text.setAttribute("data-track-name-copy", label);
+    range.selectNodeContents(text);
+    const width = range.getBoundingClientRect().width;
+    title.style.setProperty("--track-name-duration", `${Math.max(.75, width / 84)}s`);
+    title.toggleAttribute("data-title-overflow", width - title.clientWidth > .5);
   }
 
   const resize = new ResizeObserver(entries => {
@@ -1076,9 +1072,15 @@ function initTrackTitleScroll(titles, trackPlaylist) {
     text.append(...title.childNodes);
     title.append(text);
     title.classList.add("track-name-scroll");
-    if (!trackPlaylist) title.title = text.textContent;
     measure(title);
     resize.observe(title);
+  }
+  for (const block of titleBlocks) {
+    const target = block.closest(".track-choice") || block;
+    target.addEventListener("pointerenter", event => {
+      target.toggleAttribute("data-track-title-hovered", event.pointerType !== "touch");
+    });
+    target.addEventListener("pointerleave", () => target.removeAttribute("data-track-title-hovered"));
   }
   document.fonts?.ready.then(() => titles.forEach(measure));
   return measure;
@@ -1098,7 +1100,6 @@ function enhanceAudio(player) {
     const audio = row.querySelector("audio"), download = row.querySelector(".track-download"), title = row.querySelector(".track-title");
     audio.id = row.id + "-audio";
     const label = audio.getAttribute("aria-label");
-    if (!trackPlaylist) title.title = label;
     const choice = { row, audio, download, title, track: trackSpectra[row.id] };
     if (entries.length) {
       const button = document.createElement("button");
@@ -1111,7 +1112,7 @@ function enhanceAudio(player) {
       button.append(icon, title);
       if (!compareVersions && !trackPlaylist) {
         const duration = timeLabel(choice.track.duration);
-        title.title += " · " + duration;
+        title.title = label + " · " + duration;
         const length = document.createElement("span");
         length.className = "track-length";
         length.textContent = duration;
@@ -1147,9 +1148,8 @@ function enhanceAudio(player) {
     playTooltip: !trackPlaylist,
     onPosition: p => spectrum?.drawAt(p),
   });
-  const trackName = bar.querySelector(".track-title strong");
-  const titles = trackPlaylist ? [trackName, ...choices.map(choice => choice.title.querySelector("strong"))] : [trackName];
-  const measureTitle = initTrackTitleScroll(titles, trackPlaylist);
+  const titleBlocks = new Set([bar.querySelector(".track-title"), ...choices.map(choice => choice.title)]);
+  const measureTitle = initTrackTitleScroll(titleBlocks);
   spectrum = createTrackSpectrum(plot, controls.seek);
   function select(choice) {
     if (selected === choice) return;
@@ -1169,9 +1169,11 @@ function enhanceAudio(player) {
       if (entry.button) entry.button.setAttribute("aria-current", String(entry === choice));
     }
     if (currentTitle) {
-      currentTitle.querySelector(".track-artist").textContent = choice.title.querySelector(".track-artist").textContent;
-      trackName.firstElementChild.textContent = choice.title.querySelector("strong").textContent;
-      measureTitle(trackName);
+      for (const selector of [".track-artist", "strong"]) {
+        const title = currentTitle.querySelector(selector);
+        title.firstElementChild.textContent = choice.title.querySelector(selector).textContent;
+        measureTitle(title);
+      }
     }
     notice.hidden = !choice.audio.error;
     controls.select(choice.audio, choice.track.duration, choice.button);
