@@ -91,7 +91,10 @@ const linkCards = {
     "title": "archivenormis",
     "meta": "«Telegram»",
     "description": "Архив от кино до репостов комментариев из музыкальных каналов.",
-    ...archivenormisAvatar
+    "imageLayout": "avatar",
+    "image": "assets/media/previews/archivenormis-channel-avatar.jpg",
+    "video": "assets/media/previews/archivenormis-channel-avatar.mp4",
+    "animatedImage": "assets/media/previews/archivenormis-channel-avatar.webp"
   },
   "https://t.me/archivenormis/5429/12636": {
     "title": "Arca live",
@@ -405,7 +408,7 @@ const linkCards = {
     "meta": "ВКонтакте · Запись",
     "description": "Запись на стене бывшего паблика «Hard Dubstep».",
     "imageLayout": "square",
-    "image": "assets/link-thumbnails/hard-dubstep-legion.png"
+    "image": "assets/link-thumbnails/hard-dubstep-legion.png?v=2"
   },
   "https://vk.ru/thebassland": {
     "title": "BASSLAND",
