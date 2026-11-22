@@ -82,7 +82,7 @@ function initDisplaySettings() {
   });
   initDisplaySwitch("question-numbers", "shown", "hidden", (value, control) => {
     control.title = value === "shown" ? "Скрыть номера на шкале" : "Показать номера на шкале";
-  });
+  }, { preservePosition: true });
 }
 
 // Keep artist typography in excerpts while leaving links and other interactive markup in the article.
@@ -765,10 +765,17 @@ function createTrackSpectrum(plot, seek) {
 }
 
 function initTrackTitleScroll(titles, trackPlaylist) {
+  const range = trackPlaylist ? document.createRange() : null;
   function measure(title) {
     const text = title.firstElementChild;
-    const distance = Math.max(0, Math.ceil(text.getBoundingClientRect().width - title.clientWidth));
-    const duration = trackPlaylist ? Math.max(.75, distance / 84) : Math.max(4, distance / 32 + 2);
+    if (range) {
+      const label = text.textContent;
+      if (text.getAttribute("data-track-name-copy") !== label) text.setAttribute("data-track-name-copy", label);
+      range.selectNodeContents(text);
+    }
+    const width = (range ?? text).getBoundingClientRect().width;
+    const distance = Math.max(0, Math.ceil(width - title.clientWidth));
+    const duration = trackPlaylist ? Math.max(.75, width / 84) : Math.max(4, distance / 32 + 2);
     title.style.setProperty("--track-name-shift", `${-distance}px`);
     title.style.setProperty("--track-name-duration", `${duration}s`);
     title.toggleAttribute("data-title-overflow", distance > 1);

@@ -84,9 +84,8 @@ const linkCards = {
     "displayUrl": "t.me/aginormis",
     "meta": "aginormis · 20 окт. 2026 г.",
     "description": "Заметка о визуальном тренде и подборка роликов из разных каналов.",
-    "imageLayout": "square",
-    "image": "assets/media/previews/post-aginormis-1363.jpg",
-    "video": "assets/media/previews/post-aginormis-1363.mp4"
+    "image": "assets/media/previews/post-aginormis-1363.jpg?v=2",
+    "video": "assets/media/previews/post-aginormis-1363.mp4?v=2"
   },
   "https://t.me/archivenormis": {
     "title": "archivenormis",
@@ -105,7 +104,7 @@ const linkCards = {
     "title": "Max Headroom",
     "displayUrl": "t.me/archivenormis",
     "meta": "archivenormis · 17 июл. 2026 г.",
-    "description": "мнение по поводу известного в определенных кругах культуролога",
+    "description": "Мнение по поводу известного в определённых кругах культуролога.",
     "imageLayout": "avatar",
     "image": "assets/media/previews/headroom-inc-avatar.jpg"
   },
@@ -113,6 +112,7 @@ const linkCards = {
     "title": "Zapret",
     "displayUrl": "t.me/archivenormis",
     "meta": "Тема в «Telegram»",
+    "description": "Раздел, посвящённый запретам, в группе archivenormis.",
     ...archivenormisAvatar
   },
   "https://t.me/bad_zu/1466": {
@@ -120,7 +120,8 @@ const linkCards = {
     "displayUrl": "t.me/bad_zu",
     "meta": "Публикация · 27 окт. 2026 г.",
     "description": "Лекция Филиппа Александрова о восприятии звука и его роли в медиа.",
-    "image": "assets/media/previews/post-bad-zu-1466.jpg"
+    "image": "assets/media/previews/post-bad-zu-1466.jpg",
+    "imageLayout": "square-fill-trim"
   },
   "https://t.me/trollnormis": {
     "title": "trollnormis",
@@ -158,7 +159,7 @@ const linkCards = {
     "meta": "fict.info",
     "description": "Los Angeles. Las Vegas. Tokyo.",
     "imageLayout": "square",
-    "image": "assets/link-thumbnails/fict-info.png"
+    "image": "assets/link-thumbnails/fict-info.png?v=2"
   },
   "https://t.me/thequietplace/8490": {
     "title": "Анна Виленская о тембральном слухе",
@@ -179,7 +180,7 @@ const linkCards = {
     "title": "A Factual Account of the CCRU",
     "meta": "Hijinx World",
     "description": "Интерактивная карта истории CCRU. На ней можно проследить связи между людьми, идеями и событиями.",
-    "imageLayout": "square",
+    "imageLayout": "stretch",
     "image": "assets/link-thumbnails/hijinx-ccru-graph.jpg"
   },
   "https://t.me/slopnormis/942/3538": {
@@ -187,15 +188,16 @@ const linkCards = {
     "displayUrl": "t.me/slopnormis",
     "meta": "slopnormis · 19 окт. 2026 г.",
     "description": "Реплика о конкурсе с призовым фондом 220 USDT.",
-    ...slopnormisAvatar
+    "imageLayout": "portrait",
+    "image": "assets/media/previews/post-slopnormis-3538.jpg",
+    "video": "assets/media/previews/post-slopnormis-3538.mp4"
   },
   "https://t.me/slopnormis/942/3578": {
     "title": "М О Р И А Р Т И",
-    "titleUrl": "https://www.youtube.com/@moriartymega",
     "displayUrl": "t.me/slopnormis",
     "meta": "slopnormis · 28 окт. 2026 г.",
-    "description": "Реакция на ИИ-контент канала moriartymega.",
-    ...slopnormisAvatar
+    "description": "Реакция на ИИ-контент канала Мориарти.",
+    "image": "assets/media/previews/post-slopnormis-3578.jpg"
   },
   "https://t.me/slopnormis/2737/3590": {
     "title": "Nick Land",
@@ -220,7 +222,8 @@ const linkCards = {
   },
   "https://www.instagram.com/0ll668/": {
     "title": "@0ll668",
-    "meta": "Instagram"
+    "meta": "Instagram",
+    "image": "assets/media/previews/011668-instagram-avatar.jpg"
   },
   "https://t.me/hypernormis/376/377": {
     "title": "WWWINGS",
@@ -327,10 +330,9 @@ const linkCards = {
     "image": "assets/media/previews/salibium-avatar.jpg"
   },
   "http://t.me/ushko2000/3386?comment=19246": {
-    "title": "ᎽᗯᏦᗝ vol.2",
+    "title": "Сравнение трека с Suno по громкости",
     "meta": "Комментарий в «Telegram»",
-    "imageLayout": "avatar",
-    "image": "assets/media/previews/ushko2000-avatar.jpg"
+    "image": "assets/media/previews/ushko-suno-comparison-cover.webp"
   },
   "http://t.me/dailyslime": {
     "title": "Daily Slime",
@@ -345,7 +347,7 @@ const linkCards = {
   "https://www.instagram.com/oscarcarreteero/": {
     "title": "Óscar Carretero",
     "description": "автор костюма",
-    "image": "assets/media/fitnesss-s4-portrait.jpg"
+    "image": "assets/media/previews/oscar-carretero-helmet.webp"
   },
   "https://t.me/fakeboys01/22361": {
     "title": "Deescawa",
@@ -368,6 +370,7 @@ const linkCards = {
   "https://iamnhuman.github.io/agi": {
     "title": "ИИзм",
     "description": "ИИзм — командный архив ИИ-сцены: досье художников и медиа, тактическая карта и видеохроника.",
+    "imageLayout": "natural",
     "image": "assets/link-thumbnails/iizm-social-preview-v5.jpg"
   },
   "https://higgsfield.ai/creator-partnership-program": {
@@ -377,7 +380,7 @@ const linkCards = {
   },
   "https://www.instagram.com/p/Dbt67C-MlM0/": {
     "title": "salibi",
-    "image": "assets/media/video/salibi-01.jpg"
+    "image": "assets/media/previews/salibi-dbt67c-instagram.jpg?v=2"
   },
   "https://panayiotiskokoras.com/writings/": {
     "title": "Writings",
@@ -435,13 +438,15 @@ const linkCards = {
     "title": "Gypsyhook",
     "meta": "YouTube",
     "description": "Мини-альбом Sonny Moore целиком.",
-    "image": "assets/link-thumbnails/sonny-gypsyhook.jpg"
+    "image": "assets/link-thumbnails/sonny-gypsyhook.jpg",
+    "imageLayout": "square-fill-right"
   },
   "https://youtu.be/8sgu7yz73yU?si=r7nY01W7yejDMgi7&t=4374": {
     "title": "ИЗОБРЕТАЕМ НОВЫЕ НОТЫ. Пушной, Семихатов и Сурдин",
     "meta": "YouTube · Вселенная Плюс · 1:12:54",
     "description": "ссылка на отрывок из выпуска",
-    "image": "assets/link-thumbnails/izobretaem-novye-noty.jpg"
+    "image": "assets/link-thumbnails/izobretaem-novye-noty.jpg",
+    "imageLayout": "square-fill"
   },
   "https://www.youtube.com/watch?v=WSeNSzJ2-Jw": {
     "title": "Skrillex - Scary Monsters And Nice Sprites",
@@ -493,6 +498,7 @@ const linkCards = {
   "https://t.me/egrooves": {
     "title": "ethereal grooves",
     "description": "Музыкальный блог и серия миксов VK: vk.com/etherealgrooves SoundCloud: https://soundcloud.com/etherealgroovesofficial eternal love",
+    "imageLayout": "avatar",
     "image": "assets/link-thumbnails/4b3bf2ddefff.jpg"
   },
   "https://t.me/egrooves/10103": {
@@ -521,12 +527,14 @@ const linkCards = {
   "https://www.youtube.com/watch?v=bBsShBdDuxk": {
     "title": "Дора | ASMR",
     "meta": "YouTube · goshakartsev",
-    "image": "assets/link-thumbnails/dora-asmr.jpg"
+    "image": "assets/link-thumbnails/dora-asmr.jpg",
+    "imageLayout": "square-fill-right"
   },
   "https://www.youtube.com/watch?v=d9t0eXNnT1c": {
     "title": "Vitman The Prince - Цветы",
     "description": "Vitman The Prince",
-    "image": "assets/link-thumbnails/5e1b27ae3eda.jpg"
+    "image": "assets/link-thumbnails/5e1b27ae3eda.jpg",
+    "imageLayout": "square-fill"
   },
   "https://www.youtube.com/watch?v=9eQUtOQXYgQ": {
     "title": "STARCRAFT | Announce Cinematic | Dominion",
@@ -690,7 +698,7 @@ const linkCards = {
     "displayUrl": "t.me/archivenormis",
     "meta": "Публикация · 10 июл. 2026 г.",
     "description": "Автору больше всего понравилось интро альбома Темного Принца. Он разбирает тексты и спорит с тем, что их называют футуристичными.",
-    ...archivenormisAvatar
+    "image": "assets/media/previews/temny-prince-spotify-cover.jpg"
   },
   "https://open.spotify.com/track/2D94XNl9XV05mxKfG9wFst": {
     "title": "Arca - Throb",
@@ -728,7 +736,7 @@ const linkCards = {
   "https://vk.ru/necrofuturism": {
     "title": "necrofuturism",
     "meta": "ВКонтакте · Сообщество",
-    "description": "ИИ-артворки 2023 года на странице бывшего паблика «bassfunk».",
+    "description": "Заглушка вместо старого паблика «bassfunk».",
     "imageLayout": "avatar",
     "image": "assets/link-thumbnails/necrofuturism-vk.jpg"
   },
@@ -807,6 +815,6 @@ const linkCards = {
     "displayUrl": "t.me/archivenormis",
     "meta": "Публикация · 17 нояб. 2025 г.",
     "description": "старые треки Alon Mor",
-    "image": "assets/media/previews/post-archivenormis-822.jpg"
+    ...archivenormisAvatar
   }
 };

@@ -189,6 +189,8 @@
 
     const isOverlay = source.parentElement?.hasAttribute("data-photo");
     const trigger = isOverlay ? source.parentElement : source;
+    const autoplay = source.hasAttribute("data-cover-frame-idle");
+    const motionRate = source.dataset.coverFrameDirection === "reverse" ? -.72 : 1;
     let photo = source;
     const events = new AbortController();
     const { signal } = events;
@@ -469,20 +471,22 @@
       frame = 0;
       if (!fitted || !visible || unavailable || document.hidden || signal.aborted) return;
       let useSoftware = !renderer || contextLost || gpuFailed;
-      if ((useSoftware || weave) && previous && stamp - previous < 30) {
+      if ((useSoftware || weave || isOverlay || (autoplay && !hovered)) && previous && stamp - previous < 30) {
         schedule();
         return;
       }
       const dt = previous ? Math.min(.05, (stamp - previous) / 1000) : 1 / 60;
       const calm = reduced.matches;
-      const active = (hovered || (weave && !isOverlay)) && !(calm && isOverlay);
-      const target = active ? (calm ? .8 : 1) : 0;
+      const idle = autoplay && photo === source ? .7 : 0;
+      let target = hovered || weave ? 1 : idle;
+      if (isOverlay) target = hovered ? 1.15 : .85;
+      if (calm) target *= .8;
       const difference = target - strength;
       strength = Math.abs(difference) < .003
         ? target : strength + difference * (1 - Math.exp(-7 * dt));
       uniforms.frameMotion.value = weave ? 0 : strength * capScale;
       uniforms.framePointer.value.lerp(pointer, 1 - Math.exp(-12 * dt));
-      if (strength) uniforms.frameTime.value += dt * (calm ? .56 : 1);
+      if (strength) uniforms.frameTime.value += dt * (calm ? .56 : 1) * motionRate;
       weave?.(uniforms.frameTime.value, strength);
 
       if (!useSoftware) {
