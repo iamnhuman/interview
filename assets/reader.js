@@ -198,6 +198,7 @@ function initReadingPosition() {
   const end = document.getElementById("end");
   const returnArrow = end.querySelector(".return-link svg");
   const mobile = matchMedia("(max-width: 37rem)");
+  const previewAlignsWithText = matchMedia("(max-width: 56rem)");
   const viewport = window.visualViewport;
   const sections = [{
     id: intro.id, label: "Начало интервью",
@@ -254,6 +255,8 @@ function initReadingPosition() {
   function placePreview() {
     if (previewIndex < 0) return;
     const bounds = navigation.getBoundingClientRect();
+    const textEdge = previewAlignsWithText.matches ? `${intro.getBoundingClientRect().left}px` : "";
+    preview.style.setProperty("--preview-left", textEdge);
     const top = bounds.top + 4;
     const height = preview.offsetHeight;
     const viewportBottom = compactRail || mobile.matches ? bounds.bottom : window.innerHeight;

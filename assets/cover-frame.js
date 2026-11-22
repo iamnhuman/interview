@@ -77,21 +77,31 @@
     offset[1] = amount * y * across * across * Math.sin(stageWave.frequency * u - y - phase);
   }
 
-  function fitStageStrands(width, height, cap) {
-    const [x1, y1, x2, y2] = frameArt["cover-stage"].railCenter;
+  function fitFrameStrands(photo, width, height, cap, artwork) {
+    const spread = artwork === frameArt["cover-stage"] ? .3 : 0;
+    const innerScale = parseFloat(getComputedStyle(photo).getPropertyValue("--cover-frame-inner-scale")) || 0;
+    if (!spread && !innerScale) return null;
+    const [x1, y1, x2, y2] = artwork.railCenter;
     const left = frameCoordinate(x1, width, cap), right = frameCoordinate(x2, width, cap);
     const top = frameCoordinate(y1, height, cap), bottom = frameCoordinate(y2, height, cap);
     const centerX = width / 2, centerY = height / 2;
+    const outerLipOffset = .065 * cap;
 
     return (x, y, result) => {
       // Widen the strands across their centerlines, tapering into the corners.
       const across = Math.max(0, 1 - ((x - centerX) / (centerX - cap)) ** 2);
       const down = Math.max(0, 1 - ((y - centerY) / (centerY - cap)) ** 2);
-      const extraX = .3 * down * down, extraY = .3 * across * across;
-      result[0] = x + extraX * (x - (x < centerX ? left : right));
-      result[1] = y + extraY * (y - (y < centerY ? top : bottom));
-      result[2] = 1 + extraX;
-      result[3] = 1 + extraY;
+      const extraX = spread * down * down, extraY = spread * across * across;
+      const inwardX = x < centerX ? 1 : -1, inwardY = y < centerY ? 1 : -1;
+      const dx = x - (inwardX > 0 ? left : right), dy = y - (inwardY > 0 ? top : bottom);
+      // The extra width starts at the outer lip and extends toward the photo.
+      const innerX = Math.max(0, dx * inwardX + outerLipOffset);
+      const innerY = Math.max(0, dy * inwardY + outerLipOffset);
+      const stretchX = innerScale * down * down, stretchY = innerScale * across * across;
+      result[0] = x + extraX * dx + stretchX * innerX * inwardX;
+      result[1] = y + extraY * dy + stretchY * innerY * inwardY;
+      result[2] = 1 + extraX + (innerX ? stretchX : 0);
+      result[3] = 1 + extraY + (innerY ? stretchY : 0);
     };
   }
 
@@ -139,8 +149,9 @@
   }
 
   function fitStageFallbackWave(photo, width, height, cap, left, top, padding) {
-    const fitStrands = fitStageStrands(width, height, cap);
-    const paintOpening = fitFrameOpening(photo, frameArt["cover-stage"].opening, width, height, cap, left, top, fitStrands);
+    const artwork = frameArt["cover-stage"];
+    const fitStrands = fitFrameStrands(photo, width, height, cap, artwork);
+    const paintOpening = fitFrameOpening(photo, artwork.opening, width, height, cap, left, top, fitStrands);
     const offset = new Float64Array(2);
     const strand = new Float64Array(4);
     return (points, time, strength) => {
@@ -444,7 +455,7 @@
       const centerX = (width - 2 * cap) / (1 - 2 * slice);
       const centerY = (height - 2 * cap) / (1 - 2 * slice);
       const lower = sourceSize * slice, upper = sourceSize - lower;
-      const fitStrands = ripples ? fitStageStrands(width, height, cap) : null;
+      const fitStrands = artwork.railCenter ? fitFrameStrands(photo, width, height, cap, artwork) : null;
       const strand = new Float64Array([0, 0, 1, 1]);
       for (let index = 0; index < position.count; index++) {
         const offset = index * 3;

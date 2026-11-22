@@ -88,10 +88,12 @@
       if (event.altKey || event.ctrlKey || event.metaKey) return;
       const index = choices.indexOf(event.target);
       if (index < 0) return;
+      const layout = getComputedStyle(picker);
+      const columnsInView = layout.gridAutoFlow === "row" ? layout.gridTemplateColumns.split(" ").length : columns;
       const destinations = {
         ArrowLeft: index - 1, ArrowRight: index + 1,
-        ArrowUp: index >= columns ? index - columns : index,
-        ArrowDown: index + columns < choices.length ? index + columns : index,
+        ArrowUp: index >= columnsInView ? index - columnsInView : index,
+        ArrowDown: index + columnsInView < choices.length ? index + columnsInView : index,
         Home: 0, End: choices.length - 1,
       };
       if (!Object.hasOwn(destinations, event.key)) return;

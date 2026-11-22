@@ -14,6 +14,11 @@
   const markSymbols = document.getElementById("source-marks")?.content;
   const hover = matchMedia("(any-hover: hover)");
   const mobile = matchMedia("(max-width: 37rem)");
+  const telegramAndroid = /\bAndroid\b/.test(navigator.userAgent) &&
+    (window.TelegramWebviewProxy || /\bTelegram-Android\//.test(navigator.userAgent));
+  const menuSafeHref = "javascript:";
+  const linkDestinations = new WeakMap();
+  const activatingLinks = new WeakSet();
   const shortDomains = new Map([["open.spotify.com", "spotify.com"]]);
   const sourceMarks = new Map([
     ["bandcamp.com", "bandcamp"], ["fandom.com", "fandom"], ["github.io", "github"],
@@ -30,6 +35,27 @@
   let suppressedClick = null;
   let timer = 0;
   let line = 0;
+
+  function guardTelegramLink(link) {
+    if (!telegramAndroid || activatingLinks.has(link)) return;
+    const href = link.getAttribute("href");
+    if (href === null || href === menuSafeHref) return;
+    // Android WebView records the link at touch start and ignores JavaScript URLs in its link hit test.
+    linkDestinations.set(link, href);
+    link.setAttribute("href", menuSafeHref);
+  }
+
+  function restoreLinkForClick(event) {
+    const link = event.target.closest?.("a[href]");
+    const href = linkDestinations.get(link);
+    if (href === undefined || link.getAttribute("href") !== menuSafeHref) return;
+    activatingLinks.add(link);
+    link.setAttribute("href", href);
+    window.setTimeout(() => {
+      activatingLinks.delete(link);
+      guardTelegramLink(link);
+    }, 0);
+  }
 
   function createSourceMark(link) {
     const domain = link.hostname.split(".").slice(-2).join(".");
@@ -288,23 +314,27 @@
     line = Math.max(0, [...link.getClientRects()].findIndex(rect => clientY >= rect.top && clientY <= rect.bottom));
     arrow.textContent = "↗";
     const destination = activeSource?.destination || link;
+    const href = linkDestinations.get(destination) ?? destination.getAttribute("href");
+    const url = new URL(href, document.baseURI);
     card.toggleAttribute("data-touch-preview", touch);
     if (touch) {
-      arrow.href = destination.href;
+      arrow.href = url.href;
+      guardTelegramLink(arrow);
       arrow.target = destination.target;
       arrow.rel = destination.rel;
       arrow.removeAttribute("aria-hidden");
     }
     const label = destination.getAttribute("type") === "application/pdf"
-      ? destination.pathname.split("/").pop()
-      : destination.getAttribute("href");
-    address.textContent = record.previewAddress || record.displayUrl || shortDomains.get(destination.hostname) || label;
+      ? url.pathname.split("/").pop()
+      : href;
+    address.textContent = record.previewAddress || record.displayUrl || shortDomains.get(url.hostname) || label;
     setMeta(record.meta);
     card.toggleAttribute("data-linked-title", Boolean(record.titleUrl));
     card.setAttribute("role", touch || record.titleUrl ? "group" : "tooltip");
     if (record.titleUrl) {
       const titleLink = document.createElement("a");
       setTitleLink(titleLink, record);
+      guardTelegramLink(titleLink);
       if (!touch) titleLink.tabIndex = -1;
       title.replaceChildren(titleLink);
     } else {
@@ -370,6 +400,14 @@
     });
     link.addEventListener("click", hide);
   }
+  if (telegramAndroid) {
+    document.querySelectorAll("a[href]").forEach(guardTelegramLink);
+    const headerJump = masthead?.querySelector("[data-header-jump]");
+    if (headerJump) {
+      new MutationObserver(() => guardTelegramLink(headerJump)).observe(headerJump, { attributeFilter: ["href"] });
+    }
+    document.addEventListener("auxclick", restoreLinkForClick, true);
+  }
   card.addEventListener("pointerenter", () => clearTimeout(timer));
   card.addEventListener("pointerleave", event => {
     if (event.pointerType === "touch") return;
@@ -411,14 +449,18 @@
     });
   }
   document.addEventListener("contextmenu", event => {
-    const link = event.target.closest?.("[data-link-preview-touch]");
-    if (link && (event.pointerType === "touch" || touchPress?.link === link || suppressedClick === link)) event.preventDefault();
+    const link = event.target.closest?.("a[href]");
+    if (!touchLinks.has(link) && !linkDestinations.has(link)) return;
+    if (event.pointerType === "touch" || touchPress?.link === link || suppressedClick === link) event.preventDefault();
   });
   document.addEventListener("click", event => {
-    if (event.detail === 0 || !suppressedClick?.contains(event.target)) return;
-    suppressedClick = null;
-    event.preventDefault();
-    event.stopImmediatePropagation();
+    if ((event.detail !== 0 || event.pointerType === "touch") && suppressedClick?.contains(event.target)) {
+      suppressedClick = null;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      return;
+    }
+    if (telegramAndroid) restoreLinkForClick(event);
   }, true);
   document.addEventListener("visibilitychange", () => { if (document.hidden) hide(); });
   window.addEventListener("scroll", hide, { passive: true });
