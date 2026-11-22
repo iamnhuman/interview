@@ -7,14 +7,12 @@
   const reduced = matchMedia("(prefers-reduced-motion: reduce)");
   const avatars = Array.from(profiles.querySelectorAll(".toyota-profile-avatar"), (avatar, index) => {
     const angle = parseFloat(avatar.closest("li").style.getPropertyValue("--profile-frame-angle")) || 0;
-    const period = 7.2 + index * .43;
+    const period = 52 + index * 4.3;
     const phase = index * 2.4;
     const direction = index % 2 ? -1 : 1;
-    const swing = 9 + index % 4 * 2;
     avatar.style.setProperty("--profile-frame-period", period + "s");
-    avatar.style.setProperty("--profile-frame-delay", -(phase / (2 * Math.PI) % 1) * period + "s");
-    avatar.style.setProperty("--profile-frame-swing", direction * swing + "deg");
-    return { avatar, angle: -angle * Math.PI / 180, period, phase, direction, swing: swing * Math.PI / 180 };
+    avatar.style.setProperty("--profile-frame-turn", -direction + "turn");
+    return { avatar, angle: -angle * Math.PI / 180, period, phase, direction };
   });
   const visible = new Set();
   const events = new AbortController();
@@ -58,11 +56,11 @@
       for (const item of avatars) {
         item.rig.visible = visible.has(item.avatar);
         if (!item.rig.visible) continue;
-        const phase = seconds * item.direction * 2 * Math.PI / item.period + item.phase;
+        const turn = (seconds / item.period % 1) * item.direction * 2 * Math.PI;
         item.rig.rotation.set(
-          strength * .07 * Math.sin(.68 * phase + item.phase),
-          strength * .08 * Math.cos(.81 * phase - .5 * item.phase),
-          item.angle + strength * item.swing * Math.sin(phase)
+          strength * .07 * Math.sin(2 * turn + item.phase),
+          strength * .08 * Math.cos(3 * turn - .5 * item.phase),
+          item.angle + turn
         );
       }
       try {

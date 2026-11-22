@@ -2,6 +2,7 @@
 
 (() => {
   const card = document.getElementById("link-preview");
+  const navigation = document.querySelector("[data-sigil-navigation]");
   const arrow = card.querySelector(".link-preview-arrow");
   const title = card.querySelector("strong");
   const description = card.querySelector("p");
@@ -19,9 +20,12 @@
     ["vk.com", "vk"], ["vk.ru", "vk"], ["youtu.be", "youtube"], ["youtube.com", "youtube"],
   ]);
   const sources = new WeakMap();
+  const touchLinks = new WeakMap();
   let anchor = null;
   let pending = null;
   let activeSource = null;
+  let touchPress = null;
+  let suppressedClick = null;
   let timer = 0;
   let line = 0;
 
@@ -171,7 +175,9 @@
     if (rect.bottom <= 0 || rect.top >= height || !rect.width) { hide(); return; }
     const cardWidth = card.offsetWidth;
     const centered = linkRect.left + (linkRect.width - cardWidth) / 2;
-    const x = Math.max(8, Math.min(centered, width - cardWidth - 8));
+    const railEnd = navigation && !navigation.hidden ? navigation.getBoundingClientRect().right : 0;
+    const rightLimit = Math.max(8, width - cardWidth - 8);
+    const x = Math.min(rightLimit, Math.max(centered, railEnd + 8));
     const above = rect.top - card.offsetHeight - 7;
     const y = above >= 8 ? above : Math.max(8, Math.min(rect.bottom + 7, height - card.offsetHeight - 8));
     card.style.left = `${x}px`;
@@ -183,7 +189,15 @@
     timer = window.setTimeout(hide, 220);
   }
 
+  function cancelTouchPress() {
+    if (!touchPress) return;
+    clearTimeout(touchPress.timer);
+    touchPress.link.removeAttribute("data-link-preview-pressing");
+    touchPress = null;
+  }
+
   function hide() {
+    cancelTouchPress();
     clearTimeout(timer);
     highlight(null);
     pending = null;
@@ -194,6 +208,9 @@
     }
     anchor = null;
     card.hidden = true;
+    card.removeAttribute("data-touch-preview");
+    arrow.removeAttribute("href");
+    arrow.setAttribute("aria-hidden", "true");
     if (!video.hidden) {
       video.pause();
       video.hidden = true;
@@ -244,24 +261,31 @@
     }));
   }
 
-  function show(link, record, clientY) {
+  function show(link, record, clientY, touch = false) {
     if (!link.isConnected) { hide(); return; }
     pending = null;
     anchor = link;
     line = Math.max(0, [...link.getClientRects()].findIndex(rect => clientY >= rect.top && clientY <= rect.bottom));
     arrow.textContent = "↗";
     const destination = activeSource?.destination || link;
+    card.toggleAttribute("data-touch-preview", touch);
+    if (touch) {
+      arrow.href = destination.href;
+      arrow.target = destination.target;
+      arrow.rel = destination.rel;
+      arrow.removeAttribute("aria-hidden");
+    }
     const label = destination.getAttribute("type") === "application/pdf"
       ? destination.pathname.split("/").pop()
       : destination.getAttribute("href");
     address.textContent = record.previewAddress || record.displayUrl || shortDomains.get(destination.hostname) || label;
     setMeta(record.meta);
     card.toggleAttribute("data-linked-title", Boolean(record.titleUrl));
-    card.setAttribute("role", record.titleUrl ? "group" : "tooltip");
+    card.setAttribute("role", touch || record.titleUrl ? "group" : "tooltip");
     if (record.titleUrl) {
       const titleLink = document.createElement("a");
       setTitleLink(titleLink, record);
-      titleLink.tabIndex = -1;
+      if (!touch) titleLink.tabIndex = -1;
       title.replaceChildren(titleLink);
     } else {
       title.textContent = record.title;
@@ -302,16 +326,21 @@
       image: group.dataset.previewImage,
     });
     if (!record) continue;
+    touchLinks.set(link, record);
+    link.setAttribute("data-link-preview-touch", "");
     link.addEventListener("pointerenter", event => {
       if (hover.matches && event.pointerType !== "touch") request(link, record, event.clientY, 240);
     });
-    link.addEventListener("pointerleave", () => {
+    link.addEventListener("pointerleave", event => {
+      if (event.pointerType === "touch") return;
       if (pending !== link && anchor !== link) return;
       if (link.matches(":focus-visible")) return;
       if (record.titleUrl && anchor === link) queueHide();
       else hide();
     });
-    link.addEventListener("focus", () => { if (link.matches(":focus-visible")) request(link, record, null, 0); });
+    link.addEventListener("focus", () => {
+      if (!touchPress && link.matches(":focus-visible")) request(link, record, null, 0);
+    });
     link.addEventListener("blur", event => {
       if ((pending === link || anchor === link) && !card.contains(event.relatedTarget)) hide();
     });
@@ -319,6 +348,7 @@
   }
   card.addEventListener("pointerenter", () => clearTimeout(timer));
   card.addEventListener("pointerleave", event => {
+    if (event.pointerType === "touch") return;
     if (anchor && !anchor.contains(event.relatedTarget) && !anchor.matches(":focus-visible")) queueHide();
   });
   picture.addEventListener("error", () => { picture.hidden = true; place(); });
@@ -326,7 +356,47 @@
     if (event.key !== "Escape") return;
     hide();
   });
-  document.addEventListener("pointerdown", event => { if (!card.contains(event.target)) hide(); });
+  document.addEventListener("pointerdown", event => {
+    if (event.isPrimary) suppressedClick = null;
+    if (card.contains(event.target)) return;
+    hide();
+    if (event.pointerType !== "touch" || !event.isPrimary || event.button !== 0) return;
+
+    const link = event.target.closest?.("[data-link-preview-touch]");
+    const record = touchLinks.get(link);
+    if (!record) return;
+    const press = {
+      link, id: event.pointerId, x: event.clientX, y: event.clientY,
+      timer: window.setTimeout(() => {
+        if (touchPress !== press || !link.isConnected) return;
+        suppressedClick = link;
+        highlight(sources.get(link));
+        show(link, record, press.y, true);
+      }, 450),
+    };
+    touchPress = press;
+    link.setAttribute("data-link-preview-pressing", "");
+  });
+  document.addEventListener("pointermove", event => {
+    if (touchPress?.id !== event.pointerId) return;
+    if (Math.hypot(event.clientX - touchPress.x, event.clientY - touchPress.y) > 10) hide();
+  }, { passive: true });
+  for (const type of ["pointerup", "pointercancel"]) {
+    document.addEventListener(type, event => {
+      if (touchPress?.id === event.pointerId) cancelTouchPress();
+    });
+  }
+  document.addEventListener("contextmenu", event => {
+    const link = event.target.closest?.("[data-link-preview-touch]");
+    if (link && (event.pointerType === "touch" || touchPress?.link === link || suppressedClick === link)) event.preventDefault();
+  });
+  document.addEventListener("click", event => {
+    if (event.detail === 0 || !suppressedClick?.contains(event.target)) return;
+    suppressedClick = null;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  }, true);
+  document.addEventListener("visibilitychange", () => { if (document.hidden) hide(); });
   window.addEventListener("scroll", hide, { passive: true });
   window.addEventListener("resize", place);
   new ResizeObserver(place).observe(card);
