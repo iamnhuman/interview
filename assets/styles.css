@@ -1187,12 +1187,36 @@ a.source-site:focus-visible::before { outline: 1px solid var(--metal); outline-o
   .track-bar.media-controls > .track-title > strong { translate: 0 var(--track-title-translate-y, -1px); }
   .track-bar.media-controls:not(.playlist-bar) > .track-title > .track-artist { font-size: .75rem; }
 }
+@container media-player (20rem < width <= 26rem) {
+  .track-bar.media-controls > .track-title > strong { translate: 0 calc(var(--track-title-translate-y, -1px) - 1px); }
+}
 @container media-player (min-width: 20rem) {
   .track-bar.media-controls:not(.playlist-bar) > .track-title { margin-inline-start: .375rem; }
   .track-bar.media-controls:not(.playlist-bar) > .clock { margin-inline-end: .375rem; }
 }
 @container media-player (max-width: 20rem) {
   .media-controls { gap: .22rem; padding: .375rem; }
+  .track-bar.media-controls:has(> .play-toggle) {
+    grid-template: "title title clock" auto "play volume download" auto / minmax(0, 1fr) auto auto;
+    gap: .5rem .375rem;
+    padding: .5rem;
+  }
+  .track-bar.media-controls:has(> .play-toggle) > .track-title { grid-area: title; margin-inline-start: 0; }
+  .track-bar.media-controls:has(> .play-toggle) > .clock { grid-area: clock; justify-self: end; margin-inline-end: 0; }
+  .track-bar.media-controls:has(> .play-toggle) > .play-toggle {
+    grid-area: play;
+    width: 100%; gap: .45rem;
+    font: 550 .75rem/1 var(--body);
+  }
+  .track-bar.media-controls:has(> .play-toggle) > .media-gain { grid-area: volume; }
+  .track-bar.media-controls:has(> .play-toggle) > .track-download { grid-area: download; justify-self: end; }
+}
+@container media-player (15rem <= width <= 20rem) {
+  .track-bar.media-controls > .play-toggle::after {
+    content: attr(title);
+    content: attr(title) / "";
+    white-space: nowrap;
+  }
 }
 @container media-player (max-width: 17rem) {
   .video-bar .clock .total { display: none; }
@@ -1220,7 +1244,7 @@ a.source-site:focus-visible::before { outline: 1px solid var(--metal); outline-o
   translate: 0 calc(50% + var(--footer-bottom-padding) - var(--rail-end-inset));
 }
 .return-link-content > span { translate: 0 -.5px; }
-.return-link svg { width: .875em; height: .875em; }
+.return-link svg { width: .875em; height: .875em; margin-bottom: 1px; }
 
 @media (max-width: 64rem), (max-width: 90rem) and (any-pointer: coarse) {
   .footer { display: grid; grid-template-columns: minmax(0, 1fr); }
