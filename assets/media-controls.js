@@ -69,7 +69,7 @@ document.addEventListener("keydown", event => {
   }
 });
 
-function createMediaControls(bar, { plot, onPosition = () => {}, playButton } = {}) {
+function createMediaControls(bar, { plot, onPosition = () => {}, playButton, playTooltip = true } = {}) {
   function element(tag, cls) {
     const node = document.createElement(tag);
     node.className = cls;
@@ -131,7 +131,8 @@ function createMediaControls(bar, { plot, onPosition = () => {}, playButton } = 
     const playing = !media.paused && !media.ended, silent = media.muted || !media.volume;
     bar.toggleAttribute("data-playing", playing);
     const action = playing ? "Пауза" : "Воспроизвести";
-    play.title = action; play.setAttribute("aria-label", action + " — " + media.getAttribute("aria-label"));
+    if (playTooltip) play.title = action;
+    play.setAttribute("aria-label", action + " — " + media.getAttribute("aria-label"));
     mute.setAttribute("aria-pressed", String(silent));
     mute.title = silent ? "Включить звук" : "Выключить звук";
     volume.value = silent ? "0" : String(media.volume);
@@ -145,7 +146,7 @@ function createMediaControls(bar, { plot, onPosition = () => {}, playButton } = 
     if (media && play !== nextPlay) {
       play.removeAttribute("data-media-play");
       play.setAttribute("aria-label", "Воспроизвести — " + media.getAttribute("aria-label"));
-      play.title = "Воспроизвести";
+      if (playTooltip) play.title = "Воспроизвести";
     }
     play = nextPlay;
     play.setAttribute("data-media-play", "");
@@ -168,8 +169,10 @@ function createMediaControls(bar, { plot, onPosition = () => {}, playButton } = 
   }
 
   function seekTo(time) {
-    if (media.readyState >= 1) media.currentTime = time;
-    else {
+    if (media.readyState >= 1) {
+      pending = null;
+      media.currentTime = time;
+    } else {
       pending = time;
       if (media.preload === "none") { media.preload = "metadata"; media.load(); }
     }

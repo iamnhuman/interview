@@ -164,12 +164,14 @@
 
   function place() {
     if (!anchor || card.hidden) return;
+    const linkRect = anchor.getClientRects()[line] || anchor.getBoundingClientRect();
     const row = sources.get(anchor)?.row;
-    const reference = row?.contains(anchor) ? row : anchor;
-    const rect = reference.getClientRects()[line] || reference.getBoundingClientRect();
+    const rect = row?.contains(anchor) ? row.getBoundingClientRect() : linkRect;
     const width = document.documentElement.clientWidth, height = window.innerHeight;
     if (rect.bottom <= 0 || rect.top >= height || !rect.width) { hide(); return; }
-    const x = Math.max(8, Math.min(rect.left, width - card.offsetWidth - 8));
+    const cardWidth = card.offsetWidth;
+    const centered = linkRect.left + (linkRect.width - cardWidth) / 2;
+    const x = Math.max(8, Math.min(centered, width - cardWidth - 8));
     const above = rect.top - card.offsetHeight - 7;
     const y = above >= 8 ? above : Math.max(8, Math.min(rect.bottom + 7, height - card.offsetHeight - 8));
     card.style.left = `${x}px`;

@@ -1,11 +1,100 @@
 "use strict";
 
+function disposeSigilGeometry(object) {
+  object?.traverse(mesh => {
+    if (!mesh.isMesh) return;
+    mesh.geometry.dispose();
+    const textures = new Set(Object.values(mesh.material).filter(value => value?.isTexture));
+    for (const texture of textures) {
+      texture.image?.close?.();
+      texture.dispose();
+    }
+    mesh.material.dispose();
+  });
+}
+
+function makeSigilReflections(renderer) {
+  const studio = new THREE.Scene();
+  studio.background = new THREE.Color().setRGB(.072, .072, .072);
+  const softboxes = [
+    { position: [-3, 4.9, 5.8], size: [5, 4], intensity: 4.4 },
+    { position: [2.4, 2.5, 5.8], size: [1, 5.6], intensity: 4.2 },
+    { position: [4.4, -.1, 3], size: [2.5, 5], intensity: 1.15 },
+    { position: [-3.9, -2.1, 1.4], size: [2.5, 3.4], intensity: 1.8 },
+    { position: [1.9, -4.2, -1.3], size: [4.2, 2.6], intensity: 2.8 },
+    { position: [1.2, -2.8, 5], size: [4.2, 2.2], intensity: .45 },
+  ];
+  const panelGeometry = new THREE.BoxGeometry();
+  for (const { position, size, intensity } of softboxes) {
+    const color = new THREE.Color().setRGB(intensity, intensity, intensity);
+    const material = new THREE.MeshBasicMaterial({ color, toneMapped: false });
+    const panel = new THREE.Mesh(panelGeometry, material);
+    panel.position.set(...position);
+    panel.scale.set(...size, .04);
+    panel.lookAt(0, 0, 0);
+    studio.add(panel);
+  }
+
+  const filter = new THREE.PMREMGenerator(renderer);
+  try {
+    return filter.fromScene(studio, .045, .1, 32);
+  } finally {
+    filter.dispose();
+    panelGeometry.dispose();
+    for (const panel of studio.children) panel.material.dispose();
+  }
+}
+
+async function loadSigilGLB(url, backup, signal) {
+  const loader = new THREE.GLTFLoader();
+  if (window.location.protocol !== "file:") {
+    try {
+      const response = await fetch(url, { signal });
+      if (!response.ok) throw new Error("GLB model unavailable");
+      return await loader.parseAsync(await response.arrayBuffer(), "");
+    } catch (error) {
+      if (signal.aborted || !backup) throw error;
+    }
+  }
+
+  // Local HTML can load a classic script even when fetch() for file URLs is unavailable.
+  const data = await new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = backup;
+    script.onload = () => {
+      const encoded = script.sigilModelData ?? globalThis.sigilModelData;
+      if (script.sigilModelData === undefined) delete globalThis.sigilModelData;
+      script.remove();
+      try {
+        if (typeof encoded !== "string") throw new Error("GLB backup unavailable");
+        const bytes = atob(encoded);
+        const data = new Uint8Array(bytes.length);
+        for (let index = 0; index < bytes.length; index++) data[index] = bytes.charCodeAt(index);
+        resolve(data.buffer);
+      } catch (error) {
+        reject(error);
+      }
+    };
+    script.onerror = () => {
+      script.remove();
+      reject(new Error("GLB backup unavailable"));
+    };
+    document.head.append(script);
+  });
+  return loader.parseAsync(data, "");
+}
+
 (() => {
   const triggers = document.querySelectorAll("[data-sigil-trigger]");
   const preview = document.querySelector("[data-sigil-hover]");
   const viewer = document.getElementById("sigil-viewer");
   if (!triggers.length || !preview || typeof viewer?.showModal !== "function") return;
 
+  const heroTrigger = document.querySelector(".heading-sigil");
+  const hoverStart = document.querySelector("[data-sigil-hover-start]");
+  const masthead = document.querySelector(".masthead");
+  const footerTrigger = document.querySelector('[data-sigil-preview="footer"]');
+  const outro = document.getElementById("interview-outro");
   const stage = viewer.querySelector("[data-sigil-stage]");
   const close = viewer.querySelector("[data-sigil-close]");
   const status = viewer.querySelector("[data-sigil-status]");
@@ -36,40 +125,8 @@
   let frame = 0;
   let previous = 0;
   let hovering = false;
-  let pointer;
+  let pointer, hoverCursor;
   let softwareStamp = -Infinity;
-
-  function makeReflections() {
-    const studio = new THREE.Scene();
-    studio.background = new THREE.Color().setRGB(.072, .072, .072);
-    const softboxes = [
-      { position: [-3, 4.9, 5.8], size: [5, 4], intensity: 4.4 },
-      { position: [2.4, 2.5, 5.8], size: [1, 5.6], intensity: 4.2 },
-      { position: [4.4, -.1, 3], size: [2.5, 5], intensity: 1.15 },
-      { position: [-3.9, -2.1, 1.4], size: [2.5, 3.4], intensity: 1.8 },
-      { position: [1.9, -4.2, -1.3], size: [4.2, 2.6], intensity: 2.8 },
-      { position: [1.2, -2.8, 5], size: [4.2, 2.2], intensity: .45 },
-    ];
-    const panelGeometry = new THREE.BoxGeometry();
-    for (const { position, size, intensity } of softboxes) {
-      const color = new THREE.Color().setRGB(intensity, intensity, intensity);
-      const material = new THREE.MeshBasicMaterial({ color, toneMapped: false });
-      const panel = new THREE.Mesh(panelGeometry, material);
-      panel.position.set(...position);
-      panel.scale.set(...size, .04);
-      panel.lookAt(0, 0, 0);
-      studio.add(panel);
-    }
-
-    const filter = new THREE.PMREMGenerator(renderer);
-    try {
-      return filter.fromScene(studio, .045, .1, 32);
-    } finally {
-      filter.dispose();
-      panelGeometry.dispose();
-      for (const panel of studio.children) panel.material.dispose();
-    }
-  }
 
   function prepareModel(model) {
     const materialMetalness = new Map();
@@ -109,7 +166,7 @@
     scene.environment = null;
     if (renderer.extensions.has("EXT_color_buffer_float")) {
       try {
-        reflections = makeReflections();
+        reflections = makeSigilReflections(renderer);
         scene.environment = reflections.texture;
         scene.environmentIntensity = .95;
       } catch {
@@ -219,19 +276,6 @@
     schedule();
   }
 
-  function disposeModel(object) {
-    object?.traverse(mesh => {
-      if (!mesh.isMesh) return;
-      mesh.geometry.dispose();
-      const textures = new Set(Object.values(mesh.material).filter(value => value?.isTexture));
-      for (const texture of textures) {
-        texture.image?.close?.();
-        texture.dispose();
-      }
-      mesh.material.dispose();
-    });
-  }
-
   function dispose() {
     if (signal.aborted) return;
     events.abort();
@@ -241,7 +285,7 @@
     if (activeTrigger) delete activeTrigger.dataset.sigilPreviewing;
     size.disconnect();
     for (const pending of models.values()) {
-      void pending.then(({ facing }) => disposeModel(facing), () => {});
+      void pending.then(({ facing }) => disposeSigilGeometry(facing), () => {});
     }
     models.clear();
     reflections?.dispose();
@@ -267,58 +311,16 @@
     }
   }
 
-  function loadBackup(trigger) {
-    // A local HTML file can load scripts even when the browser blocks fetch() for file URLs.
-    return new Promise((resolve, reject) => {
-      const script = document.createElement("script");
-      script.src = trigger.dataset.sigilBackup;
-      script.onload = () => {
-        // The original hero backup exposes its bytes globally.
-        const encoded = script.sigilModelData ?? globalThis.sigilModelData;
-        if (script.sigilModelData === undefined) delete globalThis.sigilModelData;
-        script.remove();
-        try {
-          if (typeof encoded !== "string") throw new Error("Sigil backup unavailable");
-          const bytes = atob(encoded);
-          const data = new Uint8Array(bytes.length);
-          for (let index = 0; index < bytes.length; index++) data[index] = bytes.charCodeAt(index);
-          resolve(data.buffer);
-        } catch (error) {
-          reject(error);
-        }
-      };
-      script.onerror = () => {
-        script.remove();
-        reject(new Error("Sigil backup unavailable"));
-      };
-      document.head.append(script);
-    });
-  }
-
-  async function loadModel(trigger) {
-    const loader = new THREE.GLTFLoader();
-    if (window.location.protocol !== "file:") {
-      try {
-        const response = await fetch(trigger.dataset.sigilModel, { signal });
-        if (!response.ok) throw new Error("Sigil model unavailable");
-        return await loader.parseAsync(await response.arrayBuffer(), "");
-      } catch (error) {
-        if (signal.aborted) throw error;
-        console.warn("Не удалось загрузить основной GLB сигила.", error);
-      }
-    }
-    return loader.parseAsync(await loadBackup(trigger), "");
-  }
-
   async function start() {
     if (!isShowing() || mounted || signal.aborted) return;
     if (!scene) { showError(); return; }
     const trigger = activeTrigger;
-    const pending = models.get(trigger) ?? loadModel(trigger).then(({ scene: model }) => {
+    const { sigilModel, sigilBackup } = trigger.dataset;
+    const pending = models.get(trigger) ?? loadSigilGLB(sigilModel, sigilBackup, signal).then(({ scene: model }) => {
       try {
         return prepareModel(model);
       } catch (error) {
-        disposeModel(model);
+        disposeSigilGeometry(model);
         throw error;
       }
     });
@@ -341,8 +343,25 @@
     schedule();
   }
 
-  const size = new ResizeObserver(resize);
+  function measureHeroHover() {
+    if (!heroTrigger || !hoverStart || signal.aborted) return;
+    const bounds = heroTrigger.getBoundingClientRect();
+    const left = hoverStart.getBoundingClientRect().right - bounds.left;
+    const right = bounds.right - document.documentElement.clientWidth;
+    heroTrigger.style.setProperty("--sigil-hover-start", `${left}px`);
+    heroTrigger.style.setProperty("--sigil-hover-end", `${right}px`);
+  }
+
+  const size = new ResizeObserver(() => {
+    resize();
+    measureHeroHover();
+  });
   size.observe(stage);
+  if (heroTrigger && hoverStart) {
+    measureHeroHover();
+    size.observe(heroTrigger.parentElement);
+    document.fonts?.ready.then(measureHeroHover);
+  }
 
   function hidePreview() {
     if (!hovering) return;
@@ -366,34 +385,63 @@
     poster.src = trigger.querySelector("img").src;
   }
 
-  function positionPreview() {
+  function followCursor(event) {
+    hoverCursor = { x: event.clientX, y: event.clientY };
+    preview.style.setProperty("--sigil-cursor-x", `${event.clientX}px`);
+    preview.style.setProperty("--sigil-cursor-y", `${event.clientY}px`);
+  }
+
+  function hoverTriggerAt(x, y) {
+    const { clientWidth, clientHeight } = document.documentElement;
+    const headerBottom = masthead?.getBoundingClientRect().bottom ?? 0;
+    if (x < 0 || x >= clientWidth || y < Math.max(0, headerBottom) || y >= clientHeight) return;
+
+    if (heroTrigger && hoverStart) {
+      const { width, bottom, height } = heroTrigger.getBoundingClientRect();
+      if (width && bottom > headerBottom && y < bottom + height * .065
+        && x >= hoverStart.getBoundingClientRect().right) return heroTrigger;
+    }
+
+    if (footerTrigger) {
+      const { left, right, top } = footerTrigger.getBoundingClientRect();
+      const sidePadding = 24;
+      const hoverTop = outro ? outro.getBoundingClientRect().bottom + 50 : top - 50;
+      if (x >= left - sidePadding && x < right + sidePadding && y < footerTrigger.parentElement.getBoundingClientRect().bottom
+        && y >= hoverTop) return footerTrigger;
+    }
+  }
+
+  function canPreview(event) {
+    return !viewer.open && (event.pointerType === "mouse" || event.pointerType === "pen");
+  }
+
+  function showPreview(trigger, event) {
+    followCursor(event);
+    if (hovering && activeTrigger === trigger) return;
+    activate(trigger);
+    hovering = true;
+    preview.toggleAttribute("data-compact", trigger.dataset.sigilPreview === "footer");
+    preview.hidden = false;
+    stage.tabIndex = -1;
+    preview.append(stage);
+    turntable?.rotation.set(.09, 0, -.14);
+    resize();
+    void start();
+    schedule();
+  }
+
+  function checkHover() {
     if (!hovering) return;
-    const bounds = activeTrigger.getBoundingClientRect();
-    const { innerWidth: width, innerHeight: height } = window;
-    if (bounds.bottom <= 0 || bounds.top >= height) { hidePreview(); return; }
-    const radius = preview.clientWidth / 2;
-    const x = Math.max(radius, Math.min(width - radius, bounds.left + bounds.width / 2));
-    const y = Math.max(radius, Math.min(height - radius, bounds.top + bounds.height / 2));
-    preview.style.left = `${x}px`;
-    preview.style.top = `${y}px`;
+    const { x, y } = hoverCursor;
+    if (hoverTriggerAt(x, y) !== activeTrigger) hidePreview();
   }
 
   for (const trigger of triggers) {
     trigger.addEventListener("pointerenter", event => {
-      if (viewer.open || (event.pointerType !== "mouse" && event.pointerType !== "pen")) return;
-      activate(trigger);
-      hovering = true;
-      preview.hidden = false;
-      stage.tabIndex = -1;
-      preview.append(stage);
-      positionPreview();
-      turntable?.rotation.set(.09, 0, -.14);
-      resize();
-      void start();
-      schedule();
+      if (canPreview(event) && hoverTriggerAt(event.clientX, event.clientY) === trigger) showPreview(trigger, event);
     }, { signal });
-    trigger.addEventListener("pointerleave", () => {
-      if (activeTrigger === trigger) hidePreview();
+    trigger.addEventListener("pointerleave", event => {
+      if (activeTrigger === trigger && hoverTriggerAt(event.clientX, event.clientY) !== trigger) hidePreview();
     }, { signal });
     trigger.addEventListener("click", () => {
       if (viewer.open) return;
@@ -409,8 +457,19 @@
       schedule();
     }, { signal });
   }
-  window.addEventListener("scroll", positionPreview, { passive: true, signal });
-  window.addEventListener("resize", positionPreview, { signal });
+  window.addEventListener("pointermove", event => {
+    if (!canPreview(event)) return;
+    const trigger = hoverTriggerAt(event.clientX, event.clientY);
+    if (trigger) showPreview(trigger, event);
+    else hidePreview();
+  }, { passive: true, signal });
+  document.documentElement.addEventListener("pointerleave", hidePreview, { signal });
+  window.addEventListener("blur", hidePreview, { signal });
+  window.addEventListener("scroll", checkHover, { passive: true, signal });
+  window.addEventListener("resize", () => {
+    measureHeroHover();
+    checkHover();
+  }, { signal });
 
   function rotate(yaw, pitch) {
     if (!turntable) return;

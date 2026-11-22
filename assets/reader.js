@@ -97,17 +97,21 @@ function copyReadingText(target, source) {
 
 function positionOnTimeline(stops, scrollTop) {
   const last = stops.length - 1;
-  if (last < 1 || stops[last] <= 0 || scrollTop <= 0) return 0;
-  if (scrollTop >= stops[last]) return 1;
+  if (last < 1 || stops[last] <= 0) return 0;
+  const top = Math.max(0, scrollTop);
+  // Keep track of the cover separately for layout changes before the first mark.
+  if (top <= stops[0]) return stops[0] ? top / stops[0] - 1 : 0;
+  if (top >= stops[last]) return 1;
   let segment = 0;
-  while (segment < last - 1 && stops[segment + 1] <= scrollTop) segment += 1;
+  while (segment < last - 1 && stops[segment + 1] <= top) segment += 1;
   const length = stops[segment + 1] - stops[segment];
-  return (segment + (length > 0 ? (scrollTop - stops[segment]) / length : 0)) / last;
+  return (segment + (length > 0 ? (top - stops[segment]) / length : 0)) / last;
 }
 
 function scrollTopOnTimeline(stops, position) {
   const last = stops.length - 1;
   if (last < 1) return 0;
+  if (position < 0) return stops[0] * (1 + Math.max(-1, position));
   const progress = Math.max(0, Math.min(1, position)) * last;
   const segment = Math.min(last - 1, Math.floor(progress));
   return stops[segment] + (stops[segment + 1] - stops[segment]) * (progress - segment);
@@ -121,9 +125,10 @@ function initReadingPosition() {
   const questions = [...document.querySelectorAll(".turn.question, .dialogue-aside")];
   if (!questions.length) return;
   const cover = document.getElementById("start");
+  const intro = document.getElementById("interview");
   const end = document.getElementById("end");
   const sections = [{
-    id: cover.id, label: "Начало интервью", marker: "↓",
+    id: intro.id, label: "Начало интервью", marker: "↓",
     sigil: cover.querySelector(".heading-sigil img").getAttribute("src"),
   }, ...questions.map((question, index) => ({
     id: question.id, label: `Вопрос ${index + 1} из ${questions.length}`,
@@ -182,7 +187,7 @@ function initReadingPosition() {
   function showPreview(index) {
     previewIndex = index;
     const section = sections[index];
-    preview.classList.toggle("endpoint-preview", section.id === cover.id || section.id === end.id);
+    preview.classList.toggle("endpoint-preview", Boolean(section.marker));
     previewNumber.textContent = section.number || "";
     previewNumber.hidden = !section.number;
     if (section.copy) copyReadingText(previewText, section.copy);
@@ -210,7 +215,7 @@ function initReadingPosition() {
       link.setAttribute("aria-labelledby", `${link.id} ${section.copy.id}`);
     }
     const marker = document.createElement("span");
-    marker.className = "question-jump-number";
+    marker.className = section.marker ? "question-jump-arrow" : "question-jump-number";
     marker.textContent = section.marker ?? String(index);
     marker.setAttribute("aria-hidden", "true");
     link.append(marker);
@@ -245,8 +250,13 @@ function initReadingPosition() {
 
   function measure() {
     const extent = scrollExtent();
-    const offset = parseFloat(getComputedStyle(questions[0]).scrollMarginTop) || 0;
-    stops = [0, ...questions.map(question => Math.max(0, Math.min(extent, question.getBoundingClientRect().top + window.scrollY - offset))), extent];
+    const offset = parseFloat(getComputedStyle(intro).scrollMarginTop) || 0;
+    const scrollTop = window.scrollY;
+    stops = [intro, ...questions].map(section => {
+      const top = section.getBoundingClientRect().top + scrollTop - offset;
+      return Math.max(0, Math.min(extent, top));
+    });
+    stops.push(extent);
     const thumbHeight = thumb.offsetHeight;
     const travel = Math.max(0, rail.clientHeight - thumbHeight);
     const interval = travel / (stops.length - 1);
@@ -294,6 +304,7 @@ function initReadingPosition() {
     const travel = Math.max(1, rail.clientHeight - thumb.offsetHeight);
     const offset = clientY - rail.getBoundingClientRect().top - drag.offset;
     const position = Math.max(0, Math.min(1, offset / travel));
+    if (position === 0 && window.scrollY <= stops[0]) return;
     window.scrollTo({ top: scrollTopOnTimeline(stops, position), behavior: "instant" });
     schedule();
   }
@@ -413,7 +424,8 @@ function initHeaderPlayback(media) {
   function setActive(item) {
     active = item;
     const owner = item?.closest("[data-audio-player], [data-video-gallery]");
-    const controls = owner?.querySelector(".media-controls:not([hidden])") || item;
+    const selector = owner?.hasAttribute("data-track-playlist") ? "[data-media-play]" : ".media-controls:not([hidden])";
+    const controls = owner?.querySelector(selector) || item;
     if (controls !== inlineControls) {
       visibility.disconnect();
       inlineControls = controls;
@@ -752,12 +764,13 @@ function createTrackSpectrum(plot, seek) {
   return { select, drawAt };
 }
 
-function initTrackTitleScroll(titles) {
+function initTrackTitleScroll(titles, trackPlaylist) {
   function measure(title) {
     const text = title.firstElementChild;
     const distance = Math.max(0, Math.ceil(text.getBoundingClientRect().width - title.clientWidth));
+    const duration = trackPlaylist ? Math.max(.75, distance / 84) : Math.max(4, distance / 32 + 2);
     title.style.setProperty("--track-name-shift", `${-distance}px`);
-    title.style.setProperty("--track-name-duration", `${Math.max(4, distance / 32 + 2)}s`);
+    title.style.setProperty("--track-name-duration", `${duration}s`);
     title.toggleAttribute("data-title-overflow", distance > 1);
   }
 
@@ -769,11 +782,12 @@ function initTrackTitleScroll(titles) {
     text.append(...title.childNodes);
     title.append(text);
     title.classList.add("track-name-scroll");
-    title.title = text.textContent;
+    if (!trackPlaylist) title.title = text.textContent;
     measure(title);
     resize.observe(title);
   }
   document.fonts?.ready.then(() => titles.forEach(measure));
+  return measure;
 }
 
 function enhanceAudio(player) {
@@ -789,27 +803,35 @@ function enhanceAudio(player) {
   const choices = rows.map(row => {
     const audio = row.querySelector("audio"), download = row.querySelector(".track-download"), title = row.querySelector(".track-title");
     audio.id = row.id + "-audio";
-    title.title = audio.getAttribute("aria-label");
-    const choice = { row, audio, download, track: trackSpectra[row.id] };
+    const label = audio.getAttribute("aria-label");
+    if (!trackPlaylist) title.title = label;
+    const choice = { row, audio, download, title, track: trackSpectra[row.id] };
     if (entries.length) {
-      const button = document.createElement("button"), icon = document.createElement("span");
+      const button = document.createElement("button");
       button.type = "button"; button.className = "track-choice";
       button.setAttribute("aria-controls", audio.id);
-      button.setAttribute("aria-label", "Воспроизвести — " + title.title);
+      button.setAttribute("aria-label", "Воспроизвести — " + label);
+      title.before(button);
+      const icon = document.createElement("span");
       icon.className = "play-icon"; icon.setAttribute("aria-hidden", "true");
-      title.before(button); button.append(icon, title);
-      if (!compareVersions) {
+      button.append(icon, title);
+      if (!compareVersions && !trackPlaylist) {
+        const duration = timeLabel(choice.track.duration);
+        title.title += " · " + duration;
         const length = document.createElement("span");
         length.className = "track-length";
-        length.textContent = timeLabel(choice.track.duration);
+        length.textContent = duration;
         button.append(length);
-        title.title += " · " + length.textContent;
       }
       bar.append(download);
       choice.button = button;
       button.addEventListener("click", () => {
-        if (selected === choice && !audio.paused && !audio.ended) { audio.pause(); return; }
-        select(choice); playMedia(audio);
+        if (selected === choice && !audio.paused && !audio.ended) {
+          audio.pause();
+          return;
+        }
+        select(choice);
+        playMedia(audio);
       });
       audio.addEventListener("play", () => { if (!audio.paused) select(choice); });
     }
@@ -817,8 +839,23 @@ function enhanceAudio(player) {
     audio.hidden = true;
     return choice;
   });
+  const deck = bar.parentElement;
+  const currentTitle = trackPlaylist ? choices[0].title.cloneNode(true) : null;
+  if (currentTitle) {
+    currentTitle.removeAttribute("id");
+    bar.prepend(currentTitle);
+    deck.hidden = false;
+  }
   let spectrum;
-  const controls = createMediaControls(bar, { plot, playButton: choices[0].button, onPosition: p => spectrum?.drawAt(p) });
+  const controls = createMediaControls(bar, {
+    plot,
+    playButton: choices[0].button,
+    playTooltip: !trackPlaylist,
+    onPosition: p => spectrum?.drawAt(p),
+  });
+  const trackName = bar.querySelector(".track-title strong");
+  const titles = trackPlaylist ? [trackName, ...choices.map(choice => choice.title.querySelector("strong"))] : [trackName];
+  const measureTitle = initTrackTitleScroll(titles, trackPlaylist);
   spectrum = createTrackSpectrum(plot, controls.seek);
   function select(choice) {
     if (selected === choice) return;
@@ -837,6 +874,11 @@ function enhanceAudio(player) {
       entry.download.hidden = entry !== choice;
       if (entry.button) entry.button.setAttribute("aria-current", String(entry === choice));
     }
+    if (currentTitle) {
+      currentTitle.querySelector(".track-artist").textContent = choice.title.querySelector(".track-artist").textContent;
+      trackName.firstElementChild.textContent = choice.title.querySelector("strong").textContent;
+      measureTitle(trackName);
+    }
     notice.hidden = !choice.audio.error;
     controls.select(choice.audio, choice.track.duration, choice.button);
     spectrum.select(choice.audio, choice.track);
@@ -847,19 +889,19 @@ function enhanceAudio(player) {
   }
   select(choices.find(c => "#" + c.row.id === window.location.hash) || choices[0]);
   plot.parentElement.hidden = false;
-  const titles = trackPlaylist ? [...bar.querySelectorAll(".track-list .track-title strong")] : [bar.querySelector(".track-title strong")];
-  initTrackTitleScroll(titles);
   if (trackPlaylist) {
     // A track fragment should center its whole deck beneath the sticky masthead.
     const measureJump = () => {
-      const bounds = player.getBoundingClientRect();
+      const bounds = deck.getBoundingClientRect();
       player.style.setProperty("--playlist-height", `${bounds.height}px`);
       for (const entry of entries) {
         entry.style.setProperty("--track-offset", `${entry.getBoundingClientRect().top - bounds.top}px`);
       }
     };
     measureJump();
-    new ResizeObserver(measureJump).observe(player);
+    const resize = new ResizeObserver(measureJump);
+    resize.observe(deck);
+    resize.observe(player.querySelector(".track-list"));
   }
 }
 
@@ -884,6 +926,7 @@ function initPhotoViewer() {
   const dialog = document.getElementById("photo-viewer");
   if (typeof dialog.showModal !== "function") return;
 
+  const content = dialog.querySelector(".lightbox-inner");
   const close = dialog.querySelector(".lightbox-close");
   const caption = dialog.querySelector("figcaption");
   const photoFrame = dialog.querySelector(".lightbox-photo");
@@ -906,7 +949,8 @@ function initPhotoViewer() {
       caption.hidden = !caption.textContent.trim();
       dialog.showModal();
       document.body.classList.add("photo-open");
-      close.focus();
+      content.focus({ preventScroll: true });
+      dialog.dispatchEvent(new CustomEvent("photo-viewer-open", { detail: link }));
     });
   }
   close.addEventListener("click", () => dialog.close());
@@ -917,6 +961,7 @@ function initPhotoViewer() {
     if (event.target === dialog) dialog.close();
   });
   dialog.addEventListener("close", () => {
+    if (dialog.open) return;
     document.body.classList.remove("photo-open");
     preview.removeAttribute("srcset");
     preview.removeAttribute("sizes");

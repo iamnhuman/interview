@@ -44,7 +44,7 @@ const linkCards = {
     "title": "папка normis",
     "meta": "Папка в «Telegram»",
     "description": "Каналы и группы Тойоты.",
-    "imageLayout": "avatar",
+    "imageLayout": "square",
     "image": "assets/media/previews/normis-folder-avatar.jpg",
     "video": "assets/media/previews/normis-folder-avatar.mp4",
     "animatedImage": "assets/media/previews/normis-folder-avatar.webp"
@@ -99,14 +99,13 @@ const linkCards = {
     "displayUrl": "t.me/archivenormis",
     "meta": "Сын Люцифера · 24 июл. 2026 г.",
     "description": "Сходство костюма Arca и FITNESSS",
-    "imageLayout": "square",
     "image": "assets/media/previews/post-archivenormis-12636.jpg"
   },
   "https://t.me/archivenormis/3766/12512": {
-    "title": "Frequent и Темный Принц",
+    "title": "Max Headroom",
     "displayUrl": "t.me/archivenormis",
     "meta": "archivenormis · 17 июл. 2026 г.",
-    "description": "Сравнение звучания Темного Принца со старыми треками Frequent на SoundCloud.",
+    "description": "мнение по поводу известного в определенных кругах культуролога",
     "imageLayout": "avatar",
     "image": "assets/media/previews/headroom-inc-avatar.jpg"
   },
@@ -115,6 +114,13 @@ const linkCards = {
     "displayUrl": "t.me/archivenormis",
     "meta": "Тема в «Telegram»",
     ...archivenormisAvatar
+  },
+  "https://t.me/bad_zu/1466": {
+    "title": "Bad Zu",
+    "displayUrl": "t.me/bad_zu",
+    "meta": "Публикация · 27 окт. 2026 г.",
+    "description": "Лекция Филиппа Александрова о восприятии звука и его роли в медиа.",
+    "image": "assets/media/previews/post-bad-zu-1466.jpg"
   },
   "https://t.me/trollnormis": {
     "title": "trollnormis",
@@ -258,7 +264,6 @@ const linkCards = {
     "displayUrl": "t.me/trollnormis",
     "meta": "Сын Люцифера · 13 янв. 2025 г.",
     "description": "подборка различных старых комментов",
-    "imageLayout": "square",
     "image": "assets/media/previews/post-trollnormis-140.png"
   },
   "https://t.me/trollnormis/4142": {
@@ -282,6 +287,7 @@ const linkCards = {
     "displayUrl": "t.me/archivenormis",
     "meta": "а можно потанцевальней? · 28 окт. 2026 г.",
     "description": "Пост о новом клипе и недавней EP артиста. Видео · 0:25",
+    "imageLayout": "square-fill",
     "image": "assets/media/previews/post-archivenormis-14801.jpg",
     "video": "assets/media/previews/post-archivenormis-14801.mp4"
   },
@@ -333,7 +339,13 @@ const linkCards = {
   },
   "https://www.instagram.com/flt.n3sss/": {
     "title": "FITNESSS",
-    "image": "assets/media/fitnesss-live.jpg"
+    "imageLayout": "avatar",
+    "image": "assets/media/previews/fitnesss-instagram-avatar.jpg"
+  },
+  "https://www.instagram.com/oscarcarreteero/": {
+    "title": "Óscar Carretero",
+    "description": "автор костюма",
+    "image": "assets/media/fitnesss-s4-portrait.jpg"
   },
   "https://t.me/fakeboys01/22361": {
     "title": "Deescawa",
@@ -356,14 +368,12 @@ const linkCards = {
   "https://iamnhuman.github.io/agi": {
     "title": "ИИзм",
     "description": "ИИзм — командный архив ИИ-сцены: досье художников и медиа, тактическая карта и видеохроника.",
-    "imageLayout": "square",
     "image": "assets/link-thumbnails/iizm-social-preview-v5.jpg"
   },
   "https://higgsfield.ai/creator-partnership-program": {
     "title": "Creator Partnership Program",
     "description": "Ежемесячные кредиты, ранний доступ к моделям, закрытое сообщество и прямая связь с командой Higgsfield.",
-    "imageLayout": "square",
-    "image": "assets/link-thumbnails/higgsfield-creator-partnership.jpg"
+    "image": "assets/link-thumbnails/higgsfield-logo.webp"
   },
   "https://www.instagram.com/p/Dbt67C-MlM0/": {
     "title": "salibi",
@@ -371,7 +381,7 @@ const linkCards = {
   },
   "https://panayiotiskokoras.com/writings/": {
     "title": "Writings",
-    "image": "assets/media/video/kokoras-01.jpg"
+    "image": "assets/link-thumbnails/panayiotis-kokoras.png"
   },
   "https://t.me/archivenormis/978/3147": {
     "title": "спор с подписчиком",
@@ -521,6 +531,7 @@ const linkCards = {
   "https://www.youtube.com/watch?v=9eQUtOQXYgQ": {
     "title": "STARCRAFT | Announce Cinematic | Dominion",
     "description": "StarCraft",
+    "imageLayout": "square-fill-left",
     "image": "assets/link-thumbnails/7d23eef4334d.jpg"
   },
   "https://t.me/archivenormis/5429/14893": {
@@ -566,6 +577,7 @@ const linkCards = {
   "https://youtu.be/2tKuE8CjON8?si=d6ex2-ieuoI0FC1c&t=2771": {
     "title": "Noisia Radio S01E26",
     "description": "Noisia",
+    "imageLayout": "square-fill",
     "image": "assets/link-thumbnails/4d8c409668cd.jpg"
   },
   "https://aesthetics.fandom.com/wiki/Necrotrap": {
@@ -590,13 +602,13 @@ const linkCards = {
     "imageLayout": "avatar",
     "image": "assets/media/previews/copilotbukakke-avatar.jpg"
   },
-  "https://t.me/mm44turboshitpostmachine/33717": {
+  "https://t.me/trap_critics/2594": {
     "title": "FORTUNA 812",
-    "displayUrl": "t.me/mm44turboshitpostmachine",
-    "meta": "mm44 turbo shitpost machine · 28 авг. 2026 г.",
-    "description": "топ реперов от порнорэпа",
+    "displayUrl": "t.me/trap_critics",
+    "meta": "PRNRP · 15 июл. 2026 г.",
+    "description": "Объективный топ русских рэпперов",
     "imageLayout": "avatar",
-    "image": "assets/media/previews/mm44turboshitpostmachine-avatar.jpg"
+    "image": "assets/media/previews/trap-critics-avatar.jpg"
   },
   "https://t.me/mainstreamusic/15479": {
     "title": "Тёмный Принц",
@@ -635,7 +647,6 @@ const linkCards = {
     "displayUrl": "t.me/archivenormis",
     "meta": "Публикация · 15 нояб. 2026 г.",
     "description": "Видео · 0:18",
-    "imageLayout": "square",
     "image": "assets/media/previews/post-archivenormis-15088.jpg",
     "video": "assets/media/previews/post-archivenormis-15088.mp4"
   },
@@ -643,7 +654,6 @@ const linkCards = {
     "title": "FITNESSS — F11 x PASSAGE",
     "meta": "Instagram · 15 окт. 2026 г.",
     "description": "@lunchmeatfestivalprague · Съёмка — @machinetriste",
-    "imageLayout": "square",
     "image": "assets/media/previews/fitnesss-f11-passage.jpg"
   },
   "https://t.me/privatenormis/3457?single": {
@@ -694,7 +704,7 @@ const linkCards = {
     "displayUrl": "t.me/hypernormis",
     "meta": "Публикация · 4 июл. 2025 г.",
     "description": "этот¹ профессор выглядит как один из последователей luigi russolo², только делает он всё это уже на современный лад³, с целой пачкой⁴ научных статей человек рассматривает⁵ связь musique concrète⁶ и mechatronics⁷, адаптирует⁸…",
-    "image": "assets/media/previews/post-hypernormis-4351.jpg"
+    "image": "assets/link-thumbnails/panayiotis-kokoras.png"
   },
   "https://t.me/trollnormis/2639": {
     "title": "Fidget History",
@@ -737,7 +747,7 @@ const linkCards = {
     "title": "труп коли редькина minimix",
     "displayUrl": "t.me/trollnormis",
     "meta": "Публикация · 12 авг. 2026 г.",
-    ...trollnormisAvatar
+    "image": "assets/media/previews/post-trollnormis-4108.jpg"
   },
   "https://t.me/hypernormis/1494": {
     "title": "Старая Группа",
@@ -771,18 +781,21 @@ const linkCards = {
   "https://www.youtube.com/watch?v=Z_oxrZUtPCM": {
     "title": "Les Petits Pilous - Wake Up",
     "description": "Boysnoize Records",
-    "image": "assets/link-thumbnails/010a60046750.jpg"
+    "image": "assets/link-thumbnails/010a60046750.jpg",
+    "imageLayout": "square-fill"
   },
   "https://www.youtube.com/watch?v=ZsSYase1hJI": {
     "title": "ZZT - Lower State of Consciousness",
     "meta": "YouTube · 2 июл. 2007 г.",
     "description": "Party Central",
-    "image": "assets/link-thumbnails/f48e4b316b69.jpg"
+    "image": "assets/link-thumbnails/f48e4b316b69.jpg",
+    "imageLayout": "square-fill"
   },
   "https://www.youtube.com/watch?v=qmsbP13xu6k&list=RDEM00DUyPjxvRFDIDKBZSyQ6w&start_radio=1": {
     "title": "Mr Oizo - Flat beat",
     "description": "fcommunications",
-    "image": "assets/link-thumbnails/e32522eb71db.jpg"
+    "image": "assets/link-thumbnails/e32522eb71db.jpg",
+    "imageLayout": "square-fill"
   },
   "https://soundcloud.com/forddnb/joe-ford-culture": {
     "title": "Joe Ford - Culture",

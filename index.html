@@ -18,18 +18,26 @@
   <meta name="theme-color" content="#000000">
   <link rel="icon" type="image/webp" href="assets/art/sigil-fractured-orbit.webp">
   <link rel="stylesheet" href="assets/fonts/fonts.css">
-  <link rel="stylesheet" href="assets/styles.css?v=9">
+  <link rel="stylesheet" href="assets/styles.css?v=54">
+  <noscript><style>
+    [data-cover-frame-model] { opacity: 1; visibility: visible; }
+    [data-cover-frame-model]::after { visibility: visible; }
+  </style></noscript>
+  <link rel="preload" href="assets/art/cover-frame.glb?v=2" as="fetch" crossorigin>
+  <link rel="preload" href="assets/art/cover-detail-frame.glb" as="fetch" crossorigin>
   <script src="assets/sound-data.js" defer></script>
   <script src="assets/question-sigils.js" defer></script>
-  <script src="assets/media-controls.js" defer></script>
-  <script src="assets/reader.js?v=6" defer></script>
-  <script src="assets/video-player.js" defer></script>
-  <script src="assets/hero-cloth.js" defer></script>
-  <script src="assets/vendor/three-r170.js?v=2" defer></script>
-  <script src="assets/sigil-software.js" defer></script>
-  <script src="assets/sigil.js?v=7" defer></script>
-  <script src="assets/link-data.js?v=3" defer></script>
-  <script src="assets/link-previews.js?v=2" defer></script>
+  <script src="assets/media-controls.js?v=3" defer></script>
+  <script src="assets/reader.js?v=19" defer></script>
+  <script src="assets/video-player.js?v=4" defer></script>
+  <script src="assets/hero-cloth.js?v=2" defer></script>
+  <script src="assets/vendor/three-r170.js?v=3" defer></script>
+  <script src="assets/sigil-software.js?v=2" defer></script>
+  <script src="assets/sigil.js?v=16" defer></script>
+  <script src="assets/cover-frame-fallback.js?v=5" defer></script>
+  <script src="assets/cover-frame.js?v=13" defer></script>
+  <script src="assets/link-data.js?v=13" defer></script>
+  <script src="assets/link-previews.js?v=3" defer></script>
 </head>
 <body id="top">
   <a class="skip-link" href="#interview">К началу интервью</a>
@@ -82,7 +90,7 @@
   <main id="page-content">
     <section class="cover wrap" id="start" aria-labelledby="title">
       <div class="cover-heading">
-        <h1 id="title"><span class="cover-kicker">Как понять</span> <span class="cover-word">Неограйм</span></h1>
+        <h1 id="title"><span class="cover-kicker">Как понять</span> <span class="cover-word">Неограй<span data-sigil-hover-start>м</span></span></h1>
         <button class="heading-sigil" type="button" data-sigil-trigger data-sigil-model="assets/art/hero-sigil.glb?v=2" data-sigil-backup="assets/art/hero-sigil-data.js" aria-haspopup="dialog" aria-controls="sigil-viewer" aria-label="Открыть 3D-модель верхнего сигила">
           <img src="assets/art/sigil-thorn-halo.webp" width="880" height="880" alt="" decoding="async" draggable="false">
         </button>
@@ -96,17 +104,23 @@
           </a>
         </div>
         <figure class="cover-main">
-          <a class="photo-link" href="assets/media/fitnesss-live.jpg" draggable="false" data-photo data-media-frame="cover-stage" aria-label="Открыть фото сценического костюма FITNESSS">
-            <img src="assets/media/fitnesss-live.jpg" width="1440" height="1920" fetchpriority="high"
-              alt="FITNESSS в сценическом костюме со светящимися модулями на спине">
-            <canvas class="cloth-canvas" aria-hidden="true"></canvas>
+          <a class="photo-link" href="assets/media/fitnesss-live.jpg" draggable="false" data-photo data-media-frame="cover-stage" data-cover-frame-model="assets/art/cover-frame.glb?v=2" aria-label="Открыть фото сценического костюма FITNESSS">
+            <span class="cover-frame-photo">
+              <img src="assets/media/fitnesss-live.jpg" width="1440" height="1920" fetchpriority="high"
+                alt="FITNESSS в сценическом костюме со светящимися модулями на спине">
+              <canvas class="cloth-canvas" aria-hidden="true"></canvas>
+            </span>
+            <canvas class="cover-frame-canvas" aria-hidden="true"></canvas>
           </a>
         </figure>
         <figure class="cover-detail">
-          <a class="photo-link" href="assets/media/fitnesss-rig.jpg" draggable="false" data-photo data-media-frame="cover-detail" aria-label="Открыть деталь сценического костюма FITNESSS">
-            <img src="assets/media/fitnesss-rig.jpg" width="1440" height="1920"
-              alt="Деталь сценического костюма FITNESSS с трубками и металлическими шарнирами">
-            <canvas class="cloth-canvas" aria-hidden="true"></canvas>
+          <a class="photo-link" href="assets/media/fitnesss-rig.jpg" draggable="false" data-photo data-media-frame="cover-detail" data-cover-frame-model="assets/art/cover-detail-frame.glb" aria-label="Открыть деталь сценического костюма FITNESSS">
+            <span class="cover-frame-photo">
+              <img src="assets/media/fitnesss-rig.jpg" width="1440" height="1920"
+                alt="Деталь сценического костюма FITNESSS с трубками и металлическими шарнирами">
+              <canvas class="cloth-canvas" aria-hidden="true"></canvas>
+            </span>
+            <canvas class="cover-frame-canvas" aria-hidden="true"></canvas>
           </a>
         </figure>
       </div>
@@ -126,7 +140,7 @@
         <div class="turn answer">
           <div class="turn-copy answer-copy">
             <p>Если ты пытаешься объяснить современное искусство словами, то каждый раз получается какая-то залупа) Говорить про музыку или про современное искусство — это как танцевать про архитектуру. Как только открываешь рот, сразу складывается ощущение, что искусство не такое уж и «современное».</p>
-            <p>Я могу только сказать, что у меня когда-то был ник <span class="artist-name"><span class="artist-quote">«</span>fazda<span class="artist-quote">»</span></span>, когда я делал <a href="https://t.me/archivenormis/818/8256" target="_blank" rel="noopener noreferrer">уебищные миксы</a> в <span class="artist-name"><span class="artist-quote">«</span>Sound Forge<span class="artist-quote">»</span></span>, годах в 2013 - 2015, <a href="https://gearspace.com/threads/how-can-burial-make-music-with-soundforge.968872/" target="_blank" rel="noopener noreferrer">как <span class="artist-name"><span class="artist-quote">«</span>Burial<span class="artist-quote">»</span></span></a> свои треки.</p>
+            <p>Я могу только сказать, что у меня когда-то был ник <span class="artist-name"><span class="artist-quote">«</span>fazda<span class="artist-quote">»</span></span>, когда я <a href="https://t.me/archivenormis/818/8256" target="_blank" rel="noopener noreferrer">делал</a> уебищные миксы в <span class="artist-name"><span class="artist-quote">«</span>Sound Forge<span class="artist-quote">»</span></span>, годах в 2013 - 2015, <a href="https://gearspace.com/threads/how-can-burial-make-music-with-soundforge.968872/" target="_blank" rel="noopener noreferrer">как <span class="artist-name"><span class="artist-quote">«</span>Burial<span class="artist-quote">»</span></span></a> свои треки.</p>
             <p>Также всегда испытывал необъяснимое влечение к тому мему из интернета, где обыгрывается лого <span class="artist-name"><span class="artist-quote">«</span>Adidas<span class="artist-quote">»</span></span>. Логотипы в какой-то момент превратились в сигилы XXI века, и заигрывание с этой темой всегда привлекало. Это часто встречалось в андерграунде того времени. На <span class="artist-name"><span class="artist-quote">«</span>Pinterest<span class="artist-quote">»</span></span> или <span class="artist-name"><span class="artist-quote">«</span>Behance<span class="artist-quote">»</span></span> регулярно можно было увидеть, как кто-то обыгрывает известные логотипы.</p>
           </div>
         </div>
@@ -139,9 +153,15 @@
           <div class="image-frame">
             <a class="photo-link" id="adidas-bootlegs" href="assets/media/adidas-bootlegs.webp" data-photo aria-label="Открыть изображение. Мем с бутлегами логотипа Adidas">
               <img src="assets/media/adidas-bootlegs.webp" width="720" height="715" loading="lazy" decoding="async" alt="Мем с бутлегами логотипа Adidas">
+              <span class="photo-frame-overlay" data-media-frame="cover-stage" data-cover-frame-model="assets/art/cover-frame.glb?v=2" aria-hidden="true">
+                <canvas class="cover-frame-canvas"></canvas>
+              </span>
             </a>
             <a id="ccru-shirt" class="photo-link" href="assets/media/anti-nick-land-shirt.jpg" data-photo aria-label="Открыть изображение. Чёрная футболка с надписью Anti Nick Land CCRU Club">
               <img src="assets/media/anti-nick-land-shirt.jpg" width="1104" height="991" loading="lazy" decoding="async" alt="Чёрная футболка с надписью Anti Nick Land CCRU Club">
+              <span class="photo-frame-overlay" data-media-frame="woven" data-cover-frame-model="assets/frames/outro-frame.glb" aria-hidden="true">
+                <canvas class="cover-frame-canvas"></canvas>
+              </span>
             </a>
           </div>
         </figure>
@@ -188,7 +208,7 @@
         </div>
         <div class="turn answer">
           <div class="turn-copy answer-copy">
-            <p>Мне это сложно объяснить, видимо, без <a href="assets/media/raiika-vs-slava-marlow.pdf" type="application/pdf" target="_blank" rel="noopener noreferrer">научной статьи</a> не обойтись, лучше сказать «я в это верю как Тойотолог». Костюм, кстати, у него был прикольнее, чем у <span class="artist-name"><span class="artist-quote">«</span>Arca<span class="artist-quote">»</span></span> — более технологичный, звук тоже. Это, конечно же, всё субъективно, и Антон Савенко, и админ <span class="artist-name"><span class="artist-quote">«</span>ethereal grooves<span class="artist-quote">»</span></span> имеют право постить и делать что хотят и иметь свою правду, а я, может, ебнулся, что вижу в своей правде истину, но что поделаешь) Обычно напрягает, что люди говорят, как молодые деконстрактед клаб продюсеры ничего не придумали, а потом идут постить в 500-й раз своего <span class="artist-name"><span class="artist-quote">«</span>Yung Lean<span class="artist-quote">»</span></span>, <span class="artist-name"><span class="artist-quote">«</span>Bladee<span class="artist-quote">»</span></span>, <span class="artist-name"><span class="artist-quote">«</span>Autechre<span class="artist-quote">»</span></span>, <span class="artist-name"><span class="artist-quote">«</span>Aphex Twin<span class="artist-quote">»</span></span>, <span class="artist-name"><span class="artist-quote">«</span>Burial<span class="artist-quote">»</span></span>, ск-реп и одинаковые афиши техно-вечеринок. Ок, <span class="artist-name"><span class="artist-quote">«</span>FITNESSS<span class="artist-quote">»</span></span>, может, и не придумал ничего нового, но <span class="artist-name"><span class="artist-quote">«</span><a href="https://t.me/copilotbukakke/1561" target="_blank" rel="noopener noreferrer">Fred Again</a><span class="artist-quote">»</span></span> или <span class="artist-name"><span class="artist-quote">«</span>Skrillex<span class="artist-quote">»</span></span> тогда вообще должны повеситься.</p>
+            <p>Мне это сложно объяснить, видимо, без <a href="assets/media/raiika-vs-slava-marlow.pdf" type="application/pdf" target="_blank" rel="noopener noreferrer">научной статьи</a> не обойтись, лучше сказать «я в это верю как Тойотолог». <a href="https://www.instagram.com/oscarcarreteero/" target="_blank" rel="noopener noreferrer">Костюм</a>, кстати, у него был прикольнее, чем у <span class="artist-name"><span class="artist-quote">«</span>Arca<span class="artist-quote">»</span></span> — более технологичный, звук тоже. Это, конечно же, всё субъективно, и Антон Савенко, и админ <span class="artist-name"><span class="artist-quote">«</span>ethereal grooves<span class="artist-quote">»</span></span> имеют право постить и делать что хотят и иметь свою правду, а я, может, ебнулся, что вижу в своей правде истину, но что поделаешь) Обычно напрягает, что люди говорят, как молодые деконстрактед клаб продюсеры ничего не придумали, а потом идут постить в 500-й раз своего <span class="artist-name"><span class="artist-quote">«</span>Yung Lean<span class="artist-quote">»</span></span>, <span class="artist-name"><span class="artist-quote">«</span>Bladee<span class="artist-quote">»</span></span>, <span class="artist-name"><span class="artist-quote">«</span>Autechre<span class="artist-quote">»</span></span>, <span class="artist-name"><span class="artist-quote">«</span>Aphex Twin<span class="artist-quote">»</span></span>, <span class="artist-name"><span class="artist-quote">«</span>Burial<span class="artist-quote">»</span></span>, ск-реп и одинаковые афиши техно-вечеринок. Ок, <span class="artist-name"><span class="artist-quote">«</span>FITNESSS<span class="artist-quote">»</span></span>, может, и не придумал ничего нового, но <span class="artist-name"><span class="artist-quote">«</span><a href="https://t.me/copilotbukakke/1561" target="_blank" rel="noopener noreferrer">Fred Again</a><span class="artist-quote">»</span></span> или <span class="artist-name"><span class="artist-quote">«</span>Skrillex<span class="artist-quote">»</span></span> тогда вообще должны повеситься.</p>
           </div>
         </div>
         <div class="turn answer">
@@ -198,8 +218,8 @@
         </div>
         <figure class="image-asset image-pair" data-sources-before>
           <div class="image-frame">
-            <a class="photo-link" href="assets/media/fitnesss-live.jpg" data-photo aria-label="Открыть изображение. FITNESSS в сценическом костюме со светящимися модулями на спине">
-              <img src="assets/media/fitnesss-live.jpg" width="1440" height="1920" loading="lazy" decoding="async" alt="FITNESSS в сценическом костюме со светящимися модулями на спине">
+            <a class="photo-link" href="assets/media/fitnesss-s4-portrait.jpg" data-photo aria-label="Открыть изображение. FITNESSS в шлеме и сценическом костюме S4 Engine">
+              <img src="assets/media/fitnesss-s4-portrait.jpg" width="1080" height="1440" loading="lazy" decoding="async" alt="FITNESSS в шлеме и сценическом костюме S4 Engine">
             </a>
             <a class="photo-link" href="assets/media/fitnesss-rig.jpg" data-photo aria-label="Открыть изображение. Деталь сценического костюма FITNESSS с трубками и металлическими шарнирами">
               <img src="assets/media/fitnesss-rig.jpg" width="1440" height="1920" loading="lazy" decoding="async" alt="Деталь сценического костюма FITNESSS с трубками и металлическими шарнирами">
@@ -293,11 +313,14 @@
             <p>А, да я даже не знаю, чё там за калькулятор) Это прикол был, с первого запроса. Я просто <span class="artist-name"><span class="artist-quote">«</span>GPT Astra<span class="artist-quote">»</span></span> сказал примерно, что делать, и дал доступ к <span class="artist-name"><span class="artist-quote">«</span>Suno<span class="artist-quote">»</span></span>.</p>
           </div>
         </div>
-        <figure class="image-asset" data-sources-before>
+        <figure class="image-asset" id="normis-calculator" data-sources-before>
           <div class="image-frame">
             <a class="photo-link" href="assets/media/normis-calculator.png" data-photo aria-label="Открыть изображение. Скриншот теста «Калькулятор нормиса»">
               <img src="assets/media/normis-calculator.png" width="2910" height="1844" loading="lazy" decoding="async" alt="Скриншот теста «Калькулятор нормиса»">
             </a>
+            <span data-media-frame="woven" data-cover-frame-model="assets/frames/outro-frame.glb" aria-hidden="true">
+              <canvas class="cover-frame-canvas"></canvas>
+            </span>
           </div>
           <figcaption>ироничный тест на слух</figcaption>
         </figure>
@@ -493,7 +516,7 @@
           <h2 class="turn-copy question-copy" id="rap-title">Как ты смотришь на современные тренды в "репе" с точки зрения звука? Было ли когда-то ощущение, что это что-то новое?</h2>
           <div class="turn answer">
             <div class="turn-copy answer-copy">
-              <p>Ты про <span class="artist-name"><span class="artist-quote">«</span><a href="https://t.me/makraaaa/2587" target="_blank" rel="noopener noreferrer">Lucy Bedroque</a><span class="artist-quote">»</span></span> и такое всякое? Про <span class="artist-name"><span class="artist-quote">«</span><a href="https://t.me/mm44turboshitpostmachine/33717" target="_blank" rel="noopener noreferrer">FORTUNA 812</a><span class="artist-quote">»</span></span> и <span class="artist-name"><span class="artist-quote">«</span><a href="https://t.me/mainstreamusic/15479" target="_blank" rel="noopener noreferrer">Темного Принца</a><span class="artist-quote">»</span></span>?</p>
+              <p>Ты про <span class="artist-name"><span class="artist-quote">«</span><a href="https://t.me/makraaaa/2587" target="_blank" rel="noopener noreferrer">Lucy Bedroque</a><span class="artist-quote">»</span></span> и такое всякое? Про <span class="artist-name"><span class="artist-quote">«</span><a href="https://t.me/trap_critics/2594" target="_blank" rel="noopener noreferrer">FORTUNA 812</a><span class="artist-quote">»</span></span> и <span class="artist-name"><span class="artist-quote">«</span><a href="https://t.me/mainstreamusic/15479" target="_blank" rel="noopener noreferrer">Темного Принца</a><span class="artist-quote">»</span></span>?</p>
             </div>
           </div>
           <div class="dialogue-aside" id="question-19" tabindex="-1" data-sources-continue>
@@ -583,6 +606,9 @@
             <a class="photo-link" href="assets/media/bassfunk-releases.png" data-photo aria-label="Открыть изображение. Архив Bassfunk Releases с сеткой обложек музыкальных релизов">
               <img src="assets/media/bassfunk-releases.jpg" width="1560" height="1110" loading="lazy" decoding="async" alt="Архив Bassfunk Releases с сеткой обложек музыкальных релизов">
             </a>
+            <span data-media-frame="woven" data-cover-frame-model="assets/frames/outro-frame.glb" aria-hidden="true">
+              <canvas class="cover-frame-canvas"></canvas>
+            </span>
           </div>
         </figure>
         <div class="turn question" id="question-25" tabindex="-1">
@@ -749,7 +775,7 @@
         </div>
         <div class="turn answer">
           <div class="turn-copy answer-copy">
-            <p>Есть до фига, я просто не собираю такое, а больше по обратной стороне музыки, которую боится <a href="https://t.me/trollnormis/4134" target="_blank" rel="noopener noreferrer">Виленская</a>. Можно почитать <a href="https://t.me/archivenormis/978/3147" target="_blank" rel="noopener noreferrer">батл</a> с каким-то подписчиком <span class="artist-name"><span class="artist-quote">«</span><a href="https://t.me/vasily_konad" target="_blank" rel="noopener noreferrer">Конада</a><span class="artist-quote">»</span></span>, где он говорит, что всё уже давно придумали в тембральной музыке. Или посмотреть <a href="https://t.me/hypernormis/4351" target="_blank" rel="noopener noreferrer">такой</a> академический пример подхода к «спектральному» звуку. Во многих <a href="https://t.me/archivenormis/3657" target="_blank" rel="noopener noreferrer">современных вузах</a> уже, наверное, есть кафедры, где пытаются <a href="https://panayiotiskokoras.com/writings/" target="_blank" rel="noopener noreferrer">научно описывать</a> экспериментальную музыку.</p>
+            <p>Есть до фига, я просто не собираю такое, а больше по обратной стороне музыки, которую боится <a href="https://t.me/trollnormis/4134" target="_blank" rel="noopener noreferrer">Виленская</a>. Можно почитать <a href="https://t.me/archivenormis/978/3147" target="_blank" rel="noopener noreferrer">батл</a> с каким-то подписчиком <span class="artist-name"><span class="artist-quote">«</span><a href="https://t.me/vasily_konad" target="_blank" rel="noopener noreferrer">Конада</a><span class="artist-quote">»</span></span>, где он говорит, что всё уже давно придумали в тембральной музыке. Или посмотреть <a href="https://t.me/hypernormis/4351" target="_blank" rel="noopener noreferrer">такой</a> академический пример подхода к «спектральному» звуку. Во многих <a href="https://t.me/bad_zu/1466" target="_blank" rel="noopener noreferrer">современных вузах</a> уже, наверное, есть кафедры, где пытаются <a href="https://panayiotiskokoras.com/writings/" target="_blank" rel="noopener noreferrer">научно описывать</a> экспериментальную музыку.</p>
           </div>
         </div>
         <figure class="video-gallery" data-video-gallery data-preview-rows="2" aria-label="Видео Панайотиса Кокораса">
@@ -854,22 +880,27 @@
             </div>
           </div>
           <figure class="image-asset image-original collection-archive">
-            <nav class="collection-index" id="vk-collections" aria-label="Подборки ВКонтакте">
-              <div class="collection-pages" data-preview-image="assets/media/vk-music-for-myself.png">
-                <a href="https://vk.com/page-47287426_45926664" target="_blank" rel="noopener noreferrer" aria-label="Music For Myself 1">1</a>
-                <a href="https://vk.com/page-47287426_46715523" target="_blank" rel="noopener noreferrer" aria-label="Music For Myself 2">2</a>
-                <a href="https://vk.com/page-47287426_46729196" target="_blank" rel="noopener noreferrer" aria-label="Music For Myself 3">3</a>
-                <a href="https://vk.com/page-47287426_46947506" target="_blank" rel="noopener noreferrer" aria-label="Music For Myself 4">4</a>
-                <a href="https://vk.com/page-47287426_47360069" target="_blank" rel="noopener noreferrer" aria-label="Music For Myself 5">5</a>
-                <a href="https://vk.com/page-47287426_47818041" target="_blank" rel="noopener noreferrer" aria-label="Music For Myself 6">6</a>
-                <a href="https://vk.com/page-47287426_47895954" target="_blank" rel="noopener noreferrer" aria-label="Music For Myself 7">7</a>
-                <a href="https://vk.com/page-47287426_49479166" target="_blank" rel="noopener noreferrer" aria-label="Music For Myself 8">8</a>
+            <div class="collection-deck">
+              <nav class="collection-index" id="vk-collections" aria-label="Подборки ВКонтакте">
+                <div class="collection-pages" data-preview-image="assets/media/vk-music-for-myself.png">
+                  <a href="https://vk.com/page-47287426_45926664" target="_blank" rel="noopener noreferrer" aria-label="Music For Myself 1">1</a>
+                  <a href="https://vk.com/page-47287426_46715523" target="_blank" rel="noopener noreferrer" aria-label="Music For Myself 2">2</a>
+                  <a href="https://vk.com/page-47287426_46729196" target="_blank" rel="noopener noreferrer" aria-label="Music For Myself 3">3</a>
+                  <a href="https://vk.com/page-47287426_46947506" target="_blank" rel="noopener noreferrer" aria-label="Music For Myself 4">4</a>
+                  <a href="https://vk.com/page-47287426_47360069" target="_blank" rel="noopener noreferrer" aria-label="Music For Myself 5">5</a>
+                  <a href="https://vk.com/page-47287426_47818041" target="_blank" rel="noopener noreferrer" aria-label="Music For Myself 6">6</a>
+                  <a href="https://vk.com/page-47287426_47895954" target="_blank" rel="noopener noreferrer" aria-label="Music For Myself 7">7</a>
+                  <a href="https://vk.com/page-47287426_49479166" target="_blank" rel="noopener noreferrer" aria-label="Music For Myself 8">8</a>
+                </div>
+              </nav>
+              <div class="image-frame">
+                <a class="photo-link" href="assets/media/vk-music-for-myself.png" data-photo aria-label="Открыть изображение. Подборка Music For Myself во ВКонтакте: на месте пропавших треков указано Unknown audio">
+                  <img src="assets/media/vk-music-for-myself.png" srcset="assets/media/vk-music-for-myself.png 798w" sizes="399px" width="399" height="749" loading="lazy" decoding="async" alt="Подборка Music For Myself во ВКонтакте: на месте пропавших треков указано Unknown audio">
+                </a>
               </div>
-            </nav>
-            <div class="image-frame">
-              <a class="photo-link" href="assets/media/vk-music-for-myself.png" data-photo aria-label="Открыть изображение. Подборка Music For Myself во ВКонтакте: на месте пропавших треков указано Unknown audio">
-                <img src="assets/media/vk-music-for-myself.png" srcset="assets/media/vk-music-for-myself.png 798w" sizes="399px" width="399" height="749" loading="lazy" decoding="async" alt="Подборка Music For Myself во ВКонтакте: на месте пропавших треков указано Unknown audio">
-              </a>
+              <span data-media-frame="woven" data-cover-frame-model="assets/frames/outro-frame.glb" aria-hidden="true">
+                <canvas class="cover-frame-canvas"></canvas>
+              </span>
             </div>
             <figcaption>масштаб удаленных треков можно увидеть на этом скрине</figcaption>
           </figure>
@@ -919,48 +950,47 @@
             </div>
           </div>
           <figure class="audio-cue" id="electro-tracks" data-audio-player data-track-playlist aria-label="Les Petits Pilous, ZZT, Mr Oizo и Joe Ford">
-            <div class="audio-deck">
+            <div class="audio-deck" hidden>
               <div class="player-screen" hidden>
                 <div class="wave-control">
                   <img data-spectrum-map loading="lazy" decoding="async" alt="">
                   <canvas class="track-spectrum" data-track-spectrum aria-hidden="true"></canvas>
                 </div>
               </div>
-              <div class="track-bar playlist-bar">
-                <div class="track-list" role="group" aria-label="Треки">
-                  <div class="track-entry" id="track-les-petits-pilous">
-                    <span class="track-title" id="track-les-petits-pilous-title">
-                      <span class="track-artist">Les Petits Pilous</span>
-                      <strong>Wake Up</strong>
-                    </span>
-                    <audio id="track-les-petits-pilous-audio" controls preload="none" src="assets/media/les-petits-pilous-wake-up.mp3" aria-label="Les Petits Pilous — Wake Up"></audio>
-                    <a class="track-download" href="assets/media/les-petits-pilous-wake-up.mp3" type="audio/mpeg" download="Wake Up.mp3" aria-label="Скачать MP3. Les Petits Pilous — Wake Up"><span>MP3</span> <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8m-3-3 3 3 3-3M3 11v2h10v-2"/></svg></a>
-                  </div>
-                  <div class="track-entry" id="track-zzt">
-                    <span class="track-title" id="track-zzt-title">
-                      <span class="track-artist">ZZT</span>
-                      <strong>Lower State of Consciousness</strong>
-                    </span>
-                    <audio id="track-zzt-audio" controls preload="none" src="assets/media/zzt-lower-state-of-consciousness.mp3" aria-label="ZZT — Lower State of Consciousness"></audio>
-                    <a class="track-download" href="assets/media/zzt-lower-state-of-consciousness.mp3" type="audio/mpeg" download="Lower State of Consciousness (Original Munich Version).mp3" aria-label="Скачать MP3. ZZT — Lower State of Consciousness"><span>MP3</span> <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8m-3-3 3 3 3-3M3 11v2h10v-2"/></svg></a>
-                  </div>
-                  <div class="track-entry" id="track-mr-oizo">
-                    <span class="track-title" id="track-mr-oizo-title">
-                      <span class="track-artist">Mr Oizo</span>
-                      <strong>Flat beat</strong>
-                    </span>
-                    <audio id="track-mr-oizo-audio" controls preload="none" src="assets/media/mr-oizo-flat-beat.mp3" aria-label="Mr Oizo — Flat beat"></audio>
-                    <a class="track-download" href="assets/media/mr-oizo-flat-beat.mp3" type="audio/mpeg" download="Flat beat.mp3" aria-label="Скачать MP3. Mr Oizo — Flat beat"><span>MP3</span> <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8m-3-3 3 3 3-3M3 11v2h10v-2"/></svg></a>
-                  </div>
-                  <div class="track-entry" id="track-joe-ford">
-                    <span class="track-title" id="track-joe-ford-title">
-                      <span class="track-artist">Joe Ford</span>
-                      <strong>Culture</strong>
-                    </span>
-                    <audio id="track-joe-ford-audio" controls preload="none" src="assets/media/joe-ford-culture.mp3" aria-label="Joe Ford — Culture"></audio>
-                    <a class="track-download" href="assets/media/joe-ford-culture.mp3" type="audio/mpeg" download="Culture.mp3" aria-label="Скачать MP3. Joe Ford — Culture"><span>MP3</span> <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8m-3-3 3 3 3-3M3 11v2h10v-2"/></svg></a>
-                  </div>
-                </div>
+              <div class="track-bar"></div>
+            </div>
+            <div class="track-list" role="group" aria-label="Треки">
+              <div class="track-entry" id="track-les-petits-pilous">
+                <span class="track-title" id="track-les-petits-pilous-title">
+                  <span class="track-artist">Les Petits Pilous</span>
+                  <strong>Wake Up</strong>
+                </span>
+                <audio id="track-les-petits-pilous-audio" controls preload="none" src="assets/media/les-petits-pilous-wake-up.mp3" aria-label="Les Petits Pilous — Wake Up"></audio>
+                <a class="track-download" href="assets/media/les-petits-pilous-wake-up.mp3" type="audio/mpeg" download="Wake Up.mp3" aria-label="Скачать MP3. Les Petits Pilous — Wake Up"><span>MP3</span> <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8m-3-3 3 3 3-3M3 11v2h10v-2"/></svg></a>
+              </div>
+              <div class="track-entry" id="track-zzt">
+                <span class="track-title" id="track-zzt-title">
+                  <span class="track-artist">ZZT</span>
+                  <strong>Lower State of Consciousness</strong>
+                </span>
+                <audio id="track-zzt-audio" controls preload="none" src="assets/media/zzt-lower-state-of-consciousness.mp3" aria-label="ZZT — Lower State of Consciousness"></audio>
+                <a class="track-download" href="assets/media/zzt-lower-state-of-consciousness.mp3" type="audio/mpeg" download="Lower State of Consciousness (Original Munich Version).mp3" aria-label="Скачать MP3. ZZT — Lower State of Consciousness"><span>MP3</span> <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8m-3-3 3 3 3-3M3 11v2h10v-2"/></svg></a>
+              </div>
+              <div class="track-entry" id="track-mr-oizo">
+                <span class="track-title" id="track-mr-oizo-title">
+                  <span class="track-artist">Mr Oizo</span>
+                  <strong>Flat beat</strong>
+                </span>
+                <audio id="track-mr-oizo-audio" controls preload="none" src="assets/media/mr-oizo-flat-beat.mp3" aria-label="Mr Oizo — Flat beat"></audio>
+                <a class="track-download" href="assets/media/mr-oizo-flat-beat.mp3" type="audio/mpeg" download="Flat beat.mp3" aria-label="Скачать MP3. Mr Oizo — Flat beat"><span>MP3</span> <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8m-3-3 3 3 3-3M3 11v2h10v-2"/></svg></a>
+              </div>
+              <div class="track-entry" id="track-joe-ford">
+                <span class="track-title" id="track-joe-ford-title">
+                  <span class="track-artist">Joe Ford</span>
+                  <strong>Culture</strong>
+                </span>
+                <audio id="track-joe-ford-audio" controls preload="none" src="assets/media/joe-ford-culture.mp3" aria-label="Joe Ford — Culture"></audio>
+                <a class="track-download" href="assets/media/joe-ford-culture.mp3" type="audio/mpeg" download="Culture.mp3" aria-label="Скачать MP3. Joe Ford — Culture"><span>MP3</span> <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8m-3-3 3 3 3-3M3 11v2h10v-2"/></svg></a>
               </div>
             </div>
             <p class="audio-error" data-media-error hidden role="status">Трек не удалось воспроизвести. Его можно скачать по ссылке MP3.</p>
@@ -972,9 +1002,19 @@
           <p>На этом всё, спасибо <strong>Тойоте</strong> за этот разговор!</p>
           <p>Спасибо, что дочитали до сюда! Ваш анкульт 😎</p>
         </footer>
+        <figure class="video-gallery" id="interview-outro" data-video-gallery aria-label="Финальное видео">
+          <div class="video-deck">
+            <div class="video-stage">
+              <video id="video-interview-outro" controls playsinline preload="none" poster="assets/media/video/interview-outro.png" width="1280" height="720" data-length="0:38" aria-label="Финальное видео интервью">
+                <source src="assets/media/video/interview-outro.mp4?v=4" type="video/mp4">
+                <a href="assets/media/video/interview-outro.mp4?v=4">Открыть видео</a>
+              </video>
+            </div>
+          </div>
+        </figure>
       </article>
       <footer class="footer" id="end" tabindex="-1" aria-label="Конец интервью">
-        <button class="footer-sigil-trigger" type="button" data-sigil-trigger data-sigil-model="assets/art/footer-sigil.glb" data-sigil-backup="assets/art/footer-sigil-data.js" aria-haspopup="dialog" aria-controls="sigil-viewer" aria-label="Открыть 3D-модель нижнего сигила">
+        <button class="footer-sigil-trigger" type="button" data-sigil-trigger data-sigil-preview="footer" data-sigil-model="assets/art/footer-sigil.glb" data-sigil-backup="assets/art/footer-sigil-data.js" aria-haspopup="dialog" aria-controls="sigil-viewer" aria-label="Открыть 3D-модель нижнего сигила">
           <img class="footer-sigil" src="assets/art/sigil-silver-wings.webp" width="1086" height="362" alt="" loading="lazy" decoding="async" draggable="false">
         </button>
         <a class="reading-link return-link" href="#top">
@@ -1011,13 +1051,13 @@
     <span class="link-preview-arrow" aria-hidden="true"></span>
   </div>
   <dialog class="lightbox" aria-label="Просмотр фотографии" id="photo-viewer">
-    <div class="lightbox-inner">
+    <div class="lightbox-inner" tabindex="-1" autofocus>
       <button class="lightbox-close reading-link" type="button">
         <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M14 8H2m5-5L2 8l5 5"/></svg>
         <span>Назад</span>
       </button>
       <figure>
-        <div class="lightbox-photo"><img alt=""></div>
+        <div class="lightbox-photo"><span class="cover-frame-photo"><img alt=""></span></div>
         <figcaption id="photo-caption"></figcaption>
       </figure>
     </div>

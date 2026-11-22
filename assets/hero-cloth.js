@@ -199,7 +199,8 @@
       canvas = document.createElement("canvas");
       canvas.className = "cloth-canvas";
       canvas.setAttribute("aria-hidden", "true");
-      link.append(canvas);
+      const picture = link.querySelector(".cover-frame-photo") ?? link;
+      picture.append(canvas);
     }
     link.draggable = false;
     photo.draggable = false;
