@@ -843,6 +843,8 @@ a.source-site:focus-visible::before { outline: 1px solid var(--metal); outline-o
   --cover-frame-padding: 12px;
   position: absolute; inset: 0; z-index: 2; pointer-events: none;
 }
+#ccru-shirt > .photo-frame-overlay { --cover-frame-inner-scale: 1.5; }
+#ccru-shirt > .photo-frame-overlay::after { border-image-width: 1.15; }
 .image-pair .photo-frame-overlay[data-cover-frame-direction="reverse"] { rotate: 180deg; }
 
 .player-screen {
