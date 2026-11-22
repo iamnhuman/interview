@@ -97,7 +97,7 @@ html.has-sigil-scroll::-webkit-scrollbar, html.has-sigil-scroll body::-webkit-sc
   user-select: none;
 }
 
-.scroll-track { position: absolute; inset: 0 0 0 var(--tick-space); touch-action: none; cursor: pointer; }
+.scroll-track { position: absolute; inset: 0 0 0 var(--tick-space); touch-action: none; -webkit-touch-callout: none; cursor: pointer; }
 
 .scroll-thumb {
   position: absolute;
@@ -925,7 +925,10 @@ a.source-site:focus-visible::before { outline: 1px solid var(--metal); outline-o
 }
 @container interview (min-width: 36rem) {
   [data-portrait] .video-deck:not(:fullscreen) {
-    --screen-width: min(calc(100% - clamp(8rem, 23%, 11rem)), calc(76svh * var(--clip-ratio)));
+    --controls-height: calc(var(--player-key-size) + 1rem + 3px);
+    --available-screen-height: calc(100dvh - var(--header-height) - var(--controls-height) - .75rem);
+    --screen-height: min(76svh, max(6rem, var(--available-screen-height)));
+    --screen-width: min(calc(100% - clamp(8rem, 23%, 11rem)), calc(var(--screen-height) * var(--clip-ratio)));
     grid-template: "screen clips" auto "controls controls" auto / var(--screen-width) minmax(0, 1fr);
   }
   [data-portrait] .video-deck:not(:fullscreen) .video-stage { border-top-right-radius: 0; }
@@ -1350,13 +1353,16 @@ a.source-site:focus-visible::before { outline: 1px solid var(--metal); outline-o
   .reading-layout { width: auto; margin-inline: var(--wrap-start) var(--wrap-edge); }
   .cover-main {
     grid-column: 1 / -1;
-    /* Let the frame extend into the gutters while the photo stays on the text guides. */
+    /* Let the frame extend past the photo into the gutters. */
     margin-inline: calc(-1 * var(--wrap-start)) calc(-1 * var(--wrap-edge));
-    padding-inline: var(--wrap-start) var(--wrap-edge);
+    padding-inline: calc(var(--wrap-start) + 5px) calc(var(--wrap-edge) + 5px);
     overflow-x: clip;
   }
   .cover-main .photo-link { --frame-cap: clamp(22px, 5.8vw, 30px); }
-  .link-preview { --link-preview-default-width: min(20rem, calc(100% - 2rem)); }
+  .link-preview {
+    --link-preview-default-width: min(20rem, calc(100% - 2rem));
+    padding: .75rem 1.625rem .75rem .75rem;
+  }
   .source-title { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
   .interview [data-media-frame="woven"] {
     --woven-frame-scale: 1.35;
@@ -1373,6 +1379,7 @@ a.source-site:focus-visible::before { outline: 1px solid var(--metal); outline-o
   .sigil-scroll {
     --tick-space: 1.375rem;
     --rail-marker-width: 1rem;
+    --preview-left: calc(var(--wrap-start) + var(--scroll-space));
   }
   :root[data-rail-numbers-fit] .scroll-thumb { translate: -1px; }
   .question-symbol.cover-symbol { height: 100%; translate: 0 2px; }

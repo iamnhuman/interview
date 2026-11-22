@@ -243,7 +243,7 @@ function initReadingPosition() {
   let railTop, railHeight;
   let thumbHeight = 0, thumbTravel = 0;
   let compactRail = false;
-  let progressHoverY;
+  let progressPreviewY;
 
   function setTabStop(index) {
     for (let i = 0; i < jumps.length; i += 1) {
@@ -258,7 +258,7 @@ function initReadingPosition() {
     const height = preview.offsetHeight;
     const viewportBottom = compactRail || mobile.matches ? bounds.bottom : window.innerHeight;
     const bottom = Math.max(top, viewportBottom - height - 12);
-    let center = progressHoverY;
+    let center = progressPreviewY;
     if (!compactRail) {
       const rect = jumps[previewIndex].getBoundingClientRect();
       center = rect.top + rect.height / 2;
@@ -266,11 +266,14 @@ function initReadingPosition() {
     const previewTop = Math.max(top, Math.min(bottom, center - height / 2));
     preview.style.top = `${previewTop}px`;
     const sigil = activeSigil.getBoundingClientRect();
-    activeSigil.style.visibility = sigil.bottom > previewTop && sigil.top < previewTop + height ? "hidden" : "";
+    const card = preview.getBoundingClientRect();
+    const overlaps = sigil.left < card.right && sigil.right > card.left &&
+      sigil.top < card.bottom && sigil.bottom > card.top;
+    activeSigil.style.visibility = overlaps ? "hidden" : "";
   }
 
   function showPreview(index) {
-    if (compactRail && progressHoverY === undefined) return;
+    if (compactRail && progressPreviewY === undefined) return;
     const section = sections[index];
     previewIndex = index;
     preview.classList.toggle("endpoint-preview", !section.number);
@@ -286,7 +289,7 @@ function initReadingPosition() {
 
   function hidePreview() {
     previewIndex = -1;
-    progressHoverY = undefined;
+    progressPreviewY = undefined;
     preview.hidden = true;
     activeSigil.style.visibility = "";
   }
@@ -409,14 +412,21 @@ function initReadingPosition() {
       : Math.max(0, positionOnTimeline(stops, scrollTop));
   }
 
+  function sectionIndexForScroll(scrollTop) {
+    const last = sections.length - 1;
+    if (isAtScrollEnd(scrollTop, stops[last])) return last;
+    let index = 0;
+    // Fragment navigation can land a fraction of a pixel before the stop.
+    while (scrollTop > 0 && index < last && stops[index + 1] - scrollTop < 1) index++;
+    return index;
+  }
+
   function update() {
     frame = 0;
     if (navigation.hidden) return;
     measureIfNeeded();
     const scrollTop = window.scrollY;
-    let current = isAtScrollEnd(scrollTop, stops.at(-1)) ? sections.length - 1 : 0;
-    // Fragment navigation can land a fraction of a pixel before the stop.
-    while (scrollTop > 0 && current + 1 < sections.length && stops[current + 1] - scrollTop < 1) current++;
+    const current = sectionIndexForScroll(scrollTop);
     const position = positionForScroll(scrollTop);
     thumb.style.transform = `translateY(${position * thumbTravel}px)`;
     if (compactRail) progressBar.style.setProperty("--rail-progress", `${position * 100}%`);
@@ -445,12 +455,13 @@ function initReadingPosition() {
     if (!thumbTravel) return;
     const offset = clientY - rail.getBoundingClientRect().top - drag.offset;
     const position = Math.max(0, Math.min(1, offset / thumbTravel));
-    if (!compactRail && drag.previewQuestions) {
-      const nearest = Math.round(position * (jumps.length - 1));
-      if (nearest !== previewIndex) showPreview(nearest);
+    const top = compactRail ? position * stops.at(-1) : scrollTopOnTimeline(stops, position);
+    if (drag.previewQuestions) {
+      if (compactRail) progressPreviewY = clientY;
+      const index = compactRail ? sectionIndexForScroll(top) : Math.round(position * (jumps.length - 1));
+      if (index !== previewIndex) showPreview(index);
     }
     if (!compactRail && position === 0 && window.scrollY <= stops[0]) return;
-    const top = compactRail ? position * stops.at(-1) : scrollTopOnTimeline(stops, position);
     window.scrollTo({ top, behavior: "instant" });
     schedule();
   }
@@ -506,13 +517,13 @@ function initReadingPosition() {
 
   function previewProgress(event) {
     const { clientY, pointerType, buttons } = event;
-    if (drag || buttons || (pointerType !== "mouse" && pointerType !== "pen") || clientY === progressHoverY) return;
-    const moved = event.type === "pointermove" && progressHoverY !== undefined;
+    if (drag || buttons || (pointerType !== "mouse" && pointerType !== "pen") || clientY === progressPreviewY) return;
+    const moved = event.type === "pointermove" && progressPreviewY !== undefined;
 
     measureIfNeeded();
     const { top, height } = progressBar.getBoundingClientRect();
     if (!height) return;
-    progressHoverY = clientY;
+    progressPreviewY = clientY;
     const position = Math.max(0, Math.min(1, (clientY - top) / height));
     const scrollTop = position * stops.at(-1);
     const nextIndex = stops.findIndex(stop => stop >= scrollTop);
@@ -530,11 +541,13 @@ function initReadingPosition() {
 
   progressBar.addEventListener("pointerenter", previewProgress);
   progressBar.addEventListener("pointermove", previewProgress, { passive: true });
-  progressBar.addEventListener("pointerleave", () => { if (compactRail) hidePreview(); });
+  progressBar.addEventListener("pointerleave", () => { if (compactRail && !drag) hidePreview(); });
 
   rail.addEventListener("pointerdown", event => {
     if (event.button !== 0 || !event.isPrimary || drag || jumpPress) return;
-    startDrag(event, { onThumb: thumb.contains(event.target) });
+    const onThumb = thumb.contains(event.target);
+    const previewQuestions = compactRail && event.pointerType === "touch" && !onThumb;
+    startDrag(event, { onThumb, previewQuestions });
   });
   rail.addEventListener("pointermove", (event) => {
     if (drag?.id === event.pointerId) moveThumb(event.clientY);
