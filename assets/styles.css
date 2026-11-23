@@ -319,7 +319,9 @@ html.has-sigil-scroll::-webkit-scrollbar, html.has-sigil-scroll body::-webkit-sc
   margin-inline-end: calc(-1 * var(--header-action-inset));
 }
 .masthead-actions button { position: relative; display: grid; place-items: center; width: var(--header-action-width); height: 2.75rem; padding: 0; border: 0; border-radius: var(--ui-radius); color: var(--ink); background: transparent; }
-.masthead-actions button:hover { color: var(--muted); }
+@media (hover: hover) {
+  .masthead-actions button:hover { color: var(--muted); }
+}
 .masthead-actions button:focus-visible::after {
   content: ""; position: absolute; inset-inline: 0; inset-block-end: .45rem;
   width: .75rem; margin-inline: auto; border-block-end: 1px solid currentColor;
